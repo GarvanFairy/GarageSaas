@@ -15,6 +15,7 @@ using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Microsoft.EntityFrameworkCore;
 using SignupAPI.Models;
+using GarageSaas.Models;
 
 namespace GarageSaas
 {
@@ -50,6 +51,17 @@ namespace GarageSaas
             //Configuring appsettings section AzureAdB2C, into IOptions
             services.AddOptions();
             services.Configure<OpenIdConnectOptions>(Configuration.GetSection("AzureAdB2C"));
+            
+
+            /*
+             *   app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
+  {
+       ClientId = Configuration["AzureAd:ClientId"],
+       Authority = string.Format(Configuration["AzureAd:AadInstance"], Configuration["AzureAd:TenantId"]),
+       CallbackPath = Configuration["AzureAd:AuthCallback"]
+  });
+             * */
+            services.Configure<AppSettingsModel>(Configuration.GetSection("AppSettings"));
 
             services.AddDbContext<SignupContext>(opt =>
             opt.UseSqlServer(Configuration.GetConnectionString("GarageSaasDBConnection")));

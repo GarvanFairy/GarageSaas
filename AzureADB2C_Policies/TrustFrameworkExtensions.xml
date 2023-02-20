@@ -1,0 +1,222 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<TrustFrameworkPolicy 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+  xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" 
+  PolicySchemaVersion="0.3.0.0" 
+  TenantId="fairycastlews.onmicrosoft.com" 
+  PolicyId="B2C_1A_TrustFrameworkExtensions1" 
+  PublicPolicyUri="http://fairycastlews.onmicrosoft.com/B2C_1A_TrustFrameworkExtensions1">
+  
+  <BasePolicy>
+    <TenantId>fairycastlews.onmicrosoft.com</TenantId>
+    <PolicyId>B2C_1A_TrustFrameworkLocalization1</PolicyId>
+  </BasePolicy>
+  <BuildingBlocks>
+  
+     <ClaimsSchema>
+	   <ClaimType Id="extension_GarageBusinessID">
+        <DisplayName>Garage ID</DisplayName>
+        <DataType>string</DataType>
+        <UserHelpText>The ID of the Garage.</UserHelpText>
+        <UserInputType>Readonly</UserInputType>
+      </ClaimType>
+	  
+	  	   <ClaimType Id="GarageBusinessName">
+        <DisplayName>Garage Name</DisplayName>
+        <DataType>string</DataType>
+        <UserHelpText>The name of the Garage.</UserHelpText>
+        <UserInputType>Readonly</UserInputType>
+      </ClaimType>
+	 </ClaimsSchema>
+  </BuildingBlocks>
+
+  <ClaimsProviders>
+
+
+    <ClaimsProvider>
+      <DisplayName>Local Account SignIn</DisplayName>
+      <TechnicalProfiles>
+         <TechnicalProfile Id="login-NonInteractive">
+          <Metadata>
+            <Item Key="client_id">fbf576cf-4dde-4863-925e-19ad4d93f251</Item>
+            <Item Key="IdTokenAudience">f76459a1-7d28-4b0d-9bf8-1d4b38f64c58</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="client_id" DefaultValue="fbf576cf-4dde-4863-925e-19ad4d93f251" />
+            <InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="f76459a1-7d28-4b0d-9bf8-1d4b38f64c58" />
+          </InputClaims>
+        </TechnicalProfile>
+		
+		<TechnicalProfile Id="LocalAccountSignUpWithLogonEmail">
+          <DisplayName>Email signup</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="IpAddressClaimReferenceId">IpAddress</Item>
+            <Item Key="ContentDefinitionReferenceId">api.localaccountsignup</Item>
+			<Item Key="EnforceEmailVerification">false</Item>
+          </Metadata>
+          <CryptographicKeys>
+            <Key Id="issuer_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
+          </CryptographicKeys>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="email" />
+			<InputClaim ClaimTypeReferenceId="extension_GarageBusinessID" /> <!--DefaultValue="5"-->
+			<InputClaim ClaimTypeReferenceId="GarageBusinessName" />
+          </InputClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="objectId" />
+            <OutputClaim ClaimTypeReferenceId="email" PartnerClaimType="Verified.Email" Required="true" />
+            <OutputClaim ClaimTypeReferenceId="newPassword" Required="true" />
+            <OutputClaim ClaimTypeReferenceId="reenterPassword" Required="true" />
+            <OutputClaim ClaimTypeReferenceId="executed-SelfAsserted-Input" DefaultValue="true" />
+            <OutputClaim ClaimTypeReferenceId="authenticationSource" />
+            <OutputClaim ClaimTypeReferenceId="newUser" />
+
+            <!-- Optional claims, to be collected from the user -->
+            <!--<OutputClaim ClaimTypeReferenceId="displayName" />-->
+            <OutputClaim ClaimTypeReferenceId="givenName" />
+            <OutputClaim ClaimTypeReferenceId="surName" />
+			<OutputClaim ClaimTypeReferenceId="extension_GarageBusinessID" />
+			<OutputClaim ClaimTypeReferenceId="GarageBusinessName" />
+          </OutputClaims>
+          <ValidationTechnicalProfiles>
+            <ValidationTechnicalProfile ReferenceId="AAD-UserWriteUsingLogonEmail" />
+          </ValidationTechnicalProfiles>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
+        </TechnicalProfile>
+
+        <!-- This technical profile uses a validation technical profile to authenticate the user. -->
+        <TechnicalProfile Id="SelfAsserted-LocalAccountSignin-Email">
+          <DisplayName>Local Account Signin</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="SignUpTarget">SignUpWithLogonEmailExchange</Item>
+            <Item Key="setting.operatingMode">Email</Item>
+            <Item Key="ContentDefinitionReferenceId">api.localaccountsignin</Item>
+            <Item Key="IncludeClaimResolvingInClaimsHandling">true</Item>
+			<!--<Item Key="EnforceEmailVerification">false</Item>-->
+          </Metadata>
+          <IncludeInSso>false</IncludeInSso>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="signInName" DefaultValue="{OIDC:LoginHint}" AlwaysUseDefaultValue="true" />
+			<InputClaim ClaimTypeReferenceId="extension_GarageBusinessID" />
+			<InputClaim ClaimTypeReferenceId="GarageBusinessName" />
+          </InputClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="signInName" Required="true" />
+            <OutputClaim ClaimTypeReferenceId="password" Required="true" />
+            <OutputClaim ClaimTypeReferenceId="objectId" />
+            <OutputClaim ClaimTypeReferenceId="authenticationSource" />
+			<OutputClaim ClaimTypeReferenceId="GarageBusinessName" />
+          </OutputClaims>
+          <ValidationTechnicalProfiles>
+            <ValidationTechnicalProfile ReferenceId="login-NonInteractive" />
+          </ValidationTechnicalProfiles>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-AAD" />
+        </TechnicalProfile>
+		
+      </TechnicalProfiles>
+    </ClaimsProvider>
+	
+		<ClaimsProvider>
+  <DisplayName>My ID Token Hint ClaimsProvider</DisplayName>
+  <TechnicalProfiles>
+    <TechnicalProfile Id="IdTokenHint_ExtractClaims">
+      <DisplayName> My ID Token Hint TechnicalProfile</DisplayName>
+      <Protocol Name="None" />
+      <Metadata>
+        <!-- Replace with your endpoint location -->
+        <Item Key="METADATA">https://fairycastlews.b2clogin.com/fairycastlews.onmicrosoft.com/v2.0/.well-known/openid-configuration?p=B2C_1A_SIGNUP_SIGNIN1</Item>
+        <Item Key="IdTokenAudience">f92ce15d-019c-449e-bff2-ab5af18cbe40</Item> <!--f76459a1-7d28-4b0d-9bf8-1d4b38f64c58-->
+        <Item Key="issuer">https://localhost:44301/</Item> <!-- https://fairycastlews.b2clogin.com/90589b9f-6a39-4285-a798-5d72f6937826/v2.0/ -->
+      </Metadata>
+      <OutputClaims>
+        <OutputClaim ClaimTypeReferenceId="email" PartnerClaimType="userId" />
+		<OutputClaim ClaimTypeReferenceId="extension_GarageBusinessID" PartnerClaimType="extension_GarageBusinessID" />
+		<OutputClaim ClaimTypeReferenceId="GarageBusinessName" PartnerClaimType="GarageBusinessName" />
+      </OutputClaims>
+    </TechnicalProfile>
+  </TechnicalProfiles>
+</ClaimsProvider>
+
+  </ClaimsProviders>
+
+    <UserJourneys>
+	
+	    <UserJourney Id="SignUp">
+      <OrchestrationSteps>
+   
+   <OrchestrationStep Order="1" Type="GetClaims" CpimIssuerTechnicalProfileReferenceId="IdTokenHint_ExtractClaims" />
+   
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- This step reads any user attributes that we may not have received when in the token. -->
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+ 
+        <OrchestrationStep Order="4" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+    
+      </OrchestrationSteps>
+      <ClientDefinition ReferenceId="DefaultWeb" />
+    </UserJourney>
+	
+	
+	   <UserJourney Id="SignUpOrSignIn"> 
+      <OrchestrationSteps>
+<!--Add by Garvan-->
+<OrchestrationStep Order="1" Type="GetClaims" CpimIssuerTechnicalProfileReferenceId="IdTokenHint_ExtractClaims" />
+<!---->
+
+<!--<OrchestrationStep Order="2" Type="ClaimsProviderSelection" ContentDefinitionReferenceId="api.idpselections.signup">
+          <ClaimsProviderSelections>
+            <ClaimsProviderSelection TargetClaimsExchangeId="SignUpWithLogonEmailExchange" />
+          </ClaimsProviderSelections>-->
+          <!-- Do NOT UNCOMMENT <ClaimsExchanges>
+            <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
+          </ClaimsExchanges> -->
+        <!--</OrchestrationStep>-->
+		
+        <OrchestrationStep Order="2" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
+          <ClaimsProviderSelections>
+            <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
+          </ClaimsProviderSelections>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>objectId</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- This step reads any user attributes that we may not have received when in the token. -->
+        <OrchestrationStep Order="4" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="5" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+
+      </OrchestrationSteps>
+      <ClientDefinition ReferenceId="DefaultWeb" />
+    </UserJourney>
+	</UserJourneys>
+
+</TrustFrameworkPolicy>

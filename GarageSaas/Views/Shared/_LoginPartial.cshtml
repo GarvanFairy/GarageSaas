@@ -5,9 +5,20 @@
         @{
             var userName = String.Empty;
             if (string.IsNullOrWhiteSpace(User.Identity.Name) || User.Identity.Name.ToLower() == "unknown")
-        { userName = TempData["userName"].ToString(); }
-            else { userName = User.Identity.Name; }
+            {
+                if (TempData.ContainsKey("userName") && !string.IsNullOrEmpty(TempData["userName"].ToString()))
+                {
+                    userName = TempData["userName"].ToString();
+                }
+                else { userName = User.Identity.Name; }
+            }
         }
+        <li class="navbar-btn">
+            <form method="get" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="EditProfile">
+                <button type="submit" class="btn btn-primary" style="margin-right:5px">Edit Profile</button>
+            </form>
+            @Html.ActionLink("Garage Business Details", "GarageBusinessDetail", new { garageBusinessId = TempData["GarageBusinessId"]})
+        </li>
         <li class="navbar-text">Hello @userName</li>
         <!-- The Account controller is not defined in this project. Instead, it is part of Microsoft.Identity.Web.UI nuget package and
             it defines some well known actions such as SignUp/In, SignOut and EditProfile-->

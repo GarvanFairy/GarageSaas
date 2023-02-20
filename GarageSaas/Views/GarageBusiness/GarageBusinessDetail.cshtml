@@ -1,0 +1,53 @@
+﻿@model SignupAPI.Models.Garagebusiness
+@{
+    ViewBag.Title = "Garage Business Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Todo</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageBusinessName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.GarageAddressLine1)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageAddressLine2)
+        </dt>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageAddressLine3)
+        </dt>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageAddressLine4)
+        </dt>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Postcode)
+        </dt>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageEmailAddress)
+        </dt>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageMobileNumber)
+        </dt>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GaragePhoneNumber)
+        </dt>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit Garage Business", "EditGarageBusiness", new { garageBusinessId = Model.Id}) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

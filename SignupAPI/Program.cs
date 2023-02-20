@@ -32,6 +32,10 @@ namespace SignupAPI
                     {
                         options.BlobName = "Singupapilog.txt";
                     }))
+                    .ConfigureAppConfiguration((Host, config) =>
+                    {
+                        config.AddJsonFile("signupappsettings.json", optional: true);
+                    })
                     .ConfigureWebHostDefaults(webBuilder =>
                     {
                     webBuilder.UseStartup<Startup>();

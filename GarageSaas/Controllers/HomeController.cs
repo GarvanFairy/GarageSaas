@@ -26,10 +26,11 @@ namespace GarageSaas.Controllers
 
             foreach (var ident in User.Claims)
             {
-                    var x = ident.Value;
+                    var garageBusinessId = ident.Value;
                 if (ident.Type == "extension_GarageBusinessID")
                 {
-                    var GarageBusinessId = x;
+                    var GarageBusinessId = garageBusinessId;
+                    TempData["GarageBusinessId"] = garageBusinessId;
                 }
                 if (ident.Type == "emails")
                 {

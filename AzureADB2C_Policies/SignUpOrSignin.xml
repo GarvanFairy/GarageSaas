@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<TrustFrameworkPolicy
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06"
+  PolicySchemaVersion="0.3.0.0"
+  TenantId="fairycastlews.onmicrosoft.com"
+  PolicyId="B2C_1A_signup_signin1"
+  PublicPolicyUri="http://fairycastlews.onmicrosoft.com/B2C_1A_signup_signin1"
+  DeploymentMode="Development"
+  UserJourneyRecorderEndpoint="urn:journeyrecorder:applicationinsights">
+
+  <BasePolicy>
+    <TenantId>fairycastlews.onmicrosoft.com</TenantId>
+    <PolicyId>B2C_1A_TrustFrameworkExtensions1</PolicyId>
+  </BasePolicy>
+
+  <RelyingParty>
+    <DefaultUserJourney ReferenceId="SignUp" /> <!-- SignUpOrSignIn-->
+    <Endpoints>
+      <!--points to refresh token journey when app makes refresh token request-->
+      <Endpoint Id="Token" UserJourneyReferenceId="RedeemRefreshToken" />
+    </Endpoints>
+	<UserJourneyBehaviors>
+	  <JourneyInsights TelemetryEngine="ApplicationInsights" InstrumentationKey="a55d71cb-0e47-4d13-91d1-47d7e8407ccf" DeveloperMode="true" ClientEnabled="false" ServerEnabled="true" TelemetryVersion="1.0.0" />
+    </UserJourneyBehaviors>
+    <TechnicalProfile Id="PolicyProfile">
+      <DisplayName>PolicyProfile</DisplayName>
+      <Protocol Name="OpenIdConnect" />
+	   <InputClaims>
+       <InputClaim ClaimTypeReferenceId="extension_GarageBusinessID" PartnerClaimType="extension_GarageBusinessID" />
+	   <InputClaim ClaimTypeReferenceId="GarageBusinessName" PartnerClaimType="GarageBusinessName" />
+    </InputClaims>
+      <OutputClaims>
+        <!--<OutputClaim ClaimTypeReferenceId="displayName" />-->
+        <OutputClaim ClaimTypeReferenceId="givenName" />
+        <OutputClaim ClaimTypeReferenceId="surname" />
+        <OutputClaim ClaimTypeReferenceId="email" />
+		<OutputClaim ClaimTypeReferenceId="extension_GarageBusinessID" PartnerClaimType="extension_GarageBusinessID" />
+		<OutputClaim ClaimTypeReferenceId="GarageBusinessName" PartnerClaimType="GarageBusinessName" />
+        <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub"/>
+        <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true" DefaultValue="{Policy:TenantObjectId}" />
+
+      </OutputClaims>
+      <SubjectNamingInfo ClaimType="sub" />
+    </TechnicalProfile>
+  </RelyingParty>
+</TrustFrameworkPolicy>
+
