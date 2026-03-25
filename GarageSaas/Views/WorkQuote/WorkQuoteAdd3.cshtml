@@ -1,0 +1,109 @@
+﻿@model SignupAPI.Models.CombinedWorkQuoteWorkitem
+
+@{
+    ViewBag.Title = Model?.Id == 0 ? "Create Work Quote" : "Edit Work Quote";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-controller="WorkQuote" asp-action="AddWorkQuote3" method="post">
+    @Html.HiddenFor(model => model.Id)
+
+    <div class="form-group">
+        <label asp-for="WorkQuoteDate"></label>
+        <input asp-for="WorkQuoteDate" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="GarageBusinessCustomerId"></label>
+        <input asp-for="GarageBusinessCustomerId" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="VehicleId"></label>
+        <input asp-for="VehicleId" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CustomerId"></label>
+        <input asp-for="CustomerId" class="form-control" />
+    </div>
+
+    <!-- Work Items Section -->
+    <div class="form-group">
+        <label>Work Items</label>
+        <table class="table" id="workItemsTable">
+            <thead>
+                <tr>
+                    <th>Work Item Description</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="workItemsBody">
+                @if (Model != null && Model.WorkItems.Any())
+                {
+                    for (int i = 0; i < Model.WorkItems.Count; i++)
+                    {
+                        <tr>
+                            <td>
+                                <input type="hidden" name="WorkItems[@i].Id" value="@Model.WorkItems[i].Id" />
+                                <input type="text" name="WorkItems[@i].RepairInstructions" value="@Model.WorkItems[i].RepairInstructions" class="form-control" required>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-danger removeWorkItem">Remove</button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td>
+                            <input type="text" name="WorkItems[0].RepairInstructions" class="form-control" required>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger removeWorkItem">Remove</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <button type="button" class="btn btn-secondary" id="addWorkItem">Add Work Item</button>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <script>
+        //let workItemIndex = @Model?.WorkItems?.Count ?? 1;
+        let workItemIndex = 1;
+        alert("workItemIndex: " + workItemIndex);
+
+        document.getElementById("addWorkItem").addEventListener("click", function () {
+            let tableBody = document.getElementById("workItemsBody");
+            let newRow = document.createElement("tr");
+
+            newRow.innerHTML = `
+                                <td>
+                                    <input type="text" name="WorkItems[${workItemIndex}].RepairInstructions" class="form-control" required>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger removeWorkItem">Remove</button>
+                                </td>
+                            `;
+
+            tableBody.appendChild(newRow);
+            workItemIndex++;
+        });
+
+        document.getElementById("workItemsTable").addEventListener("click", function (e) {
+            if (e.target.classList.contains("removeWorkItem")) {
+                e.target.closest("tr").remove();
+            }
+        });
+    </script>
+}
+

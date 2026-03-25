@@ -1,0 +1,80 @@
+﻿@model SignupAPI.Models.GarageBusinessCustomer
+@{
+    ViewBag.Title = "Garage Business Customer";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Todo</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageCustomerForename)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageCustomerForename)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageCustomerSurname)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageCustomerSurname)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageCustomerAddressline1)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageCustomerAddressline1)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageCustomerAddressline2)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageCustomerAddressline2)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageCustomerAddressline3)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageCustomerAddressline3)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageCustomerAddressline4)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageCustomerAddressline4)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageCustomerPostcode)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageCustomerPostcode)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageCustomerMobileNumber)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.GarageCustomerMobileNumber)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageCustomerPhoneNumber)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageCustomerPhoneNumber)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit Garage Customer", "EditGarageCustomer", new { garageCustomerId = Model.Id, garageBusinessId = Model.GarageBusinessId}) |
+    @Html.ActionLink("Back to List", "GarageCustomersList", new {garageBusinessId = Model.GarageBusinessId})
+</p>

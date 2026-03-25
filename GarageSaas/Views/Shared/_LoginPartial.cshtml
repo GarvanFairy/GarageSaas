@@ -9,6 +9,7 @@
                 if (TempData.ContainsKey("userName") && !string.IsNullOrEmpty(TempData["userName"].ToString()))
                 {
                     userName = TempData["userName"].ToString();
+                    var userId = TempData["userId"].ToString();
                 }
                 else { userName = User.Identity.Name; }
             }
@@ -17,7 +18,27 @@
             <form method="get" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="EditProfile">
                 <button type="submit" class="btn btn-primary" style="margin-right:5px">Edit Profile</button>
             </form>
-            @Html.ActionLink("Garage Business Details", "GarageBusinessDetail", new { garageBusinessId = TempData["GarageBusinessId"]})
+            @Html.ActionLink("Customer Vehicles", "CustomerVehicleList", "CustomerVehicle", new { garageBusinessId = TempData["GarageBusinessId"], userId = TempData["userId"]} )
+            &nbsp;
+            @Html.ActionLink("Customer Vehicles", "Index1", "CustomerVehicle", new { garageBusinessId = TempData["GarageBusinessId"], userId = TempData["userId"]} )
+            &nbsp;
+            @Html.ActionLink("Customers", "GarageCustomersList", "GarageCustomers", new { garageBusinessId = TempData["GarageBusinessId"], userId = TempData["userId"]} )
+            &nbsp;
+            @Html.ActionLink("Garage Business Details", "GarageBusinessDetail", "GarageBusiness", new { garageBusinessId = TempData["GarageBusinessId"], userId = TempData["userId"]} )
+            &nbsp;
+            @Html.ActionLink("Create New Work Quote", "WorkQuoteAdd", "WorkQuote", new { garageBusinessId = TempData["GarageBusinessId"], userId = TempData["userId"]} )
+            &nbsp;
+            @Html.ActionLink("Create New Work Item", "WorkItemAdd", "WorkItem", new { garageBusinessId = TempData["GarageBusinessId"], userId = TempData["userId"]} )
+            &nbsp;
+            @Html.ActionLink("View List Of WorkQuotes", "GetWorkQuoteByGarageBusinessId", "WorkQuote", new { garageBusinessId = TempData["GarageBusinessId"], userId = TempData["userId"]} )
+            nbsp;
+            @Html.ActionLink("View List Of CustomerWorkQuotes for Customer Id 1", "GetWorkQuoteByGarageBusinessIdCustomerId", "WorkQuote", new { garageBusinessId = TempData["GarageBusinessId"], customerId = 1} )
+            &nbsp;
+            @Html.ActionLink("Create New Vehicle Invoice", "VehicleInvoiceAdd", "VehicleInvoice", new { garageBusinessId = TempData["GarageBusinessId"], userId = TempData["userId"]} )
+            &nbsp;
+            @Html.ActionLink("Get Invoice by Garage id", "GetInvoiceByGarageBusinessId", "VehicleInvoice", new { garageBusinessId = TempData["GarageBusinessId"], userId = TempData["userId"]} )
+            &nbsp;
+            @Html.ActionLink("Get Invoice by Garage customer id", "GetInvoiceByGarageCustomerId", "VehicleInvoice", new { garageBusinessId = TempData["GarageBusinessId"], userId = TempData["userId"], garageCustomerId = 1} )
         </li>
         <li class="navbar-text">Hello @userName</li>
         <!-- The Account controller is not defined in this project. Instead, it is part of Microsoft.Identity.Web.UI nuget package and

@@ -1,0 +1,66 @@
+﻿@using System.Collections.Generic;
+@model List<SignupAPI.Models.CustomerVehicle>
+
+
+@{
+    List<SignupAPI.Models.CustomerVehicle> cvl = Model;
+    ViewBag.Title = "Garage Customer Vehicles";
+}
+@{
+    var garageBusinessId = TempData["GarageBusinessId"];
+    var userId = TempData["userId"];
+
+    <h2 class="my-4">Customer Vehicles</h2>
+
+    <div class="table-responsive">
+                                <table class="table table-striped table-bordered" id="vehiclesTable">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Make</th>
+                                            <th>Model</th>
+                                            <th>Year</th>
+                                            <th>Registration</th>
+                                            <th>Transmission</th>
+                                            <th>Fuel</th>
+                                            <th>Mileage</th>
+                                            <th>Mileage Date</th>
+                                            <th>Tax Due</th>
+                                            <th>NCT Due</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+
+                    var tbody = $('#vehiclesTable tbody');
+                    tbody.empty();
+                    var clientModel = @Html.Raw(Json.Serialize(Model));
+if (!clientModel || clientModel.length === 0) {
+                        tbody.append('<tr><td colspan="10" class="text-center">No vehicles found.</td></tr>');
+                    }
+clientModel.forEach(function(vehicle) {
+                        if (!vehicle.vehicleMake && !vehicle.vehicleModel && !vehicle.vehicleYear) return;
+                       
+                        tbody.append(`
+                                    <tr>
+                                                <td>${vehicle.vehicleMake}</td>
+                                                <td>${vehicle.vehicleModel}</td>
+                                                <td>${vehicle.vehicleYear}</td>
+                                                <td>${vehicle.vehicleRegistration}</td>
+                                                <td>${vehicle.vehicleTransmission}</td>
+                                                <td>${vehicle.vehicleFuelType}</td>
+                                                <td>${vehicle.vehicleMileage}</td>
+                                                <td>${vehicle.vehicleMileageDate ? new Date(vehicle.vehicleMileageDate).toLocaleDateString() : ''}</td>
+                                                <td>${vehicle.vehicleTaxDue}</td>
+                                                <td>${vehicle.vehicleNCTDue}</td>
+                                    </tr>
+                                `);
+                    });
+    </script>
+}
+

@@ -22,16 +22,16 @@ namespace SignupAPI.Controllers
 
         // GET: api/Garagebusinesses
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Garagebusiness>>> GetGaragebusiness()
+        public async Task<ActionResult<IEnumerable<GarageBusiness>>> GetGaragebusiness()
         {
-            return await _context.Garagebusiness.ToListAsync();
+            return await _context.GarageBusiness.ToListAsync();
         }
 
         // GET: api/Garagebusinesses/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Garagebusiness>> GetGaragebusiness(int id)
+        public async Task<ActionResult<GarageBusiness>> GetGaragebusiness(int id)
         {
-            var garagebusiness = await _context.Garagebusiness.FindAsync(id);
+            var garagebusiness = await _context.GarageBusiness.FindAsync(id);
 
             if (garagebusiness == null)
             {
@@ -45,7 +45,7 @@ namespace SignupAPI.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutGaragebusiness(int id, Garagebusiness garagebusiness)
+        public async Task<IActionResult> PutGaragebusiness(int id, GarageBusiness garagebusiness)
         {
             if (id != garagebusiness.Id)
             {
@@ -77,9 +77,9 @@ namespace SignupAPI.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost]
-        public async Task<ActionResult<Garagebusiness>> PostGaragebusiness(Garagebusiness garagebusiness)
+        public async Task<ActionResult<GarageBusiness>> PostGaragebusiness(GarageBusiness garagebusiness)
         {
-            _context.Garagebusiness.Add(garagebusiness);
+            _context.GarageBusiness.Add(garagebusiness);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetGaragebusiness", new { id = garagebusiness.Id }, garagebusiness);
@@ -87,15 +87,15 @@ namespace SignupAPI.Controllers
 
         // DELETE: api/Garagebusinesses/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Garagebusiness>> DeleteGaragebusiness(int id)
+        public async Task<ActionResult<GarageBusiness>> DeleteGaragebusiness(int id)
         {
-            var garagebusiness = await _context.Garagebusiness.FindAsync(id);
+            var garagebusiness = await _context.GarageBusiness.FindAsync(id);
             if (garagebusiness == null)
             {
                 return NotFound();
             }
 
-            _context.Garagebusiness.Remove(garagebusiness);
+            _context.GarageBusiness.Remove(garagebusiness);
             await _context.SaveChangesAsync();
 
             return garagebusiness;
@@ -103,7 +103,7 @@ namespace SignupAPI.Controllers
 
         private bool GaragebusinessExists(int id)
         {
-            return _context.Garagebusiness.Any(e => e.Id == id);
+            return _context.GarageBusiness.Any(e => e.Id == id);
         }
     }
 }

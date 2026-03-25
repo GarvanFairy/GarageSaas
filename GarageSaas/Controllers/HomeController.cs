@@ -1,4 +1,5 @@
 ﻿using GarageSaas.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SignupAPI.Models;
@@ -31,6 +32,7 @@ namespace GarageSaas.Controllers
                 {
                     var GarageBusinessId = garageBusinessId;
                     TempData["GarageBusinessId"] = garageBusinessId;
+                    HttpContext.Session.SetString("GarageBusinessId", garageBusinessId);
                 }
                 if (ident.Type == "emails")
                 {
@@ -39,6 +41,8 @@ namespace GarageSaas.Controllers
                     if (loggedInUser != null && !string.IsNullOrEmpty(loggedInUser.EmailAddress))
                     {
                         TempData["userName"] = loggedInUser.FirstName + " " + loggedInUser.LastName;
+                        TempData["userId"] = loggedInUser.Id;
+                        HttpContext.Session.SetInt32("userId", loggedInUser.Id);
                     }
                 }
             }

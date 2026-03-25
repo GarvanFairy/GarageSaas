@@ -1,18 +1,22 @@
-﻿@model SignupAPI.Models.Garagebusiness
+﻿@model SignupAPI.Models.GarageBusiness
 @{
     ViewBag.Title = "Garage Business Details";
 }
 
-<h2>Details</h2>
+<h2>Garage Business Details</h2>
 
 <div>
-    <h4>Todo</h4>
     <hr />
     <dl class="dl-horizontal">
         <dt>
             @Html.DisplayNameFor(model => model.GarageBusinessName)
         </dt>
-
+        <dd>
+            @Html.DisplayFor(model => model.GarageBusinessName)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.GarageAddressLine1)
+        </dt>
         <dd>
             @Html.DisplayFor(model => model.GarageAddressLine1)
         </dd>
@@ -20,34 +24,56 @@
         <dt>
             @Html.DisplayNameFor(model => model.GarageAddressLine2)
         </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageAddressLine2)
+        </dd>
 
         <dt>
             @Html.DisplayNameFor(model => model.GarageAddressLine3)
         </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageAddressLine3)
+        </dd>
 
         <dt>
             @Html.DisplayNameFor(model => model.GarageAddressLine4)
         </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageAddressLine4)
+        </dd>
 
         <dt>
             @Html.DisplayNameFor(model => model.Postcode)
         </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Postcode)
+        </dd>
 
         <dt>
             @Html.DisplayNameFor(model => model.GarageEmailAddress)
         </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GarageEmailAddress)
+        </dd>
 
         <dt>
             @Html.DisplayNameFor(model => model.GarageMobileNumber)
         </dt>
 
+        <dd>
+            @Html.DisplayFor(model => model.GarageMobileNumber)
+        </dd>
+
         <dt>
             @Html.DisplayNameFor(model => model.GaragePhoneNumber)
         </dt>
+        <dd>
+            @Html.DisplayFor(model => model.GaragePhoneNumber)
+        </dd>
 
     </dl>
 </div>
 <p>
     @Html.ActionLink("Edit Garage Business", "EditGarageBusiness", new { garageBusinessId = Model.Id}) |
-    @Html.ActionLink("Back to List", "Index")
+    <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
 </p>

@@ -1,0 +1,81 @@
+﻿@model SignupAPI.Models.WorkItem
+
+@{
+    ViewBag.Title = Model?.Id == 0 ? "Create Work Item" : "Edit Work Item";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-controller="WorkItem" asp-action="AddWorkItem" method="post">
+    @Html.HiddenFor(model => model.Id)
+
+    <div class="form-group">
+        <label asp-for="RepairInstructions"></label>
+        <textarea asp-for="RepairInstructions" class="form-control"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="GarageBusinessCustomerId"></label>
+        <input asp-for="GarageBusinessCustomerId" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="VehicleId"></label>
+        <input asp-for="VehicleId" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CustomerId"></label>
+        <input asp-for="CustomerId" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Vehicle Parts</label>
+@*         @if (Model != null && Model.ListOfVehicleParts != null)
+        {
+            <ul class="list-group">
+                @for (int i = 0; i < Model.ListOfVehicleParts.Count; i++)
+                {
+                    <li class="list-group-item">
+                        @Html.HiddenFor(model => model.ListOfVehicleParts[i].Id)
+                        @Html.TextBoxFor(model => model.ListOfVehicleParts[i].VehiclePartName, new { @class = "form-control", placeholder = "Part Name" })
+                    </li>
+                }
+            </ul>
+        } *@
+        <button type="button" class="btn btn-secondary" id="addPart">Add Part</button>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CreatedDate"></label>
+        <input asp-for="CreatedDate" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CreatedBy"></label>
+        <input asp-for="CreatedBy" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="UpdatedDate"></label>
+        <input asp-for="UpdatedDate" class="form-control" type="date" readonly />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="UpdatedBy"></label>
+        <input asp-for="UpdatedBy" class="form-control" readonly />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+<script>
+    document.getElementById("addPart").addEventListener("click", function () {
+        var listGroup = document.querySelector(".list-group");
+        var newItem = document.createElement("li");
+        newItem.className = "list-group-item";
+        newItem.innerHTML = '<input type="text" name="ListOfVehicleParts[][PartName]" class="form-control" placeholder="Part Name">';
+        listGroup.appendChild(newItem);
+    });
+</script>

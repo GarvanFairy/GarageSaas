@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +16,7 @@ using Microsoft.Identity.Web.UI;
 using Microsoft.EntityFrameworkCore;
 using SignupAPI.Models;
 using GarageSaas.Models;
+using GarageSaas.Services;
 
 namespace GarageSaas
 {
@@ -68,6 +69,20 @@ namespace GarageSaas
             //opt.UseSqlServer("Data Source=tcp:garagesaasdbserver.database.windows.net,1433;Initial Catalog=GarageSaas_db;User Id=sqladmin@garagesaasdbserver;Password=Password1"));
             services.AddControllers().AddNewtonsoftJson();
 
+            // 🔹 Cache
+            services.AddMemoryCache();
+
+            // 🔹 Vehicle lookup service
+            services.AddScoped<IVehicleLookupService, VehicleLookupService>();
+
+            // 🔹 EF DbContext (example)
+            services.AddDbContext<SignupContext>(options =>
+                options.UseSqlServer(
+                    Configuration.GetConnectionString("DefaultConnection")));
+
+            //services.AddDistributedMemoryCache();
+            services.AddSession();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -90,12 +105,19 @@ namespace GarageSaas
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseSession();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapControllerRoute(
+                    name: "AddGarageCustomer",
+                    pattern: "{controller=GarageCustomers}/{action=AddGarageCustomer}/{garageBusinessId}/{userId}");
+                endpoints.MapControllerRoute(
+                    name: "GetModelsByMake",
+                    pattern: "{controller=CustomerVehicle}/{action=GetModelsByMake}/{makeId}");
                 endpoints.MapRazorPages();
             });
         }

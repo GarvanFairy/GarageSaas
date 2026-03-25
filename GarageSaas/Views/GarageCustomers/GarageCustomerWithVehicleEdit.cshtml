@@ -1,0 +1,116 @@
+﻿@model SignupAPI.Models.GarageCustomerWithVehicleVM
+
+@{
+    ViewData["Title"] = "Add Garage Customer";
+}
+
+<form asp-action="AddUpdateGarageCustomerWithVehicle"
+      asp-controller="GarageCustomers"
+      method="post"
+      autocomplete="off">
+
+    @Html.AntiForgeryToken()
+
+    <!-- ================= CUSTOMER ================= -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Customer details</h5>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label">First name</label>
+                    <input asp-for="Customer.GarageCustomerForename" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Surname</label>
+                    <input asp-for="Customer.GarageCustomerSurname" class="form-control" />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Address line 1</label>
+                    <input asp-for="Customer.GarageCustomerAddressline1" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Mobile</label>
+                    <input asp-for="Customer.GarageCustomerMobileNumber" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input asp-for="Customer.GarageCustomerEmailAddress" class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= VEHICLE ================= -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" asp-for="AddVehicle" id="chkAddVehicle" />
+                <label class="form-check-label fw-semibold">
+                    Add vehicle for this customer
+                </label>
+            </div>
+
+            <div id="vehicleSection">
+                <h5 class="mb-3">Vehicle details</h5>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label">Registration</label>
+                        <input asp-for="Vehicle.VehicleRegistration" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Make</label>
+                        <select id="ddlVehicleMake" asp-for="Vehicle.VehicleMakeId" class="form-select"
+                                asp-items="Model.ListOfVehicleMakes">
+                            <option value="">-- Select make --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Model</label>
+                        <select id="ddlVehicleModel" asp-for="Vehicle.VehicleModelId" class="form-select"
+                                asp-items="Model.ListOfVehicleModels">
+                            <option value="">-- Select make --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Year</label>
+                        <select asp-for="Vehicle.VehicleYearId" class="form-select"
+                                asp-items="Model.ListOfVehicleYears">
+                            <option value="">-- Select year --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Fuel type</label>
+                        <select asp-for="Vehicle.VehicleFuelTypeId" class="form-select"
+                                asp-items="Model.ListOfVehicleFuelTypes">
+                            <option value="">-- Select fuel --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ACTIONS ================= -->
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            Save
+        </button>
+        <a class="btn btn-light" asp-action="GarageCustomersList">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+
+    <script type="text/javascript" src="~/js/CustomerVehicle/CustomerVehicle2.js"></script>
+
+}

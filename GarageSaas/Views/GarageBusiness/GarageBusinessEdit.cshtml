@@ -1,4 +1,4 @@
-﻿@model SignupAPI.Models.Garagebusiness
+﻿@model SignupAPI.Models.GarageBusiness
 
 @{
     ViewBag.Title = "Edit Garage Business";
@@ -7,7 +7,7 @@
 <h2>Edit Garage Business</h2>
 
 
-@using (Html.BeginForm())
+@using (Html.BeginForm("UpdateGarageBusiness", "GarageBusiness"))
 {
     @Html.AntiForgeryToken()
 
@@ -98,9 +98,9 @@
 }
 
 <div>
-    @Html.ActionLink("Back to List", "Index")
+    <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
 </div>
 
 @section Scripts {
-    <script src="~/Scripts/jquery-3.6.0.js"></script>
+    @*<script src="~/Scripts/jquery-3.6.0.js"></script>*@
 }

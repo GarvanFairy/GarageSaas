@@ -5,7 +5,7 @@ VisualStudioVersion = 17.3.32922.545
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GarageSaas", "GarageSaas\GarageSaas.csproj", "{95B962E0-C537-4F29-89FE-033EC2BACFBF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignupAPI", "SignupAPI\SignupAPI.csproj", "{9A6B4363-6994-4344-BA60-FAC67E896596}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignupAPI", "SignupAPI\SignupAPI.csproj", "{9A6B4363-6994-4344-BA60-FAC67E896596}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

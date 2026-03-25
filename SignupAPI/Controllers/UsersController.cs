@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 using Newtonsoft.Json;
 using System.Text.Json.Serialization;
-using System.Text.Json.Nodes;
+//using System.Text.Json.Nodes;
 
 namespace SignupAPI.Controllers
 {
@@ -147,13 +147,13 @@ namespace SignupAPI.Controllers
               Users emailAddressFromUsers = _context.Users.Where(u => u.EmailAddress.ToLower() == newUser.EmailAddress.Trim().ToLower()).ToList().FirstOrDefault();
                 if (emailAddressFromUsers != null && !string.IsNullOrEmpty(emailAddressFromUsers.EmailAddress))
                 {
-                    Garagebusiness gb = _context.Garagebusiness.Where(u => u.Id == emailAddressFromUsers.GarageBusinessId).ToList().FirstOrDefault();
+                    GarageBusiness gb = _context.GarageBusiness.Where(u => u.Id == emailAddressFromUsers.GarageBusinessId).ToList().FirstOrDefault();
                     garageBusinessId = gb.Id.ToString();
                 }
                 else
                 {
 
-                    Garagebusiness garageBusinessToAdd = new Garagebusiness
+                    GarageBusiness garageBusinessToAdd = new GarageBusiness
                     {
                         Active = true,
                         Blocked = false,
@@ -161,8 +161,8 @@ namespace SignupAPI.Controllers
                         CreatedDate = DateTime.Now,
                         GarageBusinessName = newUser.GarageBusinessName //newUser.GarageBusinessName
                     };
-
-                    _context.Garagebusiness.Add(garageBusinessToAdd);
+                        
+                    _context.GarageBusiness.Add(garageBusinessToAdd);
                     await _context.SaveChangesAsync();
 
                     garageBusinessId = garageBusinessToAdd.Id.ToString();
@@ -170,7 +170,7 @@ namespace SignupAPI.Controllers
                     Users userToAdd = new Users
                     {
                         Active = true,
-                        Admin_owner = true,
+                        Admin_Owner = true,
                         EmailAddress = newUser.email,
                         Blocked = false,
                         CreatedBy = "Admin",

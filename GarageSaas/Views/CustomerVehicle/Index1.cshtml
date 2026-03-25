@@ -1,0 +1,199 @@
+﻿@{
+    ViewData["Title"] = "Customer Vehicles";
+}
+
+<h2 class="my-4">Customer Vehicles</h2>
+
+<button class="btn btn-primary mb-3" onclick="openAddModal()">Add Vehicle</button>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped" id="vehiclesTable">
+        <thead class="table-dark">
+            <tr>
+                <th>Make</th>
+                <th>Model</th>
+                <th>Year</th>
+                <th>Registration</th>
+                <th>Mileage</th>
+                <th>Transmission</th>
+                <th>Fuel</th>
+                <th>Tax Due</th>
+                <th>NCT Due</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="vehicleModal" tabindex="-1" aria-labelledby="vehicleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="vehicleForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="vehicleModalLabel">Add Vehicle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <input type="hidden" id="vehicleId" />
+                    <div class="mb-3">
+                        <label>Make</label>
+                        <input type="text" class="form-control" id="make" required />
+                    </div>
+                    <div class="mb-3">
+                        <label>Model</label>
+                        <input type="text" class="form-control" id="model" required />
+                    </div>
+                    <div class="mb-3">
+                        <label>Year</label>
+                        <input type="text" class="form-control" id="year" />
+                    </div>
+                    <div class="mb-3">
+                        <label>Registration</label>
+                        <input type="text" class="form-control" id="registration" />
+                    </div>
+                    <div class="mb-3">
+                        <label>Mileage</label>
+                        <input type="text" class="form-control" id="mileage" />
+                    </div>
+                    <div class="mb-3">
+                        <label>Transmission</label>
+                        <input type="text" class="form-control" id="transmission" />
+                    </div>
+                    <div class="mb-3">
+                        <label>Fuel</label>
+                        <input type="text" class="form-control" id="fuel" />
+                    </div>
+                    <div class="mb-3">
+                        <label>Tax Due</label>
+                        <input type="text" class="form-control" id="tax" />
+                    </div>
+                    <div class="mb-3">
+                        <label>NCT Due</label>
+                        <input type="text" class="form-control" id="nct" />
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const apiBase = "https://localhost:44301/CustomerVehicle";
+
+        $(document).ready(function () {
+            loadVehicles();
+
+            $('#vehicleForm').submit(function (e) {
+                e.preventDefault();
+                const id = $('#vehicleId').val();
+                const method = id ? "PUT" : "POST";
+                const url = id ? `${apiBase}/Update/${id}` : `${apiBase}/Add`;
+
+                const data = {
+                    Id: id,
+                    VehicleMake: $('#make').val(),
+                    VehicleModel: $('#model').val(),
+                    VehicleYear: $('#year').val(),
+                    VehicleRegistration: $('#registration').val(),
+                    VehicleMileage: $('#mileage').val(),
+                    VehicleTransmission: $('#transmission').val(),
+                    VehicleFuelType: $('#fuel').val(),
+                    VehicleTaxDue: $('#tax').val(),
+                    VehicleNCTDue: $('#nct').val(),
+                    CustomerId: 1 // assumed constant
+                };
+
+                $.ajax({
+                    url: url,
+                    type: method,
+                    contentType: "application/json",
+                    data: JSON.stringify(data),
+                    success: function () {
+                        $('#vehicleModal').modal('hide');
+                        loadVehicles();
+                    },
+                    error: function () {
+                        alert("Something went wrong");
+                    }
+                });
+            });
+        });
+
+        function loadVehicles() {
+            $.get(`${apiBase}/CustomerVehicleList?userId=1003`, function (data) {
+                const tbody = $('#vehiclesTable tbody');
+                tbody.empty();
+
+                data.forEach(function (v) {
+                    if (!v.VehicleMake && !v.VehicleModel) return;
+
+                    tbody.append(`
+                                <tr>
+                                    <td>${v.VehicleMake}</td>
+                                    <td>${v.VehicleModel}</td>
+                                    <td>${v.VehicleYear}</td>
+                                    <td>${v.VehicleRegistration}</td>
+                                    <td>${v.VehicleMileage}</td>
+                                    <td>${v.VehicleTransmission}</td>
+                                    <td>${v.VehicleFuelType}</td>
+                                    <td>${v.VehicleTaxDue}</td>
+                                    <td>${v.VehicleNCTDue}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-warning" onclick='editVehicle(${JSON.stringify(v)})'>Edit</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteVehicle(${v.Id})">Delete</button>
+                                    </td>
+                                </tr>
+                            `);
+                });
+            });
+        }
+
+        function openAddModal() {
+            $('#vehicleForm')[0].reset();
+            $('#vehicleId').val('');
+            $('#vehicleModalLabel').text("Add Vehicle");
+            new bootstrap.Modal(document.getElementById('vehicleModal')).show();
+        }
+
+        function editVehicle(vehicle) {
+            $('#vehicleModalLabel').text("Edit Vehicle");
+            $('#vehicleId').val(vehicle.Id);
+            $('#make').val(vehicle.VehicleMake);
+            $('#model').val(vehicle.VehicleModel);
+            $('#year').val(vehicle.VehicleYear);
+            $('#registration').val(vehicle.VehicleRegistration);
+            $('#mileage').val(vehicle.VehicleMileage);
+            $('#transmission').val(vehicle.VehicleTransmission);
+            $('#fuel').val(vehicle.VehicleFuelType);
+            $('#tax').val(vehicle.VehicleTaxDue);
+            $('#nct').val(vehicle.VehicleNCTDue);
+            new bootstrap.Modal(document.getElementById('vehicleModal')).show();
+        }
+
+        function deleteVehicle(id) {
+            if (!confirm("Are you sure you want to delete this vehicle?")) return;
+            $.ajax({
+                url: `${apiBase}/Delete/${id}`,
+                type: "DELETE",
+                success: function () {
+                    loadVehicles();
+                },
+                error: function () {
+                    alert("Failed to delete vehicle.");
+                }
+            });
+        }
+    </script>
+}
+

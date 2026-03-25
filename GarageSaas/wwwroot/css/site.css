@@ -1,71 +1,147 @@
-﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-for details on configuring this project to bundle and minify static web assets. */
+﻿/* GarageSaas - Professional baseline UI
+   Keep overrides light so Bootstrap stays in control.
+*/
 
-a.navbar-brand {
-  white-space: normal;
-  text-align: center;
-  word-break: break-all;
-}
-
-/* Provide sufficient contrast against white background */
-a {
-  color: #0366d6;
-}
-
-.btn-primary {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
-}
-
-.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
-}
-
-/* Sticky footer styles
--------------------------------------------------- */
+/* ---------- Base ---------- */
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
+
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.border-top {
-  border-top: 1px solid #e5e5e5;
-}
-.border-bottom {
-  border-bottom: 1px solid #e5e5e5;
-}
-
-.box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
-}
-
-button.accept-policy {
-  font-size: 1rem;
-  line-height: inherit;
-}
-
-/* Sticky footer styles
--------------------------------------------------- */
-html {
-  position: relative;
-  min-height: 100%;
+    html {
+        font-size: 16px;
+    }
 }
 
 body {
-  /* Margin bottom by footer height */
-  margin-bottom: 60px;
+    background: #f8f9fa; /* soft app background */
+    color: #212529;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Sticky footer spacing */
+    margin-bottom: 70px;
 }
+
+/* Links */
+a {
+    color: #0d6efd;
+}
+
+    a:hover {
+        color: #0b5ed7;
+    }
+
+    /* ---------- Navbar ---------- */
+    a.navbar-brand {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+.navbar {
+    border-bottom: 1px solid rgba(0,0,0,.08);
+}
+
+    .navbar .nav-link {
+        border-radius: .6rem;
+        padding: .5rem .75rem;
+    }
+
+        .navbar .nav-link.active {
+            color: #0d6efd !important;
+            background: rgba(13, 110, 253, .08);
+            font-weight: 600;
+        }
+
+/* ---------- Cards / Panels ---------- */
+.card {
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 0.9rem;
+}
+
+.card-header,
+.card-footer {
+    border-color: rgba(0,0,0,.06);
+}
+
+/* Subtle shadow utility replacement */
+.box-shadow,
+.shadow-soft {
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .06) !important;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+    border-radius: .65rem;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0b5ed7;
+    }
+
+/* ---------- Forms ---------- */
+.form-control,
+.form-select,
+.input-group-text {
+    border-radius: .65rem;
+    border-color: rgba(0,0,0,.12);
+}
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: rgba(13,110,253,.4);
+        box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
+    }
+
+label.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Validation */
+.field-validation-error,
+.text-danger {
+    font-size: .875rem;
+}
+
+/* ---------- Tables ---------- */
+.table thead th {
+    font-size: .82rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #6c757d;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(13,110,253,.04);
+}
+
+/* ---------- Badges / Alerts ---------- */
+.badge {
+    border-radius: .65rem;
+}
+
+/* ---------- Footer (sticky) ---------- */
 .footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  line-height: 60px; /* Vertically center the text there */
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: #fff;
+    border-top: 1px solid rgba(0,0,0,.08);
+    line-height: 60px;
+    white-space: nowrap;
+}
+
+/* ---------- Small helpers ---------- */
+.page-header h2 {
+    letter-spacing: -0.02em;
+}
+
+.text-muted {
+    color: rgba(33,37,41,.65) !important;
 }

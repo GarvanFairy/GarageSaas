@@ -1,0 +1,172 @@
+﻿@using System.Collections.Generic
+@model List<SignupAPI.Models.CustomerVehicleListVM>
+
+@{
+    ViewData["Title"] = "Garage Customers";
+    var garageBusinessId = TempData["GarageBusinessId"];
+    var userId = TempData["userId"];
+}
+
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4">
+    <div>
+        <h2 class="mb-1">Garage Customers</h2>
+        <div class="text-muted small">
+            Customers associated with your garage business.
+        </div>
+    </div>
+
+    <div class="mt-3 mt-md-0 d-flex gap-2">
+
+        <a class="btn btn-primary"
+           asp-action="DisplayAddGarageCustomersWithVehicle"
+           asp-route-garageBusinessId="@garageBusinessId"
+           asp-route-userId="@userId">
+            <i class="bi bi-plus-lg me-1"></i> Add Customer with Vehicle
+        </a>
+        <a class="btn btn-primary"
+           asp-action="DisplayAddGarageCustomers"
+           asp-route-garageBusinessId="@garageBusinessId"
+           asp-route-userId="@userId">
+            <i class="bi bi-plus-lg me-1"></i> Add Customer
+        </a>
+
+        <a class="btn btn-light"
+           asp-action="GarageCustomersList"
+           asp-route-garageBusinessId="@garageBusinessId"
+           asp-route-userId="@userId">
+            Back
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+
+    <div class="card-header bg-white">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input id="tableSearch" type="text" class="form-control"
+                           placeholder="Search by name, mobile, email..." />
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <span class="badge text-bg-light border" id="rowCount"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="customersTable">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Address</th>
+                        <th scope="col">Mobile</th>
+                        <th scope="col">Phone</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Vehicle</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var gbc in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">
+                                    @gbc.GarageCustomerForename @gbc.GarageCustomerSurname
+                                </td>
+
+                                <td class="text-muted small">
+                                    @gbc.GarageCustomerAddressline1
+                                    @if (!string.IsNullOrWhiteSpace(gbc.GarageCustomerAddressline2))
+                                    {
+                                        <br />
+
+                                        @gbc.GarageCustomerAddressline2
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(gbc.GarageCustomerAddressline3))
+                                    {
+                                        <br />
+
+                                        @gbc.GarageCustomerAddressline3
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(gbc.GarageCustomerAddressline4))
+                                    {
+                                        <br />
+
+                                        @gbc.GarageCustomerAddressline4
+                                    }
+                                </td>
+
+                                <td>
+                                    @gbc.GarageCustomerMobileNumber
+                                </td>
+
+                                <td>
+                                    @gbc.GarageCustomerPhoneNumber
+                                </td>
+
+                                <td>
+                                    <a href="mailto:@gbc.GarageCustomerEmailAddress">
+                                        @gbc.GarageCustomerEmailAddress
+                                    </a>
+                                </td>
+                                <td>
+                                    <a asp-controller="CustomerVehicle" asp-action="EditCustomerVehicle" asp-route-CustomerVehicleId="@gbc.VehicleId" asp-route-userId="@userId">
+                                        @gbc.VehicleMake @gbc.VehicleModel - @gbc.VehicleRegistration
+                                    </a>
+                                </td>
+
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       asp-action="EditGarageCustomer"
+                                       asp-route-GarageCustomerId="@gbc.GarageCustomerId">
+                                        <i class="bi bi-pencil me-1"></i> Edit
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                No customers found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            const $rows = $("#customersTable tbody tr").not(":has(td[colspan])"); // ignore empty-state row
+
+            $("#totalCount").text($rows.length);
+            $("#visibleCount").text($rows.length);
+            $("#rowCount").text($rows.length + " customers");
+
+            $("#tableSearch").on("keyup", function () {
+                const value = $(this).val().toLowerCase();
+                let visible = 0;
+
+                $rows.each(function () {
+                    const show = $(this).text().toLowerCase().indexOf(value) > -1;
+                    $(this).toggle(show);
+                    if (show) visible++;
+                });
+
+                $("#visibleCount").text(visible);
+                $("#rowCount").text(visible + " customers");
+            });
+        });
+    </script>
+}

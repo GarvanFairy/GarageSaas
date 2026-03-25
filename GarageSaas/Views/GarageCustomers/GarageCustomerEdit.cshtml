@@ -1,0 +1,138 @@
+﻿@model SignupAPI.Models.GarageCustomerWithListVehiclesVM
+
+@{
+    ViewData["Title"] = Model?.Customer.Id > 0 ? "Edit Garage Customer" : "Add Garage Customer";
+}
+
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4">
+    <div>
+        <h2 class="mb-1">@ViewData["Title"]</h2>
+        <div class="text-muted small">
+            @(Model?.Customer.Id > 0
+                ? "Update customer details."
+                : "Add a new customer to your garage.")
+        </div>
+    </div>
+
+    <a class="btn btn-light mt-3 mt-md-0" asp-action="GarageCustomersList">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="AddUpdateGarageCustomer"
+              asp-controller="GarageCustomers"
+              method="post"
+              autocomplete="off">
+
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Customer.Id" />
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-5">
+
+                <!-- Name -->
+                <div class="col-12 col-md-6">
+                    <label asp-for="Customer.GarageCustomerForename" class="form-label"></label>
+                    <input asp-for="Customer.GarageCustomerForename" class="form-control" />
+                    <span asp-validation-for="Customer.GarageCustomerForename" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Customer.GarageCustomerSurname" class="form-label"></label>
+                    <input asp-for="Customer.GarageCustomerSurname" class="form-control" />
+                    <span asp-validation-for="Customer.GarageCustomerSurname" class="text-danger"></span>
+                </div>
+
+                <!-- Address -->
+                <div class="col-12">
+                    <label asp-for="Customer.GarageCustomerAddressline1" class="form-label"></label>
+                    <input asp-for="Customer.GarageCustomerAddressline1" class="form-control" />
+                    <span asp-validation-for="Customer.GarageCustomerAddressline1" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Customer.GarageCustomerAddressline2" class="form-label"></label>
+                    <input asp-for="Customer.GarageCustomerAddressline2" class="form-control" />
+                    <span asp-validation-for="Customer.GarageCustomerAddressline2" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Customer.GarageCustomerAddressline3" class="form-label"></label>
+                    <input asp-for="Customer.GarageCustomerAddressline3" class="form-control" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Customer.GarageCustomerAddressline4" class="form-label"></label>
+                    <input asp-for="Customer.GarageCustomerAddressline4" class="form-control" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Customer.GarageCustomerPostcode" class="form-label"></label>
+                    <input asp-for="Customer.GarageCustomerPostcode" class="form-control" />
+                </div>
+
+                <!-- Contact -->
+                <div class="col-12 col-md-6">
+                    <label asp-for="Customer.GarageCustomerMobileNumber" class="form-label"></label>
+                    <input asp-for="Customer.GarageCustomerMobileNumber" class="form-control" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Customer.GarageCustomerPhoneNumber" class="form-label"></label>
+                    <input asp-for="Customer.GarageCustomerPhoneNumber" class="form-control" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="Customer.GarageCustomerEmailAddress" class="form-label"></label>
+                    <input asp-for="Customer.GarageCustomerEmailAddress" class="form-control" type="email" />
+                    <span asp-validation-for="Customer.GarageCustomerEmailAddress" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div id="vehicleSection">
+                        <h5 class="mb-3">Vehicle details</h5>
+
+                        @if (Model.Vehicles != null && Model.Vehicles.Any())
+                        {
+                            for (int i = 0; i < Model.Vehicles.Count; i++)
+                            {
+                                <div class="row g-4 mb-3">
+
+                                    <input type="hidden" asp-for="Vehicles[i].Id" />
+
+                                    <a asp-controller="CustomerVehicle"
+                                       asp-action="EditCustomerVehicle"
+                                       asp-route-CustomerVehicleId="@Model.Vehicles[i].Id"
+                                       asp-route-userId="1003">
+                                        @Model.Vehicles[i].Make @Model.Vehicles[i].Model - @Model.Vehicles[i].VehicleRegistration
+                                    </a>
+
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-muted">No vehicles recorded for this customer.</div>
+                        }
+
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i> Save
+                </button>
+
+                <a class="btn btn-light" asp-action="GarageCustomersList">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

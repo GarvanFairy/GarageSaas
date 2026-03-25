@@ -1,0 +1,124 @@
+﻿@using System.Collections.Generic;
+@model SignupAPI.Models.VehicleInvoice
+
+@{
+    if (Model?.Id == 0 || Model == null)
+    {
+        ViewBag.Title = "Create vehicle invoice";
+    }
+    else
+    {
+        ViewBag.Title = "Edit  vehicle invoice";
+    }
+
+}
+
+<h2>@ViewBag.Title</h2>
+<h3>Id: @Model?.Id</h3>
+
+<form asp-controller="VehicleInvoice" asp-action="AddVehicleInvoice" method="post">
+    @Html.HiddenFor(model => model.Id)
+
+    <div class="form-group">
+        <label asp-for="InvoiceDate"></label>
+        <input asp-for="InvoiceDate" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="GarageBusinessCustomerId"></label>
+        <input asp-for="GarageBusinessCustomerId" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="VehicleId"></label>
+        <input asp-for="VehicleId" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CustomerId"></label>
+        <input asp-for="CustomerId" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="InvoiceNumber"></label>
+        <input asp-for="InvoiceNumber" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="WorkQuoteId"></label>
+        <input asp-for="WorkQuoteId" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="EnvironmentCost"></label>
+        <input asp-for="EnvironmentCost" class="form-control" type="number" step="0.01" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Paint"></label>
+        <input asp-for="Paint" class="form-control" type="number" step="0.01" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="SundryExpenses"></label>
+        <input asp-for="SundryExpenses" class="form-control" type="number" step="0.01" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CarHire"></label>
+        <input asp-for="CarHire" class="form-control" type="number" step="0.01" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="SubTotal"></label>
+        <input asp-for="SubTotal" class="form-control" type="number" step="0.01" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Vat"></label>
+        <input asp-for="Vat" class="form-control" type="number" step="0.01" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Total"></label>
+        <input asp-for="Total" class="form-control" type="number" step="0.01" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Comment"></label>
+        <textarea asp-for="Comment" class="form-control"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Labour"></label>
+        <input asp-for="Labour" class="form-control" type="number" step="0.01" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Tax"></label>
+        <input asp-for="Tax" class="form-control" type="number" step="0.01" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CreatedDate"></label>
+        <input asp-for="CreatedDate" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CreatedBy"></label>
+        <input asp-for="CreatedBy" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="UpdatedDate"></label>
+        <input asp-for="UpdatedDate" class="form-control" type="date" readonly />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="UpdatedBy"></label>
+        <input asp-for="UpdatedBy" class="form-control" readonly />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

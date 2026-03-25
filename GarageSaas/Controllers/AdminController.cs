@@ -115,7 +115,7 @@ namespace GarageSaas.Controllers
 
         private string BuildIdToken(string Name, string email, string phone)
         {
-            Garagebusiness garageBusiness = new Garagebusiness();
+            GarageBusiness garageBusiness = new GarageBusiness();
             string issuer = $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase.Value}/";
 
             // All parameters send to Azure AD B2C needs to be sent as claims
@@ -143,7 +143,7 @@ namespace GarageSaas.Controllers
                         GarageBusinessId = garageBusinessId;
                     }
                     //List<Garagebusiness> listGarageBusinesses = _context.Garagebusiness.ToList();
-                    garageBusiness = _context.Garagebusiness.Where(g => g.Id == 3).ToList().FirstOrDefault();
+                    garageBusiness = _context.GarageBusiness.Where(g => g.Id == GarageBusinessId).ToList().FirstOrDefault();
                     TempData["GarageBusinessId"] = garageBusinessId;
                 }
             }

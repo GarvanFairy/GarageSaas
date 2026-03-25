@@ -1,0 +1,147 @@
+﻿@using System.Collections.Generic
+@model List<SignupAPI.Models.CustomerVehicleListVM>
+
+@{
+    ViewData["Title"] = "Garage Customer Vehicles";
+
+    // TempData comes as object; keep it so it survives redirects
+    var garageBusinessId = TempData["GarageBusinessId"];
+    var userId = TempData["userId"];
+    TempData.Keep("GarageBusinessId");
+    TempData.Keep("userId");
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h2 class="mb-0">Vehicles</h2>
+        <div class="text-muted small">Customer-owned and garage-owned vehicles.</div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary"
+           asp-controller="CustomerVehicle"
+           asp-action="DisplayAddCustomerVehicle"
+           asp-route-garageBusinessId="@garageBusinessId"
+           asp-route-userId="@userId">
+            <i class="bi bi-plus-lg me-1"></i> Add Vehicle
+        </a>
+
+        <a class="btn btn-light"
+           asp-controller="GarageCustomers"
+           asp-action="GarageCustomersList"
+           asp-route-garageBusinessId="@garageBusinessId"
+           asp-route-userId="@userId">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input id="tableSearch" type="text" class="form-control"
+                           placeholder="Search by make, model, registration..." />
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <span class="badge text-bg-light border" id="rowCount"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="vehiclesTable">
+            <thead class="table-light">
+                <tr>
+                    <th>Make</th>
+                    <th>Model</th>
+                    <th>Registration</th>
+                    <th>Owner</th>
+                    <th>Mobile Phone No:</th>
+                    <th>Phone No:</th>
+                    <th>Email Address</th>
+                    <th class="text-end" style="width: 120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <div class="mb-2"><i class="bi bi-car-front fs-3"></i></div>
+                            No vehicles found.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var vehicle in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@vehicle.VehicleMake</td>
+                            <td>@vehicle.VehicleModel</td>
+                            <td>@vehicle.VehicleRegistration</td>
+                            <td>@vehicle.OwnerName</td>
+                            <td>@vehicle.GarageCustomerMobileNumber</td>
+                            <td>@vehicle.GarageCustomerPhoneNumber</td>
+                            <td>@vehicle.GarageCustomerEmailAddress</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   asp-controller="CustomerVehicle"
+                                   asp-action="EditCustomerVehicle"
+                                   asp-route-CustomerVehicleId="@vehicle.VehicleId"
+                                   asp-route-userId="@userId"
+                                   title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+        <span class="text-muted small">
+            Showing <span id="visibleCount"></span> of <span id="totalCount"></span>
+        </span>
+
+        <a class="btn btn-sm btn-light"
+           asp-controller="CustomerVehicle"
+           asp-action="CustomerVehicleList"
+           asp-route-garageBusinessId="@garageBusinessId"
+           asp-route-userId="@userId">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            const $rows = $("#vehiclesTable tbody tr").not(":has(td[colspan])"); // ignore empty-state row
+
+            $("#totalCount").text($rows.length);
+            $("#visibleCount").text($rows.length);
+            $("#rowCount").text($rows.length + " vehicles");
+
+            $("#tableSearch").on("keyup", function () {
+                const value = $(this).val().toLowerCase();
+                let visible = 0;
+
+                $rows.each(function () {
+                    const show = $(this).text().toLowerCase().indexOf(value) > -1;
+                    $(this).toggle(show);
+                    if (show) visible++;
+                });
+
+                $("#visibleCount").text(visible);
+                $("#rowCount").text(visible + " vehicles");
+            });
+        });
+    </script>
+}

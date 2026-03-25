@@ -8,7 +8,7 @@
   },
   "AllowedHosts": "*",
   "ConnectionStrings": {
-    //"GarageSaasDBConnection": "Server=DESKTOP-C821FRH\\SQLEXPRESS;Database=Garagesaas;Trusted_Connection=True;"
-    "GarageSaasDBConnection": "Data Source=tcp:garagesaasdbserver.database.windows.net,1433;Initial Catalog=GarageSaas_db;User Id=sqladmin@garagesaasdbserver;Password=Password1;"
+    "GarageSaasDBConnection": "Server=DESKTOP-C821FRH\\SQLEXPRESS;Database=Garagesaas;Trusted_Connection=True;"
+    //"GarageSaasDBConnection": "Data Source=tcp:garagesaasdbserver.database.windows.net,1433;Initial Catalog=GarageSaas_db;User Id=sqladmin@garagesaasdbserver;Password=Password1;"
   }
 }
