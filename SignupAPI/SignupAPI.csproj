@@ -31,5 +31,10 @@
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ViewModels\" />
+    <Folder Include="Services\Interfaces\" />
+  </ItemGroup>
+
 
 </Project>
