@@ -10,8 +10,8 @@ namespace GarageSaas.Services.Interfaces
     {
 
         public JsonResult AddUpdateCustomerVehicle([FromBody] VehicleAndCustomers VehicleCustomerVM);
-        public async Task<IActionResult> EditCustomerVehicle(int? CustomerVehicleId, int? userId);
-        private List<SelectListItem> GetListOfGarageCustomerOwners(int? userId);
+        public Task<IActionResult> EditCustomerVehicle(int? CustomerVehicleId, int? userId);
+        public List<SelectListItem> GetListOfGarageCustomerOwners(int? userId);
         public IActionResult CustomerVehicleList(int? garageBusinessId, int? userId);
 
     }

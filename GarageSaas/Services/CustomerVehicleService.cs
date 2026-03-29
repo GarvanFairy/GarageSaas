@@ -401,7 +401,7 @@ namespace GarageSaas.Services
             return View("CustomerVehicleEdit", vehicleAndCustomers);
         }
 
-        private List<SelectListItem> GetListOfGarageCustomerOwners(int? userId)
+        public List<SelectListItem> GetListOfGarageCustomerOwners(int? userId)
         {
             Users currentUser = new Users();
             GarageBusiness garage = new GarageBusiness();
