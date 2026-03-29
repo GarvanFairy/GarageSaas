@@ -2,21 +2,21 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using GarageSaas.Services.Models;
+using System.Threading.Tasks;
 
 namespace GarageSaas.Services.Interfaces
 {
-    public interface IGarageCustomersService
-    {
+
 
         public interface IGarageCustomersService
         {
-
-            ActionResult DisplayAddGarageCustomers(int? garageBusinessId, int? userId);
-            IActionResult AddUpdateGarageCustomer(GarageBusinessCustomer garageCustomer);
-            public IActionResult EditGarageCustomer(int? GarageCustomerId, int? userId);
-            public IActionResult GarageCustomersList(int? garageBusinessId, int? userId);
-            public IActionResult AddUpdateGarageCustomerWithVehicle(GarageCustomerWithVehicleVM model);
+            ServiceResult<GarageCustomerWithListVehiclesVM> GetGarageCustomerForEdit(int garageCustomerId);
+            ServiceResult<List<CustomerVehicleListVM>> GetGarageCustomersForList(int garageBusinessId);
+            ServiceResult AddOrUpdateGarageCustomer(GarageBusinessCustomer garageCustomer, int garageBusinessId, string userName);
+            Task<ServiceResult<GarageCustomerWithVehicleVM>> BuildAddCustomerWithVehicleVmAsync();
+            ServiceResult AddGarageCustomerWithVehicle(GarageCustomerWithVehicleVM model, int garageBusinessId, string userName);
         }
-    }
+
 }
 

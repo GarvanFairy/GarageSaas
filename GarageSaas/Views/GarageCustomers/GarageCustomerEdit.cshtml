@@ -1,16 +1,15 @@
 ﻿@model SignupAPI.Models.GarageCustomerWithListVehiclesVM
 
 @{
-    ViewData["Title"] = Model?.Customer.Id > 0 ? "Edit Garage Customer" : "Add Garage Customer";
+    var isEdit = Model?.Customer?.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Garage Customer" : "Add Garage Customer";
 }
 
 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4">
     <div>
         <h2 class="mb-1">@ViewData["Title"]</h2>
         <div class="text-muted small">
-            @(Model?.Customer.Id > 0
-                ? "Update customer details."
-                : "Add a new customer to your garage.")
+            @(isEdit ? "Update customer details." : "Add a new customer to your garage.")
         </div>
     </div>
 
@@ -32,8 +31,6 @@
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
             <div class="row g-5">
-
-                <!-- Name -->
                 <div class="col-12 col-md-6">
                     <label asp-for="Customer.GarageCustomerForename" class="form-label"></label>
                     <input asp-for="Customer.GarageCustomerForename" class="form-control" />
@@ -46,7 +43,6 @@
                     <span asp-validation-for="Customer.GarageCustomerSurname" class="text-danger"></span>
                 </div>
 
-                <!-- Address -->
                 <div class="col-12">
                     <label asp-for="Customer.GarageCustomerAddressline1" class="form-label"></label>
                     <input asp-for="Customer.GarageCustomerAddressline1" class="form-control" />
@@ -62,27 +58,31 @@
                 <div class="col-12 col-md-6">
                     <label asp-for="Customer.GarageCustomerAddressline3" class="form-label"></label>
                     <input asp-for="Customer.GarageCustomerAddressline3" class="form-control" />
+                    <span asp-validation-for="Customer.GarageCustomerAddressline3" class="text-danger"></span>
                 </div>
 
                 <div class="col-12 col-md-6">
                     <label asp-for="Customer.GarageCustomerAddressline4" class="form-label"></label>
                     <input asp-for="Customer.GarageCustomerAddressline4" class="form-control" />
+                    <span asp-validation-for="Customer.GarageCustomerAddressline4" class="text-danger"></span>
                 </div>
 
                 <div class="col-12 col-md-6">
                     <label asp-for="Customer.GarageCustomerPostcode" class="form-label"></label>
                     <input asp-for="Customer.GarageCustomerPostcode" class="form-control" />
+                    <span asp-validation-for="Customer.GarageCustomerPostcode" class="text-danger"></span>
                 </div>
 
-                <!-- Contact -->
                 <div class="col-12 col-md-6">
                     <label asp-for="Customer.GarageCustomerMobileNumber" class="form-label"></label>
                     <input asp-for="Customer.GarageCustomerMobileNumber" class="form-control" />
+                    <span asp-validation-for="Customer.GarageCustomerMobileNumber" class="text-danger"></span>
                 </div>
 
                 <div class="col-12 col-md-6">
                     <label asp-for="Customer.GarageCustomerPhoneNumber" class="form-label"></label>
                     <input asp-for="Customer.GarageCustomerPhoneNumber" class="form-control" />
+                    <span asp-validation-for="Customer.GarageCustomerPhoneNumber" class="text-danger"></span>
                 </div>
 
                 <div class="col-12 col-md-6">
@@ -92,37 +92,56 @@
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div id="vehicleSection">
-                        <h5 class="mb-3">Vehicle details</h5>
+            @if (isEdit)
+            {
+                <hr class="my-4" />
 
-                        @if (Model.Vehicles != null && Model.Vehicles.Any())
-                        {
-                            for (int i = 0; i < Model.Vehicles.Count; i++)
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div id="vehicleSection">
+                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
+                                <h5 class="mb-2 mb-md-0">Vehicles</h5>
+
+                                <a class="btn btn-sm btn-primary"
+                                   asp-controller="CustomerVehicle"
+                                   asp-action="DisplayAddCustomerVehicle">
+                                    <i class="bi bi-plus-lg me-1"></i> Add Vehicle
+                                </a>
+                            </div>
+
+                            @if (Model?.Vehicles != null && Model.Vehicles.Any())
                             {
-                                <div class="row g-4 mb-3">
-
-                                    <input type="hidden" asp-for="Vehicles[i].Id" />
-
-                                    <a asp-controller="CustomerVehicle"
-                                       asp-action="EditCustomerVehicle"
-                                       asp-route-CustomerVehicleId="@Model.Vehicles[i].Id"
-                                       asp-route-userId="1003">
-                                        @Model.Vehicles[i].Make @Model.Vehicles[i].Model - @Model.Vehicles[i].VehicleRegistration
-                                    </a>
-
+                                <div class="list-group">
+                                    @for (int i = 0; i < Model.Vehicles.Count; i++)
+                                    {
+                                        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                           asp-controller="CustomerVehicle"
+                                           asp-action="EditCustomerVehicle"
+                                           asp-route-CustomerVehicleId="@Model.Vehicles[i].Id"
+                                           asp-route-userId="1">
+                                            <div>
+                                                <div class="fw-semibold">
+                                                    @Model.Vehicles[i].Make @Model.Vehicles[i].Model
+                                                </div>
+                                                <div class="text-muted small">
+                                                    @Model.Vehicles[i].VehicleRegistration
+                                                </div>
+                                            </div>
+                                            <span class="text-muted small">Edit</span>
+                                        </a>
+                                    }
                                 </div>
                             }
-                        }
-                        else
-                        {
-                            <div class="text-muted">No vehicles recorded for this customer.</div>
-                        }
-
+                            else
+                            {
+                                <div class="text-muted">
+                                    No vehicles recorded for this customer.
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
 
             <hr class="my-4" />
 
@@ -136,3 +155,7 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

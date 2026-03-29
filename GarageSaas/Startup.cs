@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using SignupAPI.Models;
 using GarageSaas.Models;
 using GarageSaas.Services;
+using GarageSaas.Services.Interfaces;
 
 namespace GarageSaas
 {
@@ -40,6 +41,8 @@ namespace GarageSaas
                 // Handling SameSite cookie according to https://docs.microsoft.com/en-us/aspnet/core/security/samesite?view=aspnetcore-3.1
                 options.HandleSameSiteCookieCompatibility();
             });
+
+            services.AddScoped<IGarageCustomersService, GarageCustomersService>();
 
             // Configuration to sign-in users with Azure AD B2C
             services.AddMicrosoftIdentityWebAppAuthentication(Configuration, Microsoft.Identity.Web.Constants.AzureAdB2C);
