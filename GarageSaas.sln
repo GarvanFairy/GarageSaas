@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GarageSaas", "GarageSaas\Ga
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignupAPI", "SignupAPI\SignupAPI.csproj", "{9A6B4363-6994-4344-BA60-FAC67E896596}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GarageSaas.Tests", "GarageSaas.Tests\GarageSaas.Tests.csproj", "{85DD7FE3-0349-448B-BC69-10F5A00C2943}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GarageSaas.UnitTests", "GarageSaas.UnitTests\GarageSaas.UnitTests.csproj", "{5546C9D8-E440-464C-9D2B-7264149B6BAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{9A6B4363-6994-4344-BA60-FAC67E896596}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A6B4363-6994-4344-BA60-FAC67E896596}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A6B4363-6994-4344-BA60-FAC67E896596}.Release|Any CPU.Build.0 = Release|Any CPU
-		{85DD7FE3-0349-448B-BC69-10F5A00C2943}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{85DD7FE3-0349-448B-BC69-10F5A00C2943}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{85DD7FE3-0349-448B-BC69-10F5A00C2943}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{85DD7FE3-0349-448B-BC69-10F5A00C2943}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5546C9D8-E440-464C-9D2B-7264149B6BAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5546C9D8-E440-464C-9D2B-7264149B6BAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5546C9D8-E440-464C-9D2B-7264149B6BAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5546C9D8-E440-464C-9D2B-7264149B6BAD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

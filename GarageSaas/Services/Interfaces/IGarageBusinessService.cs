@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SignupAPI.Models;
+using GarageSaas.Services.Models;
+
 
 namespace GarageSaas.Services.Interfaces
 {
     public interface IGarageBusinessService
     {
-        public IActionResult GarageBusinessDetail(int? garageBusinessId, int? userId);
-        public IActionResult EditGarageBusiness(int? garageBusinessId);
-        public IActionResult UpdateGarageBusiness([FromForm] GarageBusiness garageBusiness);
-
+        ServiceResult<GarageBusiness> GetGarageBusinessDetail(int? garageBusinessId, int? userId);
+        ServiceResult<GarageBusiness> GetGarageBusinessForEdit(int? garageBusinessId, int sessionGarageBusinessId, int sessionUserId);
+        ServiceResult<GarageBusiness> UpdateGarageBusiness(GarageBusiness garageBusiness, int sessionGarageBusinessId, int sessionUserId, string userName);
     }
 }

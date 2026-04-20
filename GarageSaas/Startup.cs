@@ -76,7 +76,11 @@ namespace GarageSaas
             services.AddMemoryCache();
 
             // 🔹 Vehicle lookup service
+            services.AddScoped<ICustomerVehicleService, CustomerVehicleService>();
             services.AddScoped<IVehicleLookupService, VehicleLookupService>();
+
+            services.AddScoped<IGarageBusinessService, GarageBusinessService>();
+            services.AddScoped<IGarageCustomersService, GarageCustomersService>();
 
             // 🔹 EF DbContext (example)
             services.AddDbContext<SignupContext>(options =>

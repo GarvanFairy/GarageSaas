@@ -14,8 +14,6 @@
         var parts = Model.Vehicle.VehicleTaxDue.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length >= 2) { taxMonth = parts[0].Trim(); taxYear = parts[1].Trim(); }
     }
-
-    string currentTransmission = (Model?.Vehicle?.VehicleTransmissionId.ToString() ?? "").Trim();
 }
 
 <div class="container-fluid px-0">
@@ -36,14 +34,13 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            @using (Html.BeginForm("AddUpdateCustomerVehicle", "CustomerVehicle", FormMethod.Post, new { id = "vehicleForm", autocomplete = "off" }))
+            @using (Html.BeginForm("AddUpdateCustomerVehicle", "CustomerVehicle", FormMethod.Post, new { id = "vehicleForm", autocomplete = "off", onsubmit = "return false;" }))
             {
                 @Html.AntiForgeryToken()
                 @Html.HiddenFor(m => m.Vehicle.Id)
 
                 <div class="row g-4">
 
-                    <!-- Registration + Owner -->
                     <div class="col-12 col-md-4">
                         <label class="form-label">Registration</label>
                         <input class="form-control" id="txtRegistration"
@@ -62,9 +59,7 @@
                                 </option>
                             }
                         </select>
-                   
 
-                        <!-- NEW CUSTOMER TOGGLE -->
                         <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="chkNewCustomer">
                             <label class="form-check-label" for="chkNewCustomer">
@@ -72,9 +67,7 @@
                             </label>
                         </div>
                     </div>
-                
 
-                    <!-- Make / Model / Year -->
                     <div class="col-12 col-md-4">
                         <label class="form-label">Make</label>
                         <select class="form-select" id="ddlVehicleMake">
@@ -91,7 +84,9 @@
 
                     <div class="col-12 col-md-4">
                         <label class="form-label">Model</label>
-                        <select class="form-select" id="ddlVehicleModel">
+                        <select class="form-select"
+                                id="ddlVehicleModel"
+                                data-current-model-id="@Model.Vehicle.VehicleModelId">
                             <option value="">-- Select model --</option>
                             @foreach (var carModel in Model.ListofVehicleModels ?? Enumerable.Empty<SelectListItem>())
                             {
@@ -117,7 +112,6 @@
                         </select>
                     </div>
 
-                    <!-- Fuel / Transmission / Mileage -->
                     <div class="col-12 col-md-4">
                         <label class="form-label">Fuel type</label>
                         <select class="form-select" id="ddlFuelType">
@@ -160,7 +154,6 @@
                         </select>
                     </div>
 
-                    <!-- Mileage Date -->
                     <div class="col-12 col-md-4">
                         <label class="form-label">Mileage date</label>
                         <input type="text" id="txtDate" class="form-control"
@@ -168,90 +161,77 @@
                                placeholder="dd/mm/yyyy" />
                     </div>
 
-                    <!-- NCT -->
                     <div class="col-12 col-md-6">
                         <label class="form-label">NCT due</label>
-                        <div class="row g-2">
-                            <div class="d-flex gap-2">
-                                <select class="form-select" id="ddlNCTMonth">
-                                    @foreach (var mo in new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" })
-                                    {
-                                        <option value="@mo" selected="@(mo == nctMonth ? "selected" : null)">@mo</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <select class="form-select" id="ddlNCTYear">
-                                    @for (int y = DateTime.Now.Year; y <= DateTime.Now.Year + 7; y++)
-                                    {
-                                        <option value="@y" selected="@(y.ToString() == nctYear ? "selected" : null)">@y</option>
-                                    }
-                                </select>
+                        <div class="d-flex gap-2">
+                            <select class="form-select" id="ddlNCTMonth">
+                                @foreach (var mo in new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" })
+                                {
+                                    <option value="@mo" selected="@(mo == nctMonth ? "selected" : null)">@mo</option>
+                                }
+                            </select>
+
+                            <select class="form-select" id="ddlNCTYear">
+                                @for (int y = DateTime.Now.Year; y <= DateTime.Now.Year + 7; y++)
+                                {
+                                    <option value="@y" selected="@(y.ToString() == nctYear ? "selected" : null)">@y</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Tax due</label>
+                        <div class="d-flex gap-2">
+                            <select class="form-select" id="ddlTaxMonth">
+                                @foreach (var mo in new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" })
+                                {
+                                    <option value="@mo" selected="@(mo == taxMonth ? "selected" : null)">@mo</option>
+                                }
+                            </select>
+
+                            <select class="form-select" id="ddlTaxYear">
+                                @for (int y = DateTime.Now.Year; y <= DateTime.Now.Year + 7; y++)
+                                {
+                                    <option value="@y" selected="@(y.ToString() == taxYear ? "selected" : null)">@y</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="newCustomerPanel" class="col-12" style="display:none;">
+                        <div class="card bg-light border-0 mt-2">
+                            <div class="card-body">
+                                <h6 class="mb-3">New Customer Details</h6>
+
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-4">
+                                        <label class="form-label">First name</label>
+                                        <input class="form-control" id="txtNewCustomerForename" />
+                                    </div>
+
+                                    <div class="col-12 col-md-4">
+                                        <label class="form-label">Surname</label>
+                                        <input class="form-control" id="txtNewCustomerSurname" />
+                                    </div>
+
+                                    <div class="col-12 col-md-4">
+                                        <label class="form-label">Mobile number</label>
+                                        <input class="form-control" id="txtNewCustomerMobile" />
+                                    </div>
+
+                                    <div class="col-12 col-md-4">
+                                        <label class="form-label">Email Address</label>
+                                        <input class="form-control" id="txtNewCustomerEMail" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Tax -->
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Tax due</label>
-                        <div class="row g-2">
-                            <div class="d-flex gap-2">
-                                <select class="form-select" id="ddlTaxMonth">
-                                    @foreach (var mo in new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" })
-                                    {
-                                        <option value="@mo" selected="@(mo == taxMonth ? "selected" : null)">@mo</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <select class="form-select" id="ddlTaxYear">
-                                    @for (int y = DateTime.Now.Year; y <= DateTime.Now.Year + 7; y++)
-                                    {
-                                        <option value="@y" selected="@(y.ToString() == taxYear ? "selected" : null)">@y</option>
-                                    }
-                                </select>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <hr class="my-4" />
-
-                <!-- NEW CUSTOMER PANEL -->
-<div id="newCustomerPanel" class="col-12" style="display:none;">
-
-    <div class="card bg-light border-0 mt-2">
-        <div class="card-body">
-
-            <h6 class="mb-3">New Customer Details</h6>
-
-            <div class="row g-3">
-
-                <div class="col-12 col-md-4">
-                    <label class="form-label">First name</label>
-                    <input class="form-control" id="txtNewCustomerForename" />
-                </div>
-
-                <div class="col-12 col-md-4">
-                    <label class="form-label">Surname</label>
-                    <input class="form-control" id="txtNewCustomerSurname" />
-                </div>
-
-                <div class="col-12 col-md-4">
-                    <label class="form-label">Mobile number</label>
-                    <input class="form-control" id="txtNewCustomerMobile" />
-                </div>
-
-                                <div class="col-12 col-md-4">
-                                    <label class="form-label">Email Address</label>
-                                    <input class="form-control" id="txtNewCustomerEMail" />
-                                </div>
-
-            </div>
-
-        </div>
-    </div>
-</div>
 
                 <div class="d-flex flex-column flex-sm-row gap-2">
                     <button type="button" id="btnSavejs" class="btn btn-primary" onclick="SubmitVehicleCustomers();">
@@ -266,7 +246,6 @@
     </div>
 </div>
 
-
 @section Scripts {
     <script type="text/javascript" src="~/js/moment.min.js"></script>
     <link rel="stylesheet" href="~/css/datepicker.css" />
@@ -274,8 +253,6 @@
 
     <script>
         $(function () {
-
-            // Datepicker
             $('#txtDate').datepicker({
                 autoclose: true,
                 todayHighlight: true,
@@ -283,21 +260,14 @@
             });
 
             $('#chkNewCustomer').on('change', function () {
-
                 if ($(this).is(':checked')) {
-
                     $('#newCustomerPanel').slideDown(150);
-
-                    // Optional UX improvement:
                     $('#ddlVehicleOwner').prop('disabled', true);
-
                 } else {
-
                     $('#newCustomerPanel').slideUp(150);
                     $('#ddlVehicleOwner').prop('disabled', false);
                 }
             });
-
         });
     </script>
 

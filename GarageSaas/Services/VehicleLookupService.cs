@@ -145,7 +145,7 @@ namespace GarageSaas.Services
         }
 
         // ---------- Transmission Type ----------
-        public async Task<List<SelectListItem>> GetTransmissionTypeAsync()
+        public async Task<List<SelectListItem>> GetTransmissionTypesAsync()
         {
             return await _cache.GetOrCreateAsync("vehicle_transmisson", async entry =>
             {

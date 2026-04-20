@@ -1,561 +1,487 @@
-﻿using SignupAPI.Models;
-using GarageSaas.Services.Interfaces;
-using GarageSaas.Controllers;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Mvc;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-
+using GarageSaas.Models;
+using GarageSaas.Services.Interfaces;
+using GarageSaas.Services.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using SignupAPI.Models;
 
 namespace GarageSaas.Services
 {
     public class CustomerVehicleService : ICustomerVehicleService
     {
-        private readonly ILogger<CustomerVehicleController> _logger;
         private readonly SignupContext _context;
+        private readonly IVehicleLookupService _vehicleLookupService;
 
-        private readonly IVehicleLookupService _vehicleLookup;
-
-        public CustomerVehicleService(SignupContext context, IVehicleLookupService vehicleLookup, ILogger<CustomerVehicleController> logger)
+        public CustomerVehicleService(
+            SignupContext context,
+            IVehicleLookupService vehicleLookupService)
         {
-            _logger = logger;
             _context = context;
-            _vehicleLookup = vehicleLookup;
+            _vehicleLookupService = vehicleLookupService;
         }
 
-        public async Task<ActionResult> DisplayAddCustomerVehicle(int? garageBusinessId, int? userId)
+        private static int? ParseNullableInt(string value)
         {
-            Trace.WriteLine("GET /GarageBusinessCustomer/Add");
-            List<GarageBusinessCustomer> garageCustomerList = _context.GarageBusinessCustomer.Where(c => c.GarageBusinessId == garageBusinessId).ToList();
-            VehicleAndCustomers vehicleAndCustomers = new VehicleAndCustomers();
-            vehicleAndCustomers.Vehicle = new CustomerVehicle();
-            vehicleAndCustomers.GarageVehicleOwnerList = GetListOfGarageCustomerOwners(userId);
-            vehicleAndCustomers.ListofVehicleMakes = await _vehicleLookup.GetVehicleMakesAsync();
-            vehicleAndCustomers.ListofVehicleModels = await _vehicleLookup.GetVehicleModelsAsync();
-            vehicleAndCustomers.ListofFuelTypes = await _vehicleLookup.GetFuelTypesAsync();
-            vehicleAndCustomers.ListofMileages = await _vehicleLookup.GetMileageAsync();
-            vehicleAndCustomers.ListofVehicleYears = await _vehicleLookup.GetVehicleYearsAsync();
-            vehicleAndCustomers.ListofTransmissionTypes = await _vehicleLookup.GetTransmissionTypeAsync();
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
 
-            return View("CustomerVehicleEdit", vehicleAndCustomers);
+            if (int.TryParse(value, out int result))
+                return result;
+
+            return null;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetModelsByMake(int makeId)
+        private static int? ParseNullableInt(string value, string fieldName)
         {
-            var models = await _vehicleLookup.GetVehicleModelsByMakeAsync(makeId);
-            return Json(models);
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            if (int.TryParse(value, out int result))
+                return result;
+
+            throw new ArgumentException($"{fieldName} is not a valid number.");
         }
 
-        [HttpPost]
-        public JsonResult AddUpdateCustomerVehicle([FromBody] VehicleAndCustomers VehicleCustomerVM)
+        private static string BuildMonthYear(SelectListItem month, SelectListItem year)
         {
-            Trace.WriteLine("GET /GarageBusinessCustomer/DisplayGarageCustomers");
+            if (month == null || year == null)
+                return string.Empty;
 
-            if (!ModelState.IsValid)
+            if (string.IsNullOrWhiteSpace(month.Text) || string.IsNullOrWhiteSpace(year.Text))
+                return string.Empty;
+
+            return $"{month.Text} {year.Text}";
+        }
+
+        public async Task<ServiceResult<VehicleAndCustomers>> BuildAddCustomerVehicleVmAsync(int? userId, int sessionGarageBusinessId)
+        {
+            var owners = GetListOfGarageCustomerOwners(userId, sessionGarageBusinessId);
+
+            var vm = new VehicleAndCustomers
             {
-                StringBuilder errorMessages = new StringBuilder();
-                foreach (var modelState in ViewData.ModelState.Values)
+                Vehicle = new CustomerVehicle
                 {
-                    foreach (ModelError error in modelState.Errors)
-                    {
-                        errorMessages = errorMessages.AppendLine(error.ErrorMessage);
-                    }
-                }
+                    GarageBusinessId = sessionGarageBusinessId,
+                    CreatedDate = DateTime.Now,
+                    Active = true
+                },
+                GarageVehicleOwnerList = owners,
+                ListofVehicleMakes = await _vehicleLookupService.GetVehicleMakesAsync(),
+                ListofVehicleModels = await _vehicleLookupService.GetVehicleModelsAsync(),
+                ListofFuelTypes = await _vehicleLookupService.GetFuelTypesAsync(),
+                ListofVehicleYears = await _vehicleLookupService.GetVehicleYearsAsync(),
+                ListofMileages = await _vehicleLookupService.GetMileageAsync(),
+                ListofTransmissionTypes = await _vehicleLookupService.GetTransmissionTypesAsync()
+            };
 
-                return Json(new { status = "Error", message = errorMessages });
+            return ServiceResult<VehicleAndCustomers>.Ok(vm);
+        }
+
+        public async Task<ServiceResult<VehicleAndCustomers>> GetCustomerVehicleForEditAsync(int customerVehicleId, int? userId, int sessionGarageBusinessId)
+        {
+            var vehicle = _context.CustomerVehicle.Find(customerVehicleId);
+            if (vehicle == null)
+            {
+                return ServiceResult<VehicleAndCustomers>.Fail("Customer vehicle couldn't be found");
             }
 
+            var owners = GetListOfGarageCustomerOwners(userId, sessionGarageBusinessId);
+            MarkSelectedOwner(owners, vehicle.Id);
 
-            if (VehicleCustomerVM == null)
-                return Json(new { status = "Error", message = "Customer Vehicle is null" });
+            var makes = await _vehicleLookupService.GetVehicleMakesAsync();
+            MarkSelected(makes, vehicle.VehicleMakeId);
 
-            int sessionGarageBusinessId = 0;
-            bool validSessionGarageBusinessId = int.TryParse(HttpContext.Session.GetString("GarageBusinessId").ToString(), out sessionGarageBusinessId);
-            if (!validSessionGarageBusinessId)
-                return Json(500, "Session GarageBusinessId no valid");
-            var customerVehicle = VehicleCustomerVM.Vehicle;
+            var models = vehicle.VehicleMakeId.HasValue
+                ? await _vehicleLookupService.GetVehicleModelsByMakeAsync(vehicle.VehicleMakeId.Value)
+                : await _vehicleLookupService.GetVehicleModelsAsync();
+            MarkSelected(models, vehicle.VehicleModelId);
 
-            if (VehicleCustomerVM.GarageVehicleOwnerListItem == null)
-                return Json(new { status = "Error", message = "Customer Vehicle owner selected is null" });
+            var fuels = await _vehicleLookupService.GetFuelTypesAsync();
+            MarkSelected(fuels, vehicle.VehicleFuelTypeId);
 
-            if (customerVehicle.Id == 0)
+            var years = await _vehicleLookupService.GetVehicleYearsAsync();
+            MarkSelected(years, vehicle.VehicleYearId);
+
+            var mileage = await _vehicleLookupService.GetMileageAsync();
+            MarkSelected(mileage, vehicle.VehicleMileageId);
+
+            var transmissionTypes = await _vehicleLookupService.GetTransmissionTypesAsync();
+            MarkSelected(transmissionTypes, vehicle.VehicleTransmissionId);
+
+            var selectedOwner = owners.FirstOrDefault(x => x.Selected);
+
+            var vm = new VehicleAndCustomers
             {
-                CustomerVehicle customerVehicleToAdd = new CustomerVehicle();
-                customerVehicleToAdd.VehicleTransmissionId = int.Parse(VehicleCustomerVM.TransmissionListItem.Value);
-                customerVehicleToAdd.VehicleYearId = int.Parse(VehicleCustomerVM.VehicleYearListItem.Value);
-                customerVehicleToAdd.GarageBusinessId = sessionGarageBusinessId;
-                customerVehicleToAdd.VehicleFuelTypeId = int.Parse(VehicleCustomerVM.FuelTypeListItem.Value);
-                customerVehicleToAdd.VehicleMakeId = int.Parse(VehicleCustomerVM.VehicleMakeListItem.Value);
-                customerVehicleToAdd.VehicleMileageId = int.Parse(VehicleCustomerVM.VehicleMileageListItem.Value);
-                customerVehicleToAdd.VehicleMileageDate = DateTime.Now; //VehicleCustomerVM.VehicleMileageListItem.Text;
-                customerVehicleToAdd.VehicleModelId = int.Parse(VehicleCustomerVM.VehicleModelListItem.Value);
-                customerVehicleToAdd.VehicleNCTDue = VehicleCustomerVM.NCTMonthListItem.Text + " " + VehicleCustomerVM.NCTYearListItem.Text;
-                customerVehicleToAdd.VehicleRegistration = VehicleCustomerVM.Vehicle.VehicleRegistration;
-                customerVehicleToAdd.VehicleTaxDue = VehicleCustomerVM.TaxMonthListItem.Text + " " + VehicleCustomerVM.TaxYearListItem.Text;
-                customerVehicleToAdd.VehicleTransmissionId = int.Parse(VehicleCustomerVM.TransmissionListItem.Value);
-                customerVehicleToAdd.CreatedDate = DateTime.Now;
-                customerVehicleToAdd.CreatedBy = User.Identity.Name;
+                Vehicle = vehicle,
+                GarageVehicleOwnerList = owners,
+                GarageVehicleOwnerListItem = selectedOwner ?? new SelectListItem(),
+                ListofVehicleMakes = makes,
+                ListofVehicleModels = models,
+                ListofFuelTypes = fuels,
+                ListofVehicleYears = years,
+                ListofMileages = mileage,
+                ListofTransmissionTypes = transmissionTypes
+            };
 
+            return ServiceResult<VehicleAndCustomers>.Ok(vm);
+        }
 
-                if (VehicleCustomerVM.GarageVehicleOwnerListItem.Value == "0")
+        public ServiceResult AddOrUpdateCustomerVehicle(VehicleAndCustomers model, int sessionGarageBusinessId, string userName)
+        {
+            if (model == null || model.Vehicle == null)
+            {
+                return ServiceResult.Fail("Customer vehicle is null");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.Vehicle.VehicleRegistration))
+            {
+                return ServiceResult.Fail("Vehicle registration is required.");
+            }
+
+            int? ownerCustomerId = null;
+            bool garageOwned = false;
+
+            var isNewCustomer =
+                model.NewCustomer != null &&
+                (
+                    !string.IsNullOrWhiteSpace(model.NewCustomer.Forename) ||
+                    !string.IsNullOrWhiteSpace(model.NewCustomer.Surname) ||
+                    !string.IsNullOrWhiteSpace(model.NewCustomer.MobileNumber) ||
+                    !string.IsNullOrWhiteSpace(model.NewCustomer.EmailAddress)
+                );
+
+            // -----------------------------
+            // Determine ownership mode
+            // -----------------------------
+            if (isNewCustomer)
+            {
+                if (string.IsNullOrWhiteSpace(model.NewCustomer.Forename) &&
+                    string.IsNullOrWhiteSpace(model.NewCustomer.Surname))
                 {
-                    customerVehicleToAdd.GarageOwned = true;
-                }
-                else
-                {
-                    customerVehicleToAdd.GarageOwned = false;
+                    return ServiceResult.Fail("New customer first name or surname is required.");
                 }
 
-                _context.CustomerVehicle.Add(customerVehicleToAdd);
+                var customerToAdd = new GarageBusinessCustomer
+                {
+                    GarageCustomerForename = model.NewCustomer.Forename?.Trim(),
+                    GarageCustomerSurname = model.NewCustomer.Surname?.Trim(),
+                    GarageCustomerMobileNumber = model.NewCustomer.MobileNumber?.Trim(),
+                    GarageCustomerEmailAddress = model.NewCustomer.EmailAddress?.Trim(),
+                    GarageBusinessId = sessionGarageBusinessId,
+                    CreatedDate = DateTime.Now,
+                    CreatedBy = userName,
+                    Active = true
+                };
+
+                _context.GarageBusinessCustomer.Add(customerToAdd);
                 _context.SaveChanges();
 
-                if (VehicleCustomerVM.AddNewCustomer)
-                {
-                    GarageBusinessCustomer newCustomer = new GarageBusinessCustomer();
-                    newCustomer.GarageBusinessId = sessionGarageBusinessId;
-                    newCustomer.GarageCustomerForename = VehicleCustomerVM.NewCustomer.Forename;
-                    newCustomer.GarageCustomerSurname = VehicleCustomerVM.NewCustomer.Surname;
-                    newCustomer.GarageCustomerMobileNumber = VehicleCustomerVM.NewCustomer.Mobile;
-                    newCustomer.GarageCustomerEmailAddress = VehicleCustomerVM.NewCustomer.EmailAddress;
-                    newCustomer.CreatedDate = DateTime.Now;
-                    newCustomer.CreatedBy = User.Identity.Name;
-                    _context.GarageBusinessCustomer.Add(newCustomer);
-                    _context.SaveChanges();
-
-                    var garageBusinessCustomerId = newCustomer.Id;
-
-                    CustomerOwnedVehicles customerOwnedVehicle = new CustomerOwnedVehicles();
-                    customerOwnedVehicle.GarageBusinessCustomerId = garageBusinessCustomerId;
-                    customerOwnedVehicle.VehicleId = customerVehicleToAdd.Id;
-                    customerOwnedVehicle.GarageBusinessId = sessionGarageBusinessId;
-                    customerOwnedVehicle.CreatedDate = DateTime.Now;
-                    customerOwnedVehicle.CreatedBy = User.Identity.Name;
-                    _context.CustomerOwnedVehicles.Add(customerOwnedVehicle);
-                    _context.SaveChanges();
-                }
-
-                else if (VehicleCustomerVM.GarageVehicleOwnerListItem.Value == "0")
-                {
-                    var garageVehicleOwner = _context.GarageVehicleOwner.Where(g => g.GarageBusinessId == sessionGarageBusinessId).FirstOrDefault();
-                    //customerVehicleToAdd.CustomerId = garageVehicleOwner.Id;
-                    GarageOwnedVehicles garageOwnedVehicle = new GarageOwnedVehicles();
-                    garageOwnedVehicle.GarageVehicleOwnerId = garageVehicleOwner.Id;
-                    garageOwnedVehicle.VehicleId = customerVehicleToAdd.Id;
-                    garageOwnedVehicle.GarageBusinessId = sessionGarageBusinessId;
-                    garageOwnedVehicle.CreatedDate = DateTime.Now;
-                    garageOwnedVehicle.CreatedBy = User.Identity.Name;
-                    _context.GarageOwnedVehicles.Add(garageOwnedVehicle);
-                    _context.SaveChanges();
-
-                }
-                else
-                {
-                    var garageBusinessCustomerId = int.Parse(VehicleCustomerVM.GarageVehicleOwnerListItem.Value);
-                    CustomerOwnedVehicles customerOwnedVehicle = new CustomerOwnedVehicles();
-                    customerOwnedVehicle.GarageBusinessCustomerId = garageBusinessCustomerId;
-                    customerOwnedVehicle.VehicleId = customerVehicleToAdd.Id;
-                    customerOwnedVehicle.GarageBusinessId = sessionGarageBusinessId;
-                    customerOwnedVehicle.CreatedDate = DateTime.Now;
-                    customerOwnedVehicle.CreatedBy = User.Identity.Name;
-                    _context.CustomerOwnedVehicles.Add(customerOwnedVehicle);
-                    _context.SaveChanges();
-                }
-
+                ownerCustomerId = customerToAdd.Id;
+                garageOwned = false;
             }
             else
             {
-                //filter on garage ID and user as well
-                CustomerVehicle customerVehicleToUpdate = _context.CustomerVehicle.Find(customerVehicle.Id);
-                if (customerVehicleToUpdate == null)
-                    return Json(new { status = "Error", message = "garageCustomer couldn't be found" });
+                var selectedOwnerValue = model.GarageVehicleOwnerListItem?.Value;
 
-                //Get current ownership of vehicle to compare to new ownership selected in form and update ownership based on change
-                bool currentlyOwnedByGarage = (bool)customerVehicleToUpdate.GarageOwned;
-                GarageVehicleOwner garageVehicleOwner = null;
-                GarageOwnedVehicles currentVehicleGarageOwned = null;
-                CustomerOwnedVehicles currentCustomerOwner = null;
-                if (currentlyOwnedByGarage)
+                if (string.IsNullOrWhiteSpace(selectedOwnerValue))
                 {
-                    garageVehicleOwner = _context.GarageVehicleOwner.Where(g => g.GarageBusinessId == sessionGarageBusinessId).FirstOrDefault();
-                    currentVehicleGarageOwned = _context.GarageOwnedVehicles.Where(c => c.VehicleId == customerVehicleToUpdate.Id && c.GarageVehicleOwnerId == garageVehicleOwner.Id && c.GarageBusinessId == sessionGarageBusinessId).FirstOrDefault();
-                }
-                else //owned by another customer, get that customer ownership record to update if ownership is changing to another customer
-                {
-                    var garageBusinessCustomerId = int.Parse(VehicleCustomerVM.GarageVehicleOwnerListItem.Value);
-                    currentCustomerOwner = _context.CustomerOwnedVehicles.Where(c => c.VehicleId == customerVehicleToUpdate.Id && c.GarageBusinessId == sessionGarageBusinessId).FirstOrDefault();
-
+                    return ServiceResult.Fail("Vehicle owner is required.");
                 }
 
-                customerVehicleToUpdate.VehicleTransmissionId = int.Parse(VehicleCustomerVM.TransmissionListItem.Value);
-                customerVehicleToUpdate.GarageBusinessId = sessionGarageBusinessId;
-                customerVehicleToUpdate.VehicleFuelTypeId = int.Parse(VehicleCustomerVM.FuelTypeListItem.Value);
-                customerVehicleToUpdate.VehicleMakeId = int.Parse(VehicleCustomerVM.VehicleMakeListItem.Value);
-                customerVehicleToUpdate.VehicleMileageId = int.Parse(VehicleCustomerVM.VehicleMileageListItem.Value);
-                customerVehicleToUpdate.VehicleMileageDate = VehicleCustomerVM.Vehicle.VehicleMileageDate;
-                customerVehicleToUpdate.VehicleModelId = int.Parse(VehicleCustomerVM.VehicleModelListItem.Value);
-                customerVehicleToUpdate.VehicleNCTDue = VehicleCustomerVM.Vehicle.VehicleNCTDue;
-                customerVehicleToUpdate.VehicleRegistration = VehicleCustomerVM.Vehicle.VehicleRegistration;
-                customerVehicleToUpdate.VehicleTaxDue = VehicleCustomerVM.Vehicle.VehicleTaxDue;
-                customerVehicleToUpdate.VehicleTransmissionId = int.Parse(VehicleCustomerVM.TransmissionListItem.Value);
-                customerVehicleToUpdate.VehicleYearId = int.Parse(VehicleCustomerVM.VehicleYearListItem.Value);
-                customerVehicleToUpdate.UpdatedDate = DateTime.Now;
-                customerVehicleToUpdate.UpdatedBy = User.Identity.Name;
-
-                if (VehicleCustomerVM.GarageVehicleOwnerListItem.Value == "0")
+                if (selectedOwnerValue == "0")
                 {
-                    customerVehicleToUpdate.GarageOwned = true;
+                    garageOwned = true;
+                    ownerCustomerId = null;
                 }
                 else
                 {
-                    customerVehicleToUpdate.GarageOwned = false;
+                    if (!int.TryParse(selectedOwnerValue, out var parsedOwnerId))
+                    {
+                        return ServiceResult.Fail("Selected vehicle owner is invalid.");
+                    }
+
+                    var existingCustomer = _context.GarageBusinessCustomer
+                        .FirstOrDefault(c => c.Id == parsedOwnerId && c.GarageBusinessId == sessionGarageBusinessId);
+
+                    if (existingCustomer == null)
+                    {
+                        return ServiceResult.Fail("Selected vehicle owner could not be found.");
+                    }
+
+                    ownerCustomerId = existingCustomer.Id;
+                    garageOwned = false;
                 }
+            }
 
-                _context.CustomerVehicle.Update(customerVehicleToUpdate);
-                var entry = _context.Entry(customerVehicleToUpdate);
-                Trace.WriteLine($"Vehicle Id: {customerVehicleToUpdate.Id}, State: {entry.State}, IsKeySet: {entry.IsKeySet}");
+            // -----------------------------
+            // Add
+            // -----------------------------
+            if (model.Vehicle.Id == 0)
+            {
+                var vehicleToAdd = new CustomerVehicle
+                {
+                    VehicleRegistration = model.Vehicle.VehicleRegistration?.Trim(),
+                    VehicleMakeId = ParseNullableInt(model.VehicleMakeListItem?.Value),
+                    VehicleModelId = ParseNullableInt(model.VehicleModelListItem?.Value),
+                    VehicleYearId = ParseNullableInt(model.VehicleYearListItem?.Value),
+                    VehicleMileageId = ParseNullableInt(model.VehicleMileageListItem?.Value),
+                    VehicleMileageDate = model.Vehicle.VehicleMileageDate,
+                    VehicleTransmissionId = ParseNullableInt(model.TransmissionListItem?.Value),
+                    VehicleFuelTypeId = ParseNullableInt(model.FuelTypeListItem?.Value),
+                    VehicleTaxDue = BuildMonthYear(model.TaxMonthListItem, model.TaxYearListItem),
+                    VehicleNCTDue = BuildMonthYear(model.NCTMonthListItem, model.NCTYearListItem),
+                    GarageBusinessId = sessionGarageBusinessId,
+                    GarageOwned = garageOwned,
+                    CreatedDate = DateTime.Now,
+                    CreatedBy = userName,
+                    Active = true
+                };
 
+                _context.CustomerVehicle.Add(vehicleToAdd);
                 _context.SaveChanges();
 
-                //Get current ownership of vehicle and update to new ownership based on selection in
-
-
-                //garage owned -> garage owned
-                if (VehicleCustomerVM.GarageVehicleOwnerListItem.Value == "0" && currentlyOwnedByGarage)
+                // only create ownership row for customer-owned vehicles
+                if (!garageOwned && ownerCustomerId.HasValue)
                 {
+                    var ownership = new CustomerOwnedVehicles
+                    {
+                        GarageBusinessCustomerId = ownerCustomerId.Value,
+                        VehicleId = vehicleToAdd.Id,
+                        GarageBusinessId = sessionGarageBusinessId,
+                        CreatedDate = DateTime.Now,
+                        CreatedBy = userName,
+                        Active = true
+                    };
 
-                    currentVehicleGarageOwned.GarageVehicleOwnerId = garageVehicleOwner.Id;
-                    //garageOwnedVehicleToUpdate.VehicleId = customerVehicleToUpdate.Id;
-                    currentVehicleGarageOwned.GarageBusinessId = sessionGarageBusinessId;
-                    currentVehicleGarageOwned.UpdatedDate = DateTime.Now;
-                    currentVehicleGarageOwned.UpdatedBy = User.Identity.Name;
-                    _context.GarageOwnedVehicles.Update(currentVehicleGarageOwned);
+                    _context.CustomerOwnedVehicles.Add(ownership);
                     _context.SaveChanges();
                 }
 
-                //garage owned -> customer owned
-                if (currentlyOwnedByGarage && VehicleCustomerVM.GarageVehicleOwnerListItem.Value != "0")
-                {
-                    //remove ownership from garage
-                    _context.GarageOwnedVehicles.Remove(currentVehicleGarageOwned);
-                    _context.SaveChanges();
-
-                    //add ownership to customer
-                    var garageBusinessCustomerId = int.Parse(VehicleCustomerVM.GarageVehicleOwnerListItem.Value);
-                    CustomerOwnedVehicles vehichleToNewCustomerOwner = new CustomerOwnedVehicles();
-                    vehichleToNewCustomerOwner.GarageBusinessCustomerId = garageBusinessCustomerId;
-                    vehichleToNewCustomerOwner.VehicleId = customerVehicleToUpdate.Id;
-                    vehichleToNewCustomerOwner.GarageBusinessId = sessionGarageBusinessId;
-                    vehichleToNewCustomerOwner.CreatedDate = DateTime.Now;
-                    vehichleToNewCustomerOwner.CreatedBy = User.Identity.Name;
-                    _context.CustomerOwnedVehicles.Add(vehichleToNewCustomerOwner);
-                    _context.SaveChanges();
-                }
-
-                //customer owned -> garage owned
-                if (!currentlyOwnedByGarage && VehicleCustomerVM.GarageVehicleOwnerListItem.Value == "0")
-                {
-                    _context.CustomerOwnedVehicles.Remove(currentCustomerOwner);
-                    _context.SaveChanges();
-
-                    //add ownership to garage
-                    garageVehicleOwner = _context.GarageVehicleOwner.Where(g => g.GarageBusinessId == sessionGarageBusinessId).FirstOrDefault();
-                    GarageOwnedVehicles vehicleToAddToGarage = new GarageOwnedVehicles();
-
-                    vehicleToAddToGarage.GarageVehicleOwnerId = garageVehicleOwner.Id;
-                    vehicleToAddToGarage.VehicleId = customerVehicleToUpdate.Id;
-                    vehicleToAddToGarage.GarageBusinessId = sessionGarageBusinessId;
-                    vehicleToAddToGarage.CreatedDate = DateTime.Now;
-                    vehicleToAddToGarage.CreatedBy = User.Identity.Name;
-                    _context.GarageOwnedVehicles.Add(vehicleToAddToGarage);
-                    _context.SaveChanges();
-
-
-                }
-
-                //customer owned -> customer owned
-                if (!currentlyOwnedByGarage && VehicleCustomerVM.GarageVehicleOwnerListItem.Value != "0")
-                {
-                    var garageBusinessCustomerId = int.Parse(VehicleCustomerVM.GarageVehicleOwnerListItem.Value);
-                    var customerOwnedVehicleToUpdate = _context.CustomerOwnedVehicles.Where(c => c.VehicleId == customerVehicleToUpdate.Id && c.GarageBusinessId == sessionGarageBusinessId).FirstOrDefault();
-
-                    customerOwnedVehicleToUpdate.GarageBusinessCustomerId = garageBusinessCustomerId;
-                    customerOwnedVehicleToUpdate.VehicleId = customerVehicleToUpdate.Id;
-                    customerOwnedVehicleToUpdate.GarageBusinessId = sessionGarageBusinessId;
-                    customerOwnedVehicleToUpdate.UpdatedDate = DateTime.Now;
-                    customerOwnedVehicleToUpdate.UpdatedBy = User.Identity.Name;
-                    _context.CustomerOwnedVehicles.Update(customerOwnedVehicleToUpdate);
-                    _context.SaveChanges();
-                }
-
+                return ServiceResult.Ok();
             }
-            //fix this filter on garageId
-            //get list of customers from garage, filter vehicles based on customer IDs
 
+            // -----------------------------
+            // Update
+            // -----------------------------
+            var vehicleToUpdate = _context.CustomerVehicle.Find(model.Vehicle.Id);
+            if (vehicleToUpdate == null)
+            {
+                return ServiceResult.Fail("Customer vehicle couldn't be found.");
+            }
 
-            List<CustomerVehicle> listOfVehicles =
+            vehicleToUpdate.VehicleRegistration = model.Vehicle.VehicleRegistration?.Trim();
+            vehicleToUpdate.VehicleMakeId = ParseNullableInt(model.VehicleMakeListItem?.Value);
+            vehicleToUpdate.VehicleModelId = ParseNullableInt(model.VehicleModelListItem?.Value);
+            vehicleToUpdate.VehicleYearId = ParseNullableInt(model.VehicleYearListItem?.Value);
+            vehicleToUpdate.VehicleMileageId = ParseNullableInt(model.VehicleMileageListItem?.Value);
+            vehicleToUpdate.VehicleMileageDate = model.Vehicle.VehicleMileageDate;
+            vehicleToUpdate.VehicleTransmissionId = ParseNullableInt(model.TransmissionListItem?.Value);
+            vehicleToUpdate.VehicleFuelTypeId = ParseNullableInt(model.FuelTypeListItem?.Value);
+            vehicleToUpdate.VehicleTaxDue = BuildMonthYear(model.TaxMonthListItem, model.TaxYearListItem);
+            vehicleToUpdate.VehicleNCTDue = BuildMonthYear(model.NCTMonthListItem, model.NCTYearListItem);
+            vehicleToUpdate.GarageOwned = garageOwned;
+            vehicleToUpdate.UpdatedDate = DateTime.Now;
+            vehicleToUpdate.UpdatedBy = userName;
+
+            var existingOwnership = _context.CustomerOwnedVehicles
+                .FirstOrDefault(x => x.VehicleId == vehicleToUpdate.Id);
+
+            if (garageOwned)
+            {
+                // if switching to garage-owned, remove any customer ownership row
+                if (existingOwnership != null)
+                {
+                    _context.CustomerOwnedVehicles.Remove(existingOwnership);
+                }
+            }
+            else
+            {
+                if (!ownerCustomerId.HasValue)
+                {
+                    return ServiceResult.Fail("Customer owner is required.");
+                }
+
+                if (existingOwnership == null)
+                {
+                    existingOwnership = new CustomerOwnedVehicles
+                    {
+                        VehicleId = vehicleToUpdate.Id,
+                        GarageBusinessId = sessionGarageBusinessId,
+                        CreatedDate = DateTime.Now,
+                        CreatedBy = userName,
+                        Active = true
+                    };
+
+                    _context.CustomerOwnedVehicles.Add(existingOwnership);
+                }
+
+                existingOwnership.GarageBusinessCustomerId = ownerCustomerId.Value;
+            }
+
+            _context.SaveChanges();
+
+            return ServiceResult.Ok();
+        }
+
+        public ServiceResult<List<CustomerVehicleListVM>> GetCustomerVehiclesForList(int garageBusinessId)
+        {
+            var vehicles =
                 (from v in _context.CustomerVehicle
-                 join cov in _context.CustomerOwnedVehicles
-                     on v.Id equals cov.VehicleId
-                 join c in _context.GarageBusinessCustomer
-                     on cov.GarageBusinessCustomerId equals c.Id
-                 where c.GarageBusinessId == sessionGarageBusinessId
-                 select v)
+                 join cov in _context.CustomerOwnedVehicles on v.Id equals cov.VehicleId
+                 join c in _context.GarageBusinessCustomer on cov.GarageBusinessCustomerId equals c.Id
+                 join make in _context.VehicleMake on v.VehicleMakeId equals make.Id into makeJoin
+                 from make in makeJoin.DefaultIfEmpty()
+                 join model in _context.VehicleModel on v.VehicleModelId equals model.Id into modelJoin
+                 from model in modelJoin.DefaultIfEmpty()
+                 where c.GarageBusinessId == garageBusinessId && v.GarageOwned == false
+                 select new CustomerVehicleListVM
+                 {
+                     GarageCustomerId = c.Id,
+                     VehicleId = v.Id,
+                     VehicleRegistration = v.VehicleRegistration,
+                     VehicleMake = make != null ? make.Make : null,
+                     VehicleModel = model != null ? model.Model : null,
+                     OwnerName = c.GarageCustomerForename + " " + c.GarageCustomerSurname,
+                     GarageCustomerForename = c.GarageCustomerForename,
+                     GarageCustomerSurname = c.GarageCustomerSurname,
+                     GarageCustomerAddressline1 = c.GarageCustomerAddressline1,
+                     GarageCustomerAddressline2 = c.GarageCustomerAddressline2,
+                     GarageCustomerAddressline3 = c.GarageCustomerAddressline3,
+                     GarageCustomerAddressline4 = c.GarageCustomerAddressline4,
+                     GarageCustomerMobileNumber = c.GarageCustomerMobileNumber,
+                     GarageCustomerPhoneNumber = c.GarageCustomerPhoneNumber,
+                     GarageCustomerEmailAddress = c.GarageCustomerEmailAddress
+                 })
                 .ToList();
 
-
-
-            return Json("Success");//View("CustomersVehiclesList", ListofVehicles);
+            return ServiceResult<List<CustomerVehicleListVM>>.Ok(vehicles);
         }
 
-        public async Task<IActionResult> EditCustomerVehicle(int? CustomerVehicleId, int? userId)
+        public async Task<ServiceResult<List<VehicleBriefInfo>>> GetVehicleBriefsForCustomerAsync(int garageCustomerId)
         {
-            Users currentUser = new Users();
-            GarageBusiness garage = new GarageBusiness();
-            VehicleAndCustomers vehicleAndCustomers = new VehicleAndCustomers();
+            var vehicles =
+                (from cov in _context.CustomerOwnedVehicles
+                 join cv in _context.CustomerVehicle on cov.VehicleId equals cv.Id
+                 join m in _context.VehicleMake on cv.VehicleMakeId equals m.Id
+                 join l in _context.VehicleModel on cv.VehicleModelId equals l.Id
+                 where cov.GarageBusinessCustomerId == garageCustomerId && cv.GarageOwned == false
+                 select new VehicleBriefInfo
+                 {
+                     Id = cv.Id,
+                     Make = m.Make,
+                     Model = l.Model,
+                     VehicleRegistration = cv.VehicleRegistration
+                 }).ToList();
 
-            if (userId != null)
+            return await Task.FromResult(ServiceResult<List<VehicleBriefInfo>>.Ok(vehicles));
+        }
+
+        private List<SelectListItem> GetListOfGarageCustomerOwners(int? userId, int sessionGarageBusinessId)
+        {
+            var owners = new List<SelectListItem>();
+
+            Users currentUser = null;
+
+            if (userId.HasValue)
             {
-                currentUser = _context.Users.Find(userId);
+                currentUser = _context.Users.Find(userId.Value);
+            }
+
+            if (currentUser == null)
+            {
+                return owners;
+            }
+
+            if (currentUser.GarageBusinessId != sessionGarageBusinessId)
+            {
+                return owners;
+            }
+
+            var garageVehicleOwner = _context.GarageVehicleOwner
+                .FirstOrDefault(g => g.GarageBusinessId == sessionGarageBusinessId);
+
+            if (garageVehicleOwner != null)
+            {
+                owners.Add(new SelectListItem
+                {
+                    Value = "0",
+                    Text = garageVehicleOwner.GarageVehicleOwnerName,
+                    Selected = false
+                });
+            }
+
+            var garageCustomers = _context.GarageBusinessCustomer
+                .Where(c => c.GarageBusinessId == sessionGarageBusinessId)
+                .OrderBy(c => c.GarageCustomerForename)
+                .ThenBy(c => c.GarageCustomerSurname)
+                .ToList();
+
+            foreach (var customer in garageCustomers)
+            {
+                owners.Add(new SelectListItem
+                {
+                    Value = customer.Id.ToString(),
+                    Text = $"{customer.GarageCustomerForename} {customer.GarageCustomerSurname}".Trim(),
+                    Selected = false
+                });
+            }
+
+            return owners;
+        }
+
+        private static void MarkSelected(List<SelectListItem> items, int? selectedId)
+        {
+            if (!selectedId.HasValue || items == null) return;
+
+            foreach (var item in items)
+            {
+                item.Selected = item.Value == selectedId.Value.ToString();
+            }
+        }
+
+        private void MarkSelectedOwner(List<SelectListItem> items, int vehicleId)
+        {
+            if (items == null || !items.Any())
+            {
+                return;
+            }
+
+            var vehicle = _context.CustomerVehicle.Find(vehicleId);
+            if (vehicle == null)
+            {
+                return;
+            }
+
+            string selectedOwnerValue = null;
+
+            if (vehicle.GarageOwned == true)
+            {
+                selectedOwnerValue = "0";
             }
             else
             {
-                var sessionUserId = HttpContext.Session.GetInt32("userId");
-                if (sessionUserId == 0)
-                    return StatusCode(500, "Session userId no valid");
-                currentUser = _context.Users.Find(sessionUserId);
+                var ownership = _context.CustomerOwnedVehicles
+                    .FirstOrDefault(x => x.VehicleId == vehicleId);
+
+                if (ownership != null)
+                {
+                    selectedOwnerValue = ownership.GarageBusinessCustomerId.ToString();
+                }
             }
 
-            CustomerVehicle customerVehicleToEdit = _context.CustomerVehicle.Find(CustomerVehicleId);
-            if (customerVehicleToEdit == null)
-                return Json(new { status = "Error", message = "Customer Vehicle couldn't be found" });
-
-            int sessionGarageBusinessId = 0;
-            bool validSessionGarageBusinessId = int.TryParse(HttpContext.Session.GetString("GarageBusinessId").ToString(), out sessionGarageBusinessId);
-            if (!validSessionGarageBusinessId)
-                return StatusCode(500, "Session GarageBusinessId no valid");
-
-            if (currentUser.GarageBusinessId == sessionGarageBusinessId)
+            if (string.IsNullOrWhiteSpace(selectedOwnerValue))
             {
-
-                garage = _context.GarageBusiness.Find(sessionGarageBusinessId);
-                if (garage == null)
-                {
-                    return StatusCode(500, "Session GarageBusinessId not found");
-                }
-
-                List<GarageBusinessCustomer> garageCustomerList = _context.GarageBusinessCustomer.Where(c => c.GarageBusinessId == sessionGarageBusinessId).ToList();
-                var garageCustomerListIds = garageCustomerList.Select(c => c.Id).ToList();
-                var garageVehicleOwner = _context.GarageVehicleOwner.Where(g => g.GarageBusinessId == sessionGarageBusinessId).FirstOrDefault();
-
-                var vehicleOwnedByGarage = _context.GarageOwnedVehicles.Where(g => g.GarageVehicleOwnerId == garageVehicleOwner.Id && g.VehicleId == customerVehicleToEdit.Id).FirstOrDefault();
-                var customersWhoOwnsVehicle = _context.CustomerOwnedVehicles.Where(g => garageCustomerListIds.Contains(g.GarageBusinessCustomerId) && g.VehicleId == customerVehicleToEdit.Id).FirstOrDefault();
-
-                List<SelectListItem> listOfGarageVehicleOwners = new List<SelectListItem>();
-                if (garageVehicleOwner != null)
-                {
-                    if (vehicleOwnedByGarage != null)
-                    {
-                        listOfGarageVehicleOwners.Add(new SelectListItem { Value = "0", Text = garageVehicleOwner.GarageVehicleOwnerName, Selected = true });
-                    }
-                    else
-                    {
-                        listOfGarageVehicleOwners.Add(new SelectListItem { Value = "0", Text = garageVehicleOwner.GarageVehicleOwnerName });
-                    }
-                }
-
-                if (garageCustomerList != null)
-                {
-                    foreach (var gCustomer in garageCustomerList)
-                    {
-                        if (customersWhoOwnsVehicle != null && gCustomer.Id == customersWhoOwnsVehicle.GarageBusinessCustomerId)
-                        {
-                            listOfGarageVehicleOwners.Add(new SelectListItem { Value = gCustomer.Id.ToString(), Text = gCustomer.GarageCustomerForename + " " + gCustomer.GarageCustomerSurname, Selected = true });
-                        }
-                        else
-                        {
-                            listOfGarageVehicleOwners.Add(new SelectListItem { Value = gCustomer.Id.ToString(), Text = gCustomer.GarageCustomerForename + " " + gCustomer.GarageCustomerSurname });
-                        }
-                    }
-                }
-
-
-                vehicleAndCustomers.Vehicle = customerVehicleToEdit;
-                vehicleAndCustomers.GarageVehicleOwnerList = listOfGarageVehicleOwners;
-                vehicleAndCustomers.ListofVehicleMakes = await _vehicleLookup.GetVehicleMakesAsync();
-                int makeId = 0;
-                foreach (var make in vehicleAndCustomers.ListofVehicleMakes)
-                {
-                    if (make.Selected == true || customerVehicleToEdit.VehicleMakeId == Convert.ToInt32(make.Value)) { makeId = Convert.ToInt32(make.Value); }
-                }
-                vehicleAndCustomers.ListofVehicleModels = await _vehicleLookup.GetVehicleModelsByMakeAsync(makeId);
-                vehicleAndCustomers.ListofFuelTypes = await _vehicleLookup.GetFuelTypesAsync();
-                vehicleAndCustomers.ListofVehicleYears = await _vehicleLookup.GetVehicleYearsAsync();
-                vehicleAndCustomers.ListofMileages = await _vehicleLookup.GetMileageAsync();
-                vehicleAndCustomers.ListofTransmissionTypes = await _vehicleLookup.GetTransmissionTypeAsync();
-
+                return;
             }
 
-            return View("CustomerVehicleEdit", vehicleAndCustomers);
+            foreach (var item in items)
+            {
+                item.Selected = item.Value == selectedOwnerValue;
+            }
         }
 
-        public List<SelectListItem> GetListOfGarageCustomerOwners(int? userId)
-        {
-            Users currentUser = new Users();
-            GarageBusiness garage = new GarageBusiness();
-            List<SelectListItem> listOfGarageVehicleOwners = new List<SelectListItem>();
-
-
-            if (userId != null)
-            {
-                currentUser = _context.Users.Find(userId);
-            }
-            else
-            {
-                var sessionUserId = HttpContext.Session.GetInt32("userId");
-                if (sessionUserId == 0)
-                {
-                    listOfGarageVehicleOwners.Add(new SelectListItem { Value = "-1", Text = "Session userId no valid" });
-                    return listOfGarageVehicleOwners;
-                }
-                currentUser = _context.Users.Find(sessionUserId);
-            }
-
-            int sessionGarageBusinessId = 0;
-            bool validSessionGarageBusinessId = int.TryParse(HttpContext.Session.GetString("GarageBusinessId").ToString(), out sessionGarageBusinessId);
-            if (!validSessionGarageBusinessId)
-            {
-                listOfGarageVehicleOwners.Add(new SelectListItem { Value = "-1", Text = "sessionGarageBusinessId is null" });
-                return listOfGarageVehicleOwners;
-            }
-
-            if (currentUser.GarageBusinessId == sessionGarageBusinessId)
-            {
-
-                garage = _context.GarageBusiness.Find(sessionGarageBusinessId);
-                if (garage == null)
-                {
-                    listOfGarageVehicleOwners.Add(new SelectListItem { Value = "-1", Text = "Session GarageBusinessId not found" });
-                    return listOfGarageVehicleOwners;
-                }
-
-                List<GarageBusinessCustomer> garageCustomerList = _context.GarageBusinessCustomer.Where(c => c.GarageBusinessId == sessionGarageBusinessId).ToList();
-                var garageVehicleOwner = _context.GarageVehicleOwner.Where(g => g.GarageBusinessId == sessionGarageBusinessId).FirstOrDefault();
-
-
-                if (garageVehicleOwner != null)
-                {
-                    listOfGarageVehicleOwners.Add(new SelectListItem { Value = "0", Text = garageVehicleOwner.GarageVehicleOwnerName });
-                }
-
-                if (garageCustomerList != null)
-                {
-                    foreach (var gCustomer in garageCustomerList)
-                    {
-                        listOfGarageVehicleOwners.Add(new SelectListItem { Value = gCustomer.Id.ToString(), Text = gCustomer.GarageCustomerForename + " " + gCustomer.GarageCustomerSurname });
-                    }
-                }
-            }
-
-            return listOfGarageVehicleOwners;
-        }
-
-        public IActionResult CustomerVehicleList(int? garageBusinessId, int? userId)
-        {
-            int sessionGarageBusinessId = 0;
-            bool validSessionGarageBusinessId = int.TryParse(HttpContext.Session.GetString("GarageBusinessId").ToString(), out sessionGarageBusinessId);
-            if (!validSessionGarageBusinessId)
-            {
-                sessionGarageBusinessId = 15;
-                HttpContext.Session.SetString("GarageBusinessId", sessionGarageBusinessId.ToString());
-                //return StatusCode(500, "Session GarageBusinessId no valid");
-            }
-
-            var sessionUserId = HttpContext.Session.GetInt32("userId");
-            if (sessionUserId == 0)
-                return StatusCode(500, "Session userId no valid");
-
-            if (garageBusinessId == 0 || garageBusinessId == null)
-                garageBusinessId = sessionGarageBusinessId;
-
-            if (userId == 0 || userId == null)
-                userId = sessionUserId;
-
-
-            TempData["GarageBusinessId"] = garageBusinessId;
-            TempData["userId"] = userId;
-
-            var garageCustomerList = _context.GarageBusinessCustomer.Where(c => c.GarageBusinessId == garageBusinessId).ToList();
-
-            var ListofGarageCustomerIDs = garageCustomerList.Select(c => c.Id).ToList();
-
-            var customerOwnedVehicleList = _context.CustomerOwnedVehicles.Where(c => ListofGarageCustomerIDs.Contains(c.GarageBusinessCustomerId)).ToList();
-            var customerOwnedVehicleIds = customerOwnedVehicleList.Select(c => c.VehicleId).ToList();
-
-            List<CustomerVehicle> ListofCustomerVehicles = new List<CustomerVehicle>();
-            if (customerOwnedVehicleIds.Count > 0)
-            {
-                ListofCustomerVehicles = _context.CustomerVehicle.Where(v => customerOwnedVehicleIds.Contains(v.Id) && v.GarageOwned == false).ToList();
-            }
-            //get garage vehicle owner and get cars owned by that owner
-            var garageVehicleOwner = _context.GarageVehicleOwner.Where(c => c.GarageBusinessId == garageBusinessId).FirstOrDefault();
-            var garageOwnedvehiclesList = _context.GarageOwnedVehicles.Where(g => g.GarageVehicleOwnerId == garageVehicleOwner.Id).ToList();
-            var garageOwnedVehicleIds = garageOwnedvehiclesList.Select(g => g.VehicleId).ToList();
-
-            List<CustomerVehicle> ListofGarageOwnedVehicles = new List<CustomerVehicle>();
-
-            if (garageOwnedVehicleIds.Count > 0)
-            {
-
-                ListofGarageOwnedVehicles = _context.CustomerVehicle.Where(v => garageOwnedVehicleIds.Contains(v.Id) && v.GarageOwned == true).ToList();
-            }
-
-
-            List<CustomerVehicleListVM> listCustomerVehiclesForList = (from v in ListofCustomerVehicles
-                                                                       join c in _context.VehicleMake on v.VehicleMakeId equals c.Id
-                                                                       join m in _context.VehicleModel on v.VehicleModelId equals m.Id
-                                                                       join cov in _context.CustomerOwnedVehicles on v.Id equals cov.VehicleId
-                                                                       join o in _context.GarageBusinessCustomer on cov.GarageBusinessCustomerId equals o.Id
-                                                                       select new CustomerVehicleListVM
-                                                                       {
-                                                                           VehicleId = v.Id,
-                                                                           VehicleRegistration = v.VehicleRegistration,
-                                                                           VehicleMake = c.Make,
-                                                                           VehicleModel = m.Model,
-                                                                           OwnerName = o.GarageCustomerForename + " " + o.GarageCustomerSurname,
-                                                                           GarageCustomerMobileNumber = o.GarageCustomerMobileNumber,
-                                                                           GarageCustomerPhoneNumber = o.GarageCustomerPhoneNumber,
-                                                                           GarageCustomerEmailAddress = o.GarageCustomerEmailAddress
-                                                                       }).ToList();
-
-            List<CustomerVehicleListVM> listGarageOwnedVehiclesForList = (from v in ListofGarageOwnedVehicles
-                                                                          join c in _context.VehicleMake on v.VehicleMakeId equals c.Id
-                                                                          join m in _context.VehicleModel on v.VehicleModelId equals m.Id
-                                                                          join gov in _context.GarageOwnedVehicles on v.Id equals gov.VehicleId
-                                                                          join o in _context.GarageVehicleOwner on gov.GarageVehicleOwnerId equals o.Id
-                                                                          join b in _context.GarageBusiness on o.GarageBusinessId equals b.Id
-                                                                          select new CustomerVehicleListVM
-                                                                          {
-                                                                              VehicleId = v.Id,
-                                                                              VehicleRegistration = v.VehicleRegistration,
-                                                                              VehicleMake = c.Make,
-                                                                              VehicleModel = m.Model,
-                                                                              OwnerName = o.GarageVehicleOwnerName,
-                                                                              GarageCustomerMobileNumber = b.GarageMobileNumber,
-                                                                              GarageCustomerPhoneNumber = b.GaragePhoneNumber,
-                                                                              GarageCustomerEmailAddress = b.GarageEmailAddress
-                                                                          }).ToList();
-
-            List<CustomerVehicleListVM> ListCustomerAndGarageOwnedVehicles = new List<CustomerVehicleListVM>();
-            ListCustomerAndGarageOwnedVehicles.AddRange(listCustomerVehiclesForList);
-            ListCustomerAndGarageOwnedVehicles.AddRange(listGarageOwnedVehiclesForList);
-
-
-            var jsonStrlistVehiclesForList = System.Text.Json.JsonSerializer.Serialize(ListCustomerAndGarageOwnedVehicles);
-            return View("CustomersVehiclesList", ListCustomerAndGarageOwnedVehicles);
-            // return View("Index", ListCustomerAndGarageOwnedVehicles);
-        }
     }
 }

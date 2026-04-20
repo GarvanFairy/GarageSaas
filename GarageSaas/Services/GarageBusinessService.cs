@@ -1,131 +1,128 @@
-﻿using GarageSaas.Controllers;
+﻿using System;
 using GarageSaas.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using GarageSaas.Services.Models;
 using SignupAPI.Models;
-using System;
+
 
 namespace GarageSaas.Services
 {
-    public class GarageBusinessService: IGarageBusinessService
+    public class GarageBusinessService : IGarageBusinessService
     {
-        private readonly ILogger<GarageBusinessController> _logger;
         private readonly SignupContext _context;
 
-        public GarageBusinessService(SignupContext context, ILogger<GarageBusinessController> logger)
+        public GarageBusinessService(SignupContext context)
         {
-            _logger = logger;
             _context = context;
         }
 
-        public IActionResult GarageBusinessDetail(int? garageBusinessId, int? userId)
+        public ServiceResult<GarageBusiness> GetGarageBusinessDetail(int? garageBusinessId, int? userId)
         {
-            //Temporary assignment garagebusinessid = 3
-
-            Users currentUser = new Users();
-            GarageBusiness garage = new GarageBusiness();
-
-            if (userId != null)
-            {
-                currentUser = _context.Users.Find(userId);
-            }
-
-            if (currentUser.GarageBusinessId == garageBusinessId)
-            {
-                if (garageBusinessId == null)
-                {
-                    //return new "Garage Business not found";
-                }
-
-                garage = _context.GarageBusiness.Find(garageBusinessId);
-                if (garage == null)
-                {
-                    //return HttpNotFound();
-                }
-            }
-
-            return View("GarageBusinessDetail", garage);
-        }
-
-        public IActionResult EditGarageBusiness(int? garageBusinessId)
-        {
-            int sessionGarageBusinessId = 0;
-            bool validSessionGarageBusinessId = int.TryParse(HttpContext.Session.GetString("GarageBusinessId").ToString(), out sessionGarageBusinessId);
-            if (!validSessionGarageBusinessId)
-                return StatusCode(500, "Session GarageBusinessId no valid");
-
-            var sessionUserId = HttpContext.Session.GetInt32("userId");
-            if (sessionUserId == 0)
-                return StatusCode(500, "Session userId no valid");
-
-            GarageBusiness garageToUpdate = null;
             if (garageBusinessId == null)
             {
-                //return new "Garage Business not found";
+                return ServiceResult<GarageBusiness>.Fail("Garage business id is required.");
             }
-            else
+
+            if (userId == null)
             {
-                if (garageBusinessId == sessionGarageBusinessId)
-                {
-                    var currentUser = _context.Users.Find(sessionUserId);
-                    if (currentUser != null && currentUser.GarageBusinessId == garageBusinessId)
-                    {
-                        garageToUpdate = _context.GarageBusiness.Find(garageBusinessId);
-                    }
-                }
-
+                return ServiceResult<GarageBusiness>.Fail("User id is required.");
             }
 
-            return View("GarageBusinessEdit", garageToUpdate);
+            var currentUser = _context.Users.Find(userId);
+            if (currentUser == null)
+            {
+                return ServiceResult<GarageBusiness>.Fail("User not found.");
+            }
+
+            if (currentUser.GarageBusinessId != garageBusinessId)
+            {
+                return ServiceResult<GarageBusiness>.Fail("User is not authorised to view this garage business.");
+            }
+
+            var garage = _context.GarageBusiness.Find(garageBusinessId);
+            if (garage == null)
+            {
+                return ServiceResult<GarageBusiness>.Fail("Garage business not found.");
+            }
+
+            return ServiceResult<GarageBusiness>.Ok(garage);
         }
 
-        [HttpPost]
-        public IActionResult UpdateGarageBusiness([FromForm] GarageBusiness garageBusiness)
+        public ServiceResult<GarageBusiness> GetGarageBusinessForEdit(int? garageBusinessId, int sessionGarageBusinessId, int sessionUserId)
         {
-            GarageBusiness garageToUpdate = null;
+            if (garageBusinessId == null)
+            {
+                return ServiceResult<GarageBusiness>.Fail("Garage business id is required.");
+            }
 
-            int sessionGarageBusinessId = 0;
-            bool validSessionGarageBusinessId = int.TryParse(HttpContext.Session.GetString("GarageBusinessId").ToString(), out sessionGarageBusinessId);
-            if (!validSessionGarageBusinessId)
-                return StatusCode(500, "Session GarageBusinessId no valid");
+            if (garageBusinessId != sessionGarageBusinessId)
+            {
+                return ServiceResult<GarageBusiness>.Fail("Session garage business id does not match.");
+            }
 
-            var sessionUserId = HttpContext.Session.GetInt32("userId");
-            if (sessionUserId == 0)
-                return StatusCode(500, "Session userId no valid");
+            var currentUser = _context.Users.Find(sessionUserId);
+            if (currentUser == null)
+            {
+                return ServiceResult<GarageBusiness>.Fail("User not found.");
+            }
 
+            if (currentUser.GarageBusinessId != garageBusinessId)
+            {
+                return ServiceResult<GarageBusiness>.Fail("User is not authorised to edit this garage business.");
+            }
+
+            var garage = _context.GarageBusiness.Find(garageBusinessId);
+            if (garage == null)
+            {
+                return ServiceResult<GarageBusiness>.Fail("Garage business not found.");
+            }
+
+            return ServiceResult<GarageBusiness>.Ok(garage);
+        }
+
+        public ServiceResult<GarageBusiness> UpdateGarageBusiness(GarageBusiness garageBusiness, int sessionGarageBusinessId, int sessionUserId, string userName)
+        {
             if (garageBusiness == null)
             {
-                //return new "Garage Business not found";
+                return ServiceResult<GarageBusiness>.Fail("Garage business is null.");
             }
 
-            if (garageBusiness.Id == sessionGarageBusinessId)
+            if (garageBusiness.Id != sessionGarageBusinessId)
             {
-                var currentUser = _context.Users.Find(sessionUserId);
-                if (currentUser != null && currentUser.GarageBusinessId == garageBusiness.Id)
-                {
-
-                    if (ModelState.IsValid)
-                    {
-                        garageToUpdate = _context.GarageBusiness.Find(garageBusiness.Id);
-                        garageToUpdate.GarageBusinessName = garageBusiness.GarageBusinessName;
-                        garageToUpdate.GarageAddressLine1 = garageBusiness.GarageAddressLine1;
-                        garageToUpdate.GarageAddressLine2 = garageBusiness.GarageAddressLine2;
-                        garageToUpdate.GarageAddressLine3 = garageBusiness.GarageAddressLine3;
-                        garageToUpdate.GarageAddressLine4 = garageBusiness.GarageAddressLine4;
-                        garageToUpdate.Postcode = garageBusiness.Postcode;
-                        garageToUpdate.GarageEmailAddress = garageBusiness.GarageEmailAddress;
-                        garageToUpdate.GaragePhoneNumber = garageBusiness.GaragePhoneNumber;
-                        garageToUpdate.GarageMobileNumber = garageBusiness.GarageMobileNumber;
-                        garageToUpdate.UpdatedDate = DateTime.Now;
-                        garageToUpdate.UpdatedBy = User.Identity.Name;
-                        _context.GarageBusiness.Update(garageToUpdate);
-                        _context.SaveChanges();
-                    }
-                }
+                return ServiceResult<GarageBusiness>.Fail("Garage business id does not match session.");
             }
-            return View("GarageBusinessDetail", garageToUpdate);
-        }
 
+            var currentUser = _context.Users.Find(sessionUserId);
+            if (currentUser == null)
+            {
+                return ServiceResult<GarageBusiness>.Fail("User not found.");
+            }
+
+            if (currentUser.GarageBusinessId != garageBusiness.Id)
+            {
+                return ServiceResult<GarageBusiness>.Fail("User is not authorised to update this garage business.");
+            }
+
+            var garageToUpdate = _context.GarageBusiness.Find(garageBusiness.Id);
+            if (garageToUpdate == null)
+            {
+                return ServiceResult<GarageBusiness>.Fail("Garage business not found.");
+            }
+
+            garageToUpdate.GarageBusinessName = garageBusiness.GarageBusinessName;
+            garageToUpdate.GarageAddressLine1 = garageBusiness.GarageAddressLine1;
+            garageToUpdate.GarageAddressLine2 = garageBusiness.GarageAddressLine2;
+            garageToUpdate.GarageAddressLine3 = garageBusiness.GarageAddressLine3;
+            garageToUpdate.GarageAddressLine4 = garageBusiness.GarageAddressLine4;
+            garageToUpdate.Postcode = garageBusiness.Postcode;
+            garageToUpdate.GarageEmailAddress = garageBusiness.GarageEmailAddress;
+            garageToUpdate.GaragePhoneNumber = garageBusiness.GaragePhoneNumber;
+            garageToUpdate.GarageMobileNumber = garageBusiness.GarageMobileNumber;
+            garageToUpdate.UpdatedDate = DateTime.Now;
+            garageToUpdate.UpdatedBy = userName;
+
+            _context.SaveChanges();
+
+            return ServiceResult<GarageBusiness>.Ok(garageToUpdate);
+        }
     }
 }

@@ -1,18 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using SignupAPI.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using GarageSaas.Models;
+using GarageSaas.Services.Models;
+using SignupAPI.Models;
 
 namespace GarageSaas.Services.Interfaces
 {
     public interface ICustomerVehicleService
     {
-
-        public JsonResult AddUpdateCustomerVehicle([FromBody] VehicleAndCustomers VehicleCustomerVM);
-        public Task<IActionResult> EditCustomerVehicle(int? CustomerVehicleId, int? userId);
-        public List<SelectListItem> GetListOfGarageCustomerOwners(int? userId);
-        public IActionResult CustomerVehicleList(int? garageBusinessId, int? userId);
-
+        Task<ServiceResult<VehicleAndCustomers>> BuildAddCustomerVehicleVmAsync(int? userId, int sessionGarageBusinessId);
+        Task<ServiceResult<VehicleAndCustomers>> GetCustomerVehicleForEditAsync(int customerVehicleId, int? userId, int sessionGarageBusinessId);
+        ServiceResult AddOrUpdateCustomerVehicle(VehicleAndCustomers model, int sessionGarageBusinessId, string userName);
+        ServiceResult<List<CustomerVehicleListVM>> GetCustomerVehiclesForList(int garageBusinessId);
+        Task<ServiceResult<List<VehicleBriefInfo>>> GetVehicleBriefsForCustomerAsync(int garageCustomerId);
     }
 }
