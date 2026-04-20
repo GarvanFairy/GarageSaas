@@ -30,6 +30,8 @@ namespace GarageSaas.Controllers
                     var garageBusinessId = ident.Value;
                 if (ident.Type == "extension_GarageBusinessID")
                 {
+                    if (string.IsNullOrEmpty(garageBusinessId))
+                        garageBusinessId = "15"; // default to 15 for testing purposes, as this is the only GarageBusinessId in the database right now. Remove this when there are more GarageBusinessIds in the database and users have been assigned to them in Azure AD B2C.
                     var GarageBusinessId = garageBusinessId;
                     TempData["GarageBusinessId"] = garageBusinessId;
                     HttpContext.Session.SetString("GarageBusinessId", garageBusinessId);

@@ -12,6 +12,6 @@ namespace GarageSaas.Services
         Task<List<SelectListItem>> GetFuelTypesAsync();
         Task<List<SelectListItem>> GetVehicleYearsAsync();
         Task<List<SelectListItem>> GetMileageAsync();
-        Task<List<SelectListItem>> GetTransmissionTypeAsync();
+        Task<List<SelectListItem>> GetTransmissionTypesAsync();
     }
 }
