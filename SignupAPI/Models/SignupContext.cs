@@ -38,6 +38,7 @@ namespace SignupAPI.Models
         public virtual DbSet<WorkItem> WorkItem { get; set; }
         public virtual DbSet<WorkQuote> WorkQuote { get; set; }
         public virtual DbSet<WorkQuoteWorkItem> WorkQuoteWorkItem { get; set; }
+        public virtual DbSet<VehiclePart> VehiclePart { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

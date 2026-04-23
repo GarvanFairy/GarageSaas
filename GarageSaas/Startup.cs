@@ -81,6 +81,10 @@ namespace GarageSaas
 
             services.AddScoped<IGarageBusinessService, GarageBusinessService>();
             services.AddScoped<IGarageCustomersService, GarageCustomersService>();
+            services.AddScoped<IWorkItemService, WorkItemService>();
+            services.AddScoped<IWorkQuoteService, WorkQuoteService>();
+            services.AddScoped<IVehicleInvoiceService, VehicleInvoiceService>();
+            services.AddScoped<IVehiclePartService, VehiclePartService>();
 
             // 🔹 EF DbContext (example)
             services.AddDbContext<SignupContext>(options =>

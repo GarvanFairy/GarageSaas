@@ -1,116 +1,84 @@
-﻿using Microsoft.Extensions.Logging;
-using SignupAPI.Models;
-using GarageSaas.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
+﻿using GarageSaas.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
-using Microsoft.VisualStudio.Web.CodeGeneration;
-
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using SignupAPI.Models;
 
 namespace GarageSaas.Controllers
 {
     public class WorkItemController : Controller
     {
-        private readonly ILogger<GarageBusinessController> _logger;
-        private readonly SignupContext _context;
+        private readonly ILogger<WorkItemController> _logger;
+        private readonly IWorkItemService _workItemService;
 
-        public WorkItemController(SignupContext context, ILogger<GarageBusinessController> logger)
+        public WorkItemController(
+            IWorkItemService workItemService,
+            ILogger<WorkItemController> logger)
         {
+            _workItemService = workItemService;
             _logger = logger;
-            _context = context;
         }
 
-        public ActionResult WorkItemAdd()
+        [HttpGet]
+        public IActionResult Get(int workItemId)
         {
-            return View("WorkItemAdd");
+            if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int garageBusinessId))
+            {
+                return StatusCode(500, "Session GarageBusinessId no valid");
+            }
+
+            var result = _workItemService.GetWorkItem(workItemId, garageBusinessId);
+
+            if (!result.Success)
+            {
+                return Json(new { status = "Error", message = result.ErrorMessage });
+            }
+
+            return Json(result.Data);
         }
-        public ActionResult AddWorkItem(WorkItem workItem)
+
+        [HttpGet]
+        public IActionResult GetByVehicle(int vehicleId)
         {
-            Trace.WriteLine("GET /WorkQuote/AddWorkItem");
-            if (workItem == null)
-                return StatusCode(500, "workItem is null");
-
-            int sessionGarageBusinessId = 0;
-            bool validSessionGarageBusinessId = int.TryParse(HttpContext.Session.GetString("GarageBusinessId").ToString(), out sessionGarageBusinessId);
-           if (sessionGarageBusinessId == 0)
-                sessionGarageBusinessId = 15;
-
-            // if (!validSessionGarageBusinessId)
-            //  return StatusCode(500, "Session GarageBusinessId no valid");
-
-            if (workItem.Id == 0)
+            if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int garageBusinessId))
             {
-                WorkItem workItemToAdd = new WorkItem();
-                workItemToAdd.GarageBusinessCustomerId = sessionGarageBusinessId;
-                workItemToAdd.VehicleId = workItem.VehicleId;
-                workItemToAdd.CustomerId = workItem.CustomerId;
-                workItemToAdd.RepairInstructions = workItem.RepairInstructions;
-               // workItemToAdd.ListOfVehicleParts = workItem.ListOfVehicleParts;
-                workItemToAdd.CreatedDate = DateTime.Now;
-                workItemToAdd.CreatedBy = User.Identity.Name;
-                _context.WorkItem.Add(workItemToAdd);
-                _context.SaveChanges();
-                return Json(new { status = "Success", message = "WorkItem added successfully" });
+                return StatusCode(500, "Session GarageBusinessId no valid");
             }
-            else
-            {
-                WorkItem workItemToUpdate = _context.WorkItem.Find(workItem.Id);
-                if (workItemToUpdate == null)
-                    return Json(new { status = "Error", message = "WorkItem not found" });
 
-                workItemToUpdate.GarageBusinessCustomerId = sessionGarageBusinessId;
-                workItemToUpdate.VehicleId = workItem.VehicleId;
-                workItemToUpdate.CustomerId = workItem.CustomerId;
-                workItemToUpdate.RepairInstructions = workItem.RepairInstructions;
-                //workItemToUpdate.ListOfVehicleParts = workItem.ListOfVehicleParts;
-                workItemToUpdate.UpdatedBy = User.Identity.Name;
-                workItemToUpdate.UpdatedDate = DateTime.Now;
-                _context.SaveChanges();
-                return Json(new { status = "Success", message = "WorkItem updated successfully" });
+            var result = _workItemService.GetWorkItemsForVehicle(vehicleId, garageBusinessId);
+
+            if (!result.Success)
+            {
+                return Json(new { status = "Error", message = result.ErrorMessage });
             }
+
+            return Json(result.Data);
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,VehicleId,GarageBusinessId,GarageBusinessCustomerId,InvoiceDate,InvoiceAmount,InvoicePaid,InvoicePaidDate,InvoicePaidAmount,InvoiceNotes,CreatedDate,CreatedBy,ModifiedDate,ModifiedBy")] WorkItem workItem)
+        public IActionResult AddWorkItem([FromBody] WorkItem workItem)
         {
-            if (ModelState.IsValid)
+            if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int garageBusinessId))
             {
-                _context.Add(workItem);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            // ViewData["GarageBusinessId"] = new SelectList(_context.Garagebusiness, "Id", "GarageBusinessName", vehicleInvoice.GarageBusinessId);
-            //ViewData["GarageBusinessCustomerId"] = new SelectList(_context.GarageBusinessCustomer, "Id", "GarageCustomerForename", vehicleInvoice.GarageBusinessCustomerId);
-            //ViewData["VehicleId"] = new SelectList(_context.Vehicle, "Id", "VehicleRegistration", vehicleInvoice.VehicleId);
-            return View(workItem);
-        }
-
-        public async Task<IActionResult> Get([Bind("Id,VehicleId,GarageBusinessId,GarageBusinessCustomerId,InvoiceDate,InvoiceAmount,InvoicePaid,InvoicePaidDate,InvoicePaidAmount,InvoiceNotes,CreatedDate,CreatedBy,ModifiedDate,ModifiedBy")] int workItemId)
-        {
-            if (workItemId == null)
-            {
-                return new StatusCodeResult(500);
+                return StatusCode(500, "Session GarageBusinessId no valid");
             }
 
-            var serviceHistory = await _context.ServiceHistory
-                .Include(v => v.Id)
-                //.Include(v => v.InvoiceDate)
-                //.Include(v => v.InvoiceType)
-                .FirstOrDefaultAsync(m => m.Id == workItemId);
+            var result = _workItemService.AddOrUpdateWorkItem(
+                workItem,
+                garageBusinessId,
+                User.Identity?.Name);
 
-            if (serviceHistory == null)
+            if (!result.Success)
             {
-                return new StatusCodeResult(500);
+                return Json(new { status = "Error", message = result.ErrorMessage });
             }
 
-            return View(serviceHistory);
+            return Json(new
+            {
+                status = "Success",
+                message = workItem.Id == 0 ? "WorkItem added successfully" : "WorkItem updated successfully",
+                data = result.Data
+            });
         }
     }
 }
