@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using GarageSaas.ViewModels;
 
 namespace GarageSaas.Controllers
 {
@@ -24,6 +25,7 @@ namespace GarageSaas.Controllers
 
         public IActionResult Index()
         {
+            var model = new DashboardViewModel();
 
             foreach (var ident in User.Claims)
             {
@@ -35,6 +37,10 @@ namespace GarageSaas.Controllers
                     var GarageBusinessId = garageBusinessId;
                     TempData["GarageBusinessId"] = garageBusinessId;
                     HttpContext.Session.SetString("GarageBusinessId", garageBusinessId);
+                    if (int.TryParse(garageBusinessId, out int parsedGarageBusinessId))
+                    {
+                        model.GarageBusinessId = parsedGarageBusinessId;
+                    }
                 }
                 if (ident.Type == "emails")
                 {
@@ -45,11 +51,50 @@ namespace GarageSaas.Controllers
                         TempData["userName"] = loggedInUser.FirstName + " " + loggedInUser.LastName;
                         TempData["userId"] = loggedInUser.Id;
                         HttpContext.Session.SetInt32("userId", loggedInUser.Id);
+                        model.UserName = loggedInUser.FirstName + " " + loggedInUser.LastName;
+                        model.UserId = loggedInUser.Id;
                     }
                 }
             }
 
-            return View();
+            if (!model.GarageBusinessId.HasValue &&
+                int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int sessionGarageBusinessId))
+            {
+                model.GarageBusinessId = sessionGarageBusinessId;
+            }
+
+            if (!model.UserId.HasValue)
+            {
+                model.UserId = HttpContext.Session.GetInt32("userId");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.UserName))
+            {
+                model.UserName = TempData["userName"]?.ToString();
+                TempData.Keep("userName");
+            }
+
+            if (model.GarageBusinessId.HasValue)
+            {
+                try
+                {
+                    model.CustomerCount = _context.GarageBusinessCustomer.Count(c => c.GarageBusinessId == model.GarageBusinessId.Value);
+                    model.VehicleCount = _context.CustomerVehicle.Count(v => v.GarageBusinessId == model.GarageBusinessId.Value);
+                    model.InvoiceCount = _context.VehicleInvoice.Count(i => i.GarageBusinessId == model.GarageBusinessId.Value);
+                    model.OutstandingTotal = _context.VehicleInvoice
+                        .Where(i => i.GarageBusinessId == model.GarageBusinessId.Value && i.Paid != true)
+                        .Sum(i => i.Total ?? 0);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Unable to load dashboard counts.");
+                }
+            }
+
+            TempData.Keep("GarageBusinessId");
+            TempData.Keep("userId");
+
+            return View(model);
         }
 
         public IActionResult Privacy()

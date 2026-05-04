@@ -1,7 +1,25 @@
-﻿@model SignupAPI.Models.VehicleAndCustomers
+@model SignupAPI.Models.VehicleAndCustomers
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using System.Linq
 
 @{
-    ViewData["Title"] = Model?.Vehicle?.Id > 0 ? "Edit Vehicle" : "Add Vehicle";
+    var isEdit = Model?.Vehicle?.Id > 0;
+    var registration = string.IsNullOrWhiteSpace(Model?.Vehicle?.VehicleRegistration)
+        ? "New vehicle"
+        : Model.Vehicle.VehicleRegistration.ToUpperInvariant();
+    var selectedOwner = Model?.GarageVehicleOwnerList?.FirstOrDefault(o => o.Selected)?.Text;
+    var selectedMake = Model?.ListofVehicleMakes?.FirstOrDefault(m => m.Selected || m.Value == Model.Vehicle.VehicleMakeId.ToString())?.Text;
+    var selectedModel = Model?.ListofVehicleModels?.FirstOrDefault(m => m.Selected || m.Value == Model.Vehicle.VehicleModelId.ToString())?.Text;
+    var selectedYear = Model?.ListofVehicleYears?.FirstOrDefault(y => y.Selected || y.Value == Model.Vehicle.VehicleYearId.ToString())?.Text;
+    var selectedFuel = Model?.ListofFuelTypes?.FirstOrDefault(f => f.Selected || f.Value == Model.Vehicle.VehicleFuelTypeId.ToString())?.Text;
+    var selectedTransmission = Model?.ListofTransmissionTypes?.FirstOrDefault(t => t.Selected || t.Value == Model.Vehicle.VehicleTransmissionId.ToString())?.Text;
+    var vehicleLabel = string.Join(" ", new[] { selectedYear, selectedMake, selectedModel }.Where(v => !string.IsNullOrWhiteSpace(v)));
+    var garageBusinessId = TempData["GarageBusinessId"];
+    var userId = TempData["userId"];
+    TempData.Keep("GarageBusinessId");
+    TempData.Keep("userId");
+
+    ViewData["Title"] = isEdit ? "Edit Vehicle" : "Add Vehicle";
 
     string nctMonth = "", nctYear = "", taxMonth = "", taxYear = "";
     if (!string.IsNullOrWhiteSpace(Model?.Vehicle?.VehicleNCTDue))
@@ -16,40 +34,59 @@
     }
 }
 
-<div class="container-fluid px-0">
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4">
-        <div>
-            <h2 class="mb-1">@ViewData["Title"]</h2>
-            <div class="text-muted small">
-                @(Model?.Vehicle?.Id > 0
-                    ? $"Update details for {Model.Vehicle.VehicleRegistration}."
-                    : "Add a vehicle and assign an owner.")
-            </div>
-        </div>
-
-        <a class="btn btn-light mt-3 mt-md-0" asp-action="CustomerVehicleList">
-            <i class="bi bi-arrow-left me-1"></i> Back
-        </a>
+<section class="page-title-row edit-vehicle-header">
+    <div>
+        <p class="eyebrow mb-2">Vehicle record</p>
+        <h1>@(isEdit ? "Edit vehicle" : "Add vehicle")</h1>
+        <p class="text-muted mb-0">
+            @(isEdit ? $"Update service details for {registration}." : "Create a vehicle profile and assign an owner.")
+        </p>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            @using (Html.BeginForm("AddUpdateCustomerVehicle", "CustomerVehicle", FormMethod.Post, new { id = "vehicleForm", autocomplete = "off", onsubmit = "return false;" }))
-            {
-                @Html.AntiForgeryToken()
-                @Html.HiddenFor(m => m.Vehicle.Id)
+    <div class="page-actions">
+        <a class="btn btn-outline-secondary"
+           asp-action="CustomerVehicleList"
+           asp-route-garageBusinessId="@garageBusinessId"
+           asp-route-userId="@userId">
+            <i class="bi bi-arrow-left me-2"></i>Vehicles
+        </a>
+    </div>
+</section>
 
-                <div class="row g-4">
+@using (Html.BeginForm("AddUpdateCustomerVehicle", "CustomerVehicle", FormMethod.Post, new { id = "vehicleForm", autocomplete = "off", onsubmit = "return false;" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.Vehicle.Id)
 
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">Registration</label>
-                        <input class="form-control" id="txtRegistration"
+    <section class="edit-vehicle-grid">
+        <div class="workspace-panel edit-form-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow mb-1">Specification</p>
+                    <h2>Vehicle details</h2>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-heading">
+                    <span><i class="bi bi-card-text"></i></span>
+                    <div>
+                        <h3>Registration and owner</h3>
+                        <p>Identify the vehicle and link it to the customer account.</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label" for="txtRegistration">Registration</label>
+                        <input class="form-control registration-input"
+                               id="txtRegistration"
                                value="@Model.Vehicle.VehicleRegistration"
                                placeholder="e.g. 12-D-12345" />
                     </div>
 
-                    <div class="col-12 col-md-8">
-                        <label class="form-label">Owner</label>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label" for="ddlVehicleOwner">Owner</label>
                         <select class="form-select" id="ddlVehicleOwner">
                             <option value="">-- Select owner --</option>
                             @foreach (var owner in Model.GarageVehicleOwnerList ?? Enumerable.Empty<SelectListItem>())
@@ -60,16 +97,60 @@
                             }
                         </select>
 
-                        <div class="form-check mt-2">
+                        <div class="form-check form-switch owner-toggle mt-3">
                             <input class="form-check-input" type="checkbox" id="chkNewCustomer">
                             <label class="form-check-label" for="chkNewCustomer">
-                                Add new customer
+                                Add new customer instead
                             </label>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">Make</label>
+            <div id="newCustomerPanel" class="new-customer-panel" style="display:none;">
+                <div class="section-heading">
+                    <span><i class="bi bi-person-plus"></i></span>
+                    <div>
+                        <h3>New customer</h3>
+                        <p>Add the owner details without leaving this vehicle record.</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label" for="txtNewCustomerForename">First name</label>
+                        <input class="form-control" id="txtNewCustomerForename" />
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label" for="txtNewCustomerSurname">Surname</label>
+                        <input class="form-control" id="txtNewCustomerSurname" />
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label" for="txtNewCustomerMobile">Mobile number</label>
+                        <input class="form-control" id="txtNewCustomerMobile" />
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label" for="txtNewCustomerEMail">Email address</label>
+                        <input class="form-control" id="txtNewCustomerEMail" type="email" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-heading">
+                    <span><i class="bi bi-car-front"></i></span>
+                    <div>
+                        <h3>Make and model</h3>
+                        <p>Set the core vehicle specification used across jobs and invoices.</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label" for="ddlVehicleMake">Make</label>
                         <select class="form-select" id="ddlVehicleMake">
                             <option value="">-- Select make --</option>
                             @foreach (var make in Model.ListofVehicleMakes ?? Enumerable.Empty<SelectListItem>())
@@ -82,8 +163,8 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">Model</label>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label" for="ddlVehicleModel">Model</label>
                         <select class="form-select"
                                 id="ddlVehicleModel"
                                 data-current-model-id="@Model.Vehicle.VehicleModelId">
@@ -98,8 +179,8 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">Year</label>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label" for="ddlVehicleYears">Year</label>
                         <select class="form-select" id="ddlVehicleYears">
                             <option value="">-- Select year --</option>
                             @foreach (var y in Model.ListofVehicleYears ?? Enumerable.Empty<SelectListItem>())
@@ -112,8 +193,8 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">Fuel type</label>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <label class="form-label" for="ddlFuelType">Fuel type</label>
                         <select class="form-select" id="ddlFuelType">
                             <option value="">-- Select fuel --</option>
                             @foreach (var ft in Model.ListofFuelTypes ?? Enumerable.Empty<SelectListItem>())
@@ -126,8 +207,8 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">Transmission</label>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="ddlTransmission">Transmission</label>
                         <select class="form-select" id="ddlTransmission">
                             <option value="">-- Select transmission type --</option>
                             @foreach (var tt in Model.ListofTransmissionTypes ?? Enumerable.Empty<SelectListItem>())
@@ -140,8 +221,8 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">Mileage (KM)</label>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="ddlMileage">Mileage (KM)</label>
                         <select class="form-select" id="ddlMileage">
                             <option value="">-- Select mileage --</option>
                             @foreach (var m in Model.ListofMileages ?? Enumerable.Empty<SelectListItem>())
@@ -153,17 +234,31 @@
                             }
                         </select>
                     </div>
+                </div>
+            </div>
 
+            <div class="form-section">
+                <div class="section-heading">
+                    <span><i class="bi bi-calendar-check"></i></span>
+                    <div>
+                        <h3>Dates and renewals</h3>
+                        <p>Track mileage capture, NCT due date, and tax renewal.</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
                     <div class="col-12 col-md-4">
-                        <label class="form-label">Mileage date</label>
-                        <input type="text" id="txtDate" class="form-control"
+                        <label class="form-label" for="txtDate">Mileage date</label>
+                        <input type="text"
+                               id="txtDate"
+                               class="form-control"
                                value="@(Model.Vehicle.VehicleMileageDate == default ? "" : Model.Vehicle.VehicleMileageDate.ToString("dd/MM/yyyy"))"
                                placeholder="dd/mm/yyyy" />
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">NCT due</label>
-                        <div class="d-flex gap-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="ddlNCTMonth">NCT due</label>
+                        <div class="split-select">
                             <select class="form-select" id="ddlNCTMonth">
                                 @foreach (var mo in new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" })
                                 {
@@ -180,9 +275,9 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Tax due</label>
-                        <div class="d-flex gap-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="ddlTaxMonth">Tax due</label>
+                        <div class="split-select">
                             <select class="form-select" id="ddlTaxMonth">
                                 @foreach (var mo in new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" })
                                 {
@@ -198,53 +293,80 @@
                             </select>
                         </div>
                     </div>
-
-                    <div id="newCustomerPanel" class="col-12" style="display:none;">
-                        <div class="card bg-light border-0 mt-2">
-                            <div class="card-body">
-                                <h6 class="mb-3">New Customer Details</h6>
-
-                                <div class="row g-3">
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label">First name</label>
-                                        <input class="form-control" id="txtNewCustomerForename" />
-                                    </div>
-
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label">Surname</label>
-                                        <input class="form-control" id="txtNewCustomerSurname" />
-                                    </div>
-
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label">Mobile number</label>
-                                        <input class="form-control" id="txtNewCustomerMobile" />
-                                    </div>
-
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label">Email Address</label>
-                                        <input class="form-control" id="txtNewCustomerEMail" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
+            </div>
 
-                <hr class="my-4" />
-
-                <div class="d-flex flex-column flex-sm-row gap-2">
-                    <button type="button" id="btnSavejs" class="btn btn-primary" onclick="SubmitVehicleCustomers();">
-                        <i class="bi bi-check-lg me-1"></i> Save
-                    </button>
-                    <a class="btn btn-light" asp-action="CustomerVehicleList">Cancel</a>
-                </div>
-
-                <div id="statusArea" class="mt-3"></div>
-            }
+            <div id="statusArea"></div>
         </div>
-    </div>
-</div>
+
+        <aside class="edit-vehicle-side">
+            <div class="workspace-panel vehicle-record-card">
+                <div class="vehicle-record-main">
+                    <span class="vehicle-avatar vehicle-record-avatar"><i class="bi bi-car-front"></i></span>
+                    <div>
+                        <p class="eyebrow mb-1">Current record</p>
+                        <h2>@registration</h2>
+                        <span class="status-pill">
+                            <i class="bi bi-circle-fill"></i>@(isEdit ? "Saved vehicle" : "Draft vehicle")
+                        </span>
+                    </div>
+                </div>
+
+                <div class="vehicle-record-details">
+                    <div>
+                        <span>Vehicle</span>
+                        <strong>@(string.IsNullOrWhiteSpace(vehicleLabel) ? "Not selected" : vehicleLabel)</strong>
+                    </div>
+                    <div>
+                        <span>Owner</span>
+                        <strong>@(string.IsNullOrWhiteSpace(selectedOwner) ? "Not assigned" : selectedOwner)</strong>
+                    </div>
+                    <div>
+                        <span>Fuel</span>
+                        <strong>@(string.IsNullOrWhiteSpace(selectedFuel) ? "Not selected" : selectedFuel)</strong>
+                    </div>
+                    <div>
+                        <span>Transmission</span>
+                        <strong>@(string.IsNullOrWhiteSpace(selectedTransmission) ? "Not selected" : selectedTransmission)</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="workspace-panel renewal-card">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow mb-1">Renewals</p>
+                        <h2>Due dates</h2>
+                    </div>
+                </div>
+
+                <div class="renewal-list">
+                    <div>
+                        <span><i class="bi bi-shield-check"></i>NCT</span>
+                        <strong>@(string.IsNullOrWhiteSpace(Model.Vehicle.VehicleNCTDue) ? "Not set" : Model.Vehicle.VehicleNCTDue)</strong>
+                    </div>
+                    <div>
+                        <span><i class="bi bi-receipt"></i>Tax</span>
+                        <strong>@(string.IsNullOrWhiteSpace(Model.Vehicle.VehicleTaxDue) ? "Not set" : Model.Vehicle.VehicleTaxDue)</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="workspace-panel save-panel">
+                <button type="button" id="btnSavejs" class="btn btn-primary w-100" onclick="SubmitVehicleCustomers();">
+                    <i class="bi bi-check-lg me-2"></i>Save vehicle
+                </button>
+
+                <a class="btn btn-light w-100"
+                   asp-action="CustomerVehicleList"
+                   asp-route-garageBusinessId="@garageBusinessId"
+                   asp-route-userId="@userId">
+                    Cancel
+                </a>
+            </div>
+        </aside>
+    </section>
+}
 
 @section Scripts {
     <script type="text/javascript" src="~/js/moment.min.js"></script>

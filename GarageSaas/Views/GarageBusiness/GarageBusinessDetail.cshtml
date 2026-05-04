@@ -1,79 +1,179 @@
-﻿@model SignupAPI.Models.GarageBusiness
+@using System.Linq
+@model SignupAPI.Models.GarageBusiness
+
 @{
-    ViewBag.Title = "Garage Business Details";
+    ViewData["Title"] = "Garage Business Details";
+    var addressParts = new[]
+    {
+        Model.GarageAddressLine1,
+        Model.GarageAddressLine2,
+        Model.GarageAddressLine3,
+        Model.GarageAddressLine4,
+        Model.Postcode
+    }.Where(part => !string.IsNullOrWhiteSpace(part)).ToList();
 }
 
-<h2>Garage Business Details</h2>
+<div class="page-title-row">
+    <div>
+        <p class="eyebrow mb-1">Garage profile</p>
+        <h1>@Model.GarageBusinessName</h1>
+        <div class="text-muted">Business details used across customer records, quotes, and invoices.</div>
+    </div>
 
-<div>
-    <hr />
-    <dl class="dl-horizontal">
-        <dt>
-            @Html.DisplayNameFor(model => model.GarageBusinessName)
-        </dt>
-        <dd>
-            @Html.DisplayFor(model => model.GarageBusinessName)
-        </dd>
-        <dt>
-            @Html.DisplayNameFor(model => model.GarageAddressLine1)
-        </dt>
-        <dd>
-            @Html.DisplayFor(model => model.GarageAddressLine1)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.GarageAddressLine2)
-        </dt>
-        <dd>
-            @Html.DisplayFor(model => model.GarageAddressLine2)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.GarageAddressLine3)
-        </dt>
-        <dd>
-            @Html.DisplayFor(model => model.GarageAddressLine3)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.GarageAddressLine4)
-        </dt>
-        <dd>
-            @Html.DisplayFor(model => model.GarageAddressLine4)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.Postcode)
-        </dt>
-        <dd>
-            @Html.DisplayFor(model => model.Postcode)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.GarageEmailAddress)
-        </dt>
-        <dd>
-            @Html.DisplayFor(model => model.GarageEmailAddress)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.GarageMobileNumber)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.GarageMobileNumber)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.GaragePhoneNumber)
-        </dt>
-        <dd>
-            @Html.DisplayFor(model => model.GaragePhoneNumber)
-        </dd>
-
-    </dl>
+    <div class="page-actions">
+        <a class="btn btn-light" asp-controller="Home" asp-action="Index">
+            <i class="bi bi-arrow-left me-2"></i>Dashboard
+        </a>
+        <a class="btn btn-primary"
+           asp-action="EditGarageBusiness"
+           asp-route-garageBusinessId="@Model.Id">
+            <i class="bi bi-pencil-square me-2"></i>Edit details
+        </a>
+    </div>
 </div>
-<p>
-    @Html.ActionLink("Edit Garage Business", "EditGarageBusiness", new { garageBusinessId = Model.Id}) |
-    <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-</p>
+
+<section class="business-profile-hero">
+    <div class="business-avatar">
+        <i class="bi bi-building-gear"></i>
+    </div>
+
+    <div class="business-profile-main">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <h2 class="mb-0">@Model.GarageBusinessName</h2>
+            <span class="status-chip @(Model.Active ? "status-active" : "status-muted")">
+                <i class="bi @(Model.Active ? "bi-check-circle" : "bi-pause-circle")"></i>
+                @(Model.Active ? "Active" : "Inactive")
+            </span>
+            @if (Model.Blocked)
+            {
+                <span class="status-chip status-blocked">
+                    <i class="bi bi-slash-circle"></i>Blocked
+                </span>
+            }
+        </div>
+
+        <div class="business-meta">
+            <span><i class="bi bi-hash"></i> Garage ID @Model.Id</span>
+            @if (Model.CreatedDate != default)
+            {
+                <span><i class="bi bi-calendar3"></i> Added @Model.CreatedDate.ToString("dd MMM yyyy")</span>
+            }
+            @if (Model.UpdatedDate.HasValue)
+            {
+                <span><i class="bi bi-clock-history"></i> Updated @Model.UpdatedDate.Value.ToString("dd MMM yyyy")</span>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="business-detail-grid">
+    <div class="workspace-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow mb-1">Contact</p>
+                <h2>How customers reach you</h2>
+            </div>
+        </div>
+
+        <div class="contact-card-list">
+            <div class="contact-card">
+                <span class="contact-icon"><i class="bi bi-envelope"></i></span>
+                <div>
+                    <span>Email</span>
+                    @if (!string.IsNullOrWhiteSpace(Model.GarageEmailAddress))
+                    {
+                        <a href="mailto:@Model.GarageEmailAddress">@Model.GarageEmailAddress</a>
+                    }
+                    else
+                    {
+                        <strong class="text-muted">Not provided</strong>
+                    }
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <span class="contact-icon"><i class="bi bi-telephone"></i></span>
+                <div>
+                    <span>Phone</span>
+                    @if (!string.IsNullOrWhiteSpace(Model.GaragePhoneNumber))
+                    {
+                        <a href="tel:@Model.GaragePhoneNumber">@Model.GaragePhoneNumber</a>
+                    }
+                    else
+                    {
+                        <strong class="text-muted">Not provided</strong>
+                    }
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <span class="contact-icon"><i class="bi bi-phone"></i></span>
+                <div>
+                    <span>Mobile</span>
+                    @if (!string.IsNullOrWhiteSpace(Model.GarageMobileNumber))
+                    {
+                        <a href="tel:@Model.GarageMobileNumber">@Model.GarageMobileNumber</a>
+                    }
+                    else
+                    {
+                        <strong class="text-muted">Not provided</strong>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <aside class="workspace-panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow mb-1">Location</p>
+                <h2>Garage address</h2>
+            </div>
+        </div>
+
+        @if (addressParts.Any())
+        {
+            <address class="business-address">
+                @foreach (var part in addressParts)
+                {
+                    <span>@part</span>
+                }
+            </address>
+        }
+        else
+        {
+            <div class="empty-panel">
+                <i class="bi bi-geo-alt"></i>
+                <span>No address has been added yet.</span>
+            </div>
+        }
+    </aside>
+</section>
+
+<section class="workspace-panel mt-3">
+    <div class="panel-heading">
+        <div>
+            <p class="eyebrow mb-1">Record</p>
+            <h2>Audit details</h2>
+        </div>
+    </div>
+
+    <div class="audit-grid">
+        <div>
+            <span>Created by</span>
+            <strong>@(string.IsNullOrWhiteSpace(Model.CreatedBy) ? "Not recorded" : Model.CreatedBy)</strong>
+        </div>
+        <div>
+            <span>Created date</span>
+            <strong>@(Model.CreatedDate == default ? "Not recorded" : Model.CreatedDate.ToString("dd MMM yyyy"))</strong>
+        </div>
+        <div>
+            <span>Updated by</span>
+            <strong>@(string.IsNullOrWhiteSpace(Model.UpdatedBy) ? "Not recorded" : Model.UpdatedBy)</strong>
+        </div>
+        <div>
+            <span>Updated date</span>
+            <strong>@(Model.UpdatedDate.HasValue ? Model.UpdatedDate.Value.ToString("dd MMM yyyy") : "Not recorded")</strong>
+        </div>
+    </div>
+</section>

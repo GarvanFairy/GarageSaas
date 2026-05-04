@@ -59,12 +59,12 @@
                 <h5 class="mb-3">Vehicle details</h5>
 
                 <div class="row g-4">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label">Registration</label>
                         <input asp-for="Vehicle.VehicleRegistration" class="form-control" />
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label">Make</label>
                         <select id="ddlVehicleMake" asp-for="Vehicle.VehicleMakeId" class="form-select"
                                 asp-items="Model.ListOfVehicleMakes">
@@ -72,7 +72,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label">Model</label>
                         <select id="ddlVehicleModel" asp-for="Vehicle.VehicleModelId" class="form-select"
                                 asp-items="Model.ListOfVehicleModels">
@@ -80,7 +80,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label">Year</label>
                         <select asp-for="Vehicle.VehicleYearId" class="form-select"
                                 asp-items="Model.ListOfVehicleYears">
@@ -88,7 +88,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label">Fuel type</label>
                         <select asp-for="Vehicle.VehicleFuelTypeId" class="form-select"
                                 asp-items="Model.ListOfVehicleFuelTypes">

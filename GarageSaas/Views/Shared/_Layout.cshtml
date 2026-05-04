@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - GarageSaas</title>
+    <title>@ViewData["Title"] - GarageMate</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
@@ -12,14 +12,20 @@
     @RenderSection("Styles", required: false)
 </head>
 
-<body class="bg-light">
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
-            <div class="container">
-                <a class="navbar-brand fw-semibold d-flex align-items-center gap-2"
+<body>
+    @{
+        var garageBusinessId = TempData["GarageBusinessId"];
+        var userId = TempData["userId"];
+        TempData.Keep("GarageBusinessId");
+        TempData.Keep("userId");
+    }
+
+    <header class="app-topbar">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid px-3 px-lg-4">
+                <a class="navbar-brand app-brand"
                    asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-wrench-adjustable-circle"></i>
-                    <span>GarageSaas</span>
+                    <img src="~/images/garagemate-logo.svg" asp-append-version="true" alt="GarageMate" />
                 </a>
 
                 <button class="navbar-toggler" type="button"
@@ -33,29 +39,33 @@
                         <li class="nav-item">
                             <a class="nav-link @IsActive("Home","Index")"
                                asp-area="" asp-controller="Home" asp-action="Index">
-                                <i class="bi bi-house-door me-1"></i> Home
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link @IsActive("Home","Privacy")"
-                               asp-area="" asp-controller="Home" asp-action="Privacy">
-                                <i class="bi bi-shield-lock me-1"></i> Privacy
+                            <a class="nav-link @IsActive("GarageCustomers","GarageCustomersList")"
+                               asp-controller="GarageCustomers" asp-action="GarageCustomersList"
+                               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
+                                <i class="bi bi-people me-1"></i> Customers
                             </a>
                         </li>
 
-                        @* Example dropdown for your app sections (optional)
-                        <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-grid me-1"></i> Management
-                        </a>
-                        <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" asp-controller="CustomerVehicle" asp-action="Index">Vehicles</a></li>
-                        <li><a class="dropdown-item" asp-controller="Customers" asp-action="Index">Customers</a></li>
-                        </ul>
+                        <li class="nav-item">
+                            <a class="nav-link @IsActive("CustomerVehicle","CustomerVehicleList")"
+                               asp-controller="CustomerVehicle" asp-action="CustomerVehicleList"
+                               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
+                                <i class="bi bi-car-front me-1"></i> Vehicles
+                            </a>
                         </li>
-                        *@
+
+                        <li class="nav-item">
+                            <a class="nav-link @IsActive("GarageBusiness","GarageBusinessDetail")"
+                               asp-controller="GarageBusiness" asp-action="GarageBusinessDetail"
+                               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
+                                <i class="bi bi-building-gear me-1"></i> Garage
+                            </a>
+                        </li>
                     </ul>
 
                     <div class="d-flex align-items-center gap-2">
@@ -66,33 +76,68 @@
         </nav>
     </header>
 
-    <div class="container py-4">
-        @* Optional global messages *@
-        @if (TempData["Success"] is string successMsg)
-        {
-            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                <i class="bi bi-check-circle me-1"></i> @successMsg
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        }
+    <div class="app-shell">
+        <aside class="app-sidebar">
+            <div class="sidebar-label">Workspace</div>
+            <a class="sidebar-link @IsActive("Home","Index")" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+            </a>
+            <a class="sidebar-link @IsActive("GarageCustomers","GarageCustomersList")"
+               asp-controller="GarageCustomers" asp-action="GarageCustomersList"
+               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
+                <i class="bi bi-people"></i><span>Customers</span>
+            </a>
+            <a class="sidebar-link @IsActive("CustomerVehicle","CustomerVehicleList")"
+               asp-controller="CustomerVehicle" asp-action="CustomerVehicleList"
+               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
+                <i class="bi bi-car-front"></i><span>Vehicles</span>
+            </a>
+            <a class="sidebar-link @IsActive("GarageBusiness","GarageBusinessDetail")"
+               asp-controller="GarageBusiness" asp-action="GarageBusinessDetail"
+               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
+                <i class="bi bi-building-gear"></i><span>Garage profile</span>
+            </a>
 
-        @if (TempData["Error"] is string errorMsg)
-        {
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                <i class="bi bi-exclamation-triangle me-1"></i> @errorMsg
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        }
+            <div class="sidebar-label mt-4">Create</div>
+            <a class="sidebar-link"
+               asp-controller="GarageCustomers" asp-action="DisplayAddGarageCustomersWithVehicle"
+               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
+                <i class="bi bi-person-plus"></i><span>Customer</span>
+            </a>
+            <a class="sidebar-link"
+               asp-controller="CustomerVehicle" asp-action="DisplayAddCustomerVehicle"
+               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
+                <i class="bi bi-plus-circle"></i><span>Vehicle</span>
+            </a>
+        </aside>
 
-        <main role="main">
-            @RenderBody()
-        </main>
+        <div class="app-content">
+            @if (TempData["Success"] is string successMsg)
+            {
+                <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi bi-check-circle me-1"></i> @successMsg
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] is string errorMsg)
+            {
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi bi-exclamation-triangle me-1"></i> @errorMsg
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <main role="main">
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
-    <footer class="border-top bg-white">
-        <div class="container py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+    <footer class="app-footer">
+        <div class="container-fluid px-3 px-lg-4 py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <div class="text-muted small">
-                &copy; @DateTime.Now.Year - GarageSaas
+                &copy; @DateTime.Now.Year - GarageMate
             </div>
             <div class="small">
                 <a class="text-decoration-none" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
@@ -107,7 +152,6 @@
     @RenderSection("Scripts", required: false)
 
     @functions {
-        // Highlights active nav item
         private string IsActive(string controller, string action)
         {
             var currentController = ViewContext.RouteData.Values["controller"]?.ToString();

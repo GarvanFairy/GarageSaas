@@ -1,78 +1,132 @@
-﻿@using System.Collections.Generic
+@using System.Collections.Generic
+@using System.Linq
 @model List<SignupAPI.Models.CustomerVehicleListVM>
 
 @{
-    ViewData["Title"] = "Garage Customer Vehicles";
+    ViewData["Title"] = "Vehicles";
 
-    // TempData comes as object; keep it so it survives redirects
     var garageBusinessId = TempData["GarageBusinessId"];
     var userId = TempData["userId"];
     TempData.Keep("GarageBusinessId");
     TempData.Keep("userId");
+
+    var vehicleCount = Model?.Count ?? 0;
+    var ownerCount = Model?
+        .Where(v => !string.IsNullOrWhiteSpace(v.OwnerName))
+        .Select(v => v.OwnerName)
+        .Distinct()
+        .Count() ?? 0;
+    var registrationCount = Model?.Count(v => !string.IsNullOrWhiteSpace(v.VehicleRegistration)) ?? 0;
+    var contactCount = Model?.Count(v =>
+        !string.IsNullOrWhiteSpace(v.GarageCustomerMobileNumber) ||
+        !string.IsNullOrWhiteSpace(v.GarageCustomerPhoneNumber) ||
+        !string.IsNullOrWhiteSpace(v.GarageCustomerEmailAddress)) ?? 0;
 }
 
-<div class="d-flex align-items-center justify-content-between mb-3">
+<section class="page-title-row vehicle-page-header">
     <div>
-        <h2 class="mb-0">Vehicles</h2>
-        <div class="text-muted small">Customer-owned and garage-owned vehicles.</div>
+        <p class="eyebrow mb-2">Vehicles</p>
+        <h1>Vehicle register</h1>
+        <p class="text-muted mb-0">Track customer-owned and garage-owned vehicles with owner contact details close at hand.</p>
     </div>
 
-    <div class="d-flex gap-2">
+    <div class="page-actions">
         <a class="btn btn-primary"
            asp-controller="CustomerVehicle"
            asp-action="DisplayAddCustomerVehicle"
            asp-route-garageBusinessId="@garageBusinessId"
            asp-route-userId="@userId">
-            <i class="bi bi-plus-lg me-1"></i> Add Vehicle
+            <i class="bi bi-plus-lg me-2"></i>Add vehicle
         </a>
 
-        <a class="btn btn-light"
+        <a class="btn btn-outline-secondary"
            asp-controller="GarageCustomers"
            asp-action="GarageCustomersList"
            asp-route-garageBusinessId="@garageBusinessId"
            asp-route-userId="@userId">
-            <i class="bi bi-arrow-left me-1"></i> Back
+            <i class="bi bi-arrow-left me-2"></i>Customers
         </a>
     </div>
-</div>
+</section>
 
-<div class="card shadow-sm">
-    <div class="card-header bg-white">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-6">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input id="tableSearch" type="text" class="form-control"
-                           placeholder="Search by make, model, registration..." />
-                </div>
+<section class="vehicle-summary-grid" aria-label="Vehicle summary">
+    <div class="vehicle-summary-card">
+        <span class="summary-icon summary-blue"><i class="bi bi-car-front"></i></span>
+        <div>
+            <span>Total vehicles</span>
+            <strong id="totalCount">@vehicleCount</strong>
+        </div>
+    </div>
+    <div class="vehicle-summary-card">
+        <span class="summary-icon summary-teal"><i class="bi bi-person-badge"></i></span>
+        <div>
+            <span>Known owners</span>
+            <strong>@ownerCount</strong>
+        </div>
+    </div>
+    <div class="vehicle-summary-card">
+        <span class="summary-icon summary-purple"><i class="bi bi-card-text"></i></span>
+        <div>
+            <span>Registrations</span>
+            <strong>@registrationCount</strong>
+        </div>
+    </div>
+    <div class="vehicle-summary-card">
+        <span class="summary-icon summary-amber"><i class="bi bi-telephone"></i></span>
+        <div>
+            <span>Owner contacts</span>
+            <strong>@contactCount</strong>
+        </div>
+    </div>
+</section>
+
+<section class="workspace-panel vehicle-table-panel">
+    <div class="vehicle-toolbar">
+        <div>
+            <p class="eyebrow mb-1">Register</p>
+            <h2>Vehicle records</h2>
+        </div>
+
+        <div class="vehicle-search">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input id="tableSearch" type="text" class="form-control"
+                       placeholder="Search make, model, registration, owner..." />
             </div>
-            <div class="col-md-6 text-md-end">
-                <span class="badge text-bg-light border" id="rowCount"></span>
-            </div>
+            <span class="badge text-bg-light border" id="rowCount"></span>
+            <a class="btn btn-light"
+               asp-controller="CustomerVehicle"
+               asp-action="CustomerVehicleList"
+               asp-route-garageBusinessId="@garageBusinessId"
+               asp-route-userId="@userId">
+                <i class="bi bi-arrow-clockwise"></i>
+            </a>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0" id="vehiclesTable">
-            <thead class="table-light">
+    <div class="table-responsive vehicle-table-wrap">
+        <table class="table table-hover align-middle mb-0 vehicle-table" id="vehiclesTable">
+            <thead>
                 <tr>
-                    <th>Make</th>
-                    <th>Model</th>
+                    <th>Vehicle</th>
                     <th>Registration</th>
                     <th>Owner</th>
-                    <th>Mobile Phone No:</th>
-                    <th>Phone No:</th>
-                    <th>Email Address</th>
-                    <th class="text-end" style="width: 120px;">Actions</th>
+                    <th>Contact</th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @if (Model == null || Model.Count == 0)
                 {
                     <tr>
-                        <td colspan="4" class="text-center py-5 text-muted">
-                            <div class="mb-2"><i class="bi bi-car-front fs-3"></i></div>
-                            No vehicles found.
+                        <td colspan="5">
+                            <div class="vehicle-empty-state">
+                                <span><i class="bi bi-car-front"></i></span>
+                                <div>
+                                    <strong>No vehicles found</strong>
+                                    <p class="mb-0">Add a vehicle to start building the register.</p>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -80,22 +134,67 @@
                 {
                     foreach (var vehicle in Model)
                     {
+                        var vehicleName = $"{vehicle.VehicleMake} {vehicle.VehicleModel}".Trim();
+                        var ownerName = string.IsNullOrWhiteSpace(vehicle.OwnerName) ? "No owner linked" : vehicle.OwnerName;
+
                         <tr>
-                            <td class="fw-semibold">@vehicle.VehicleMake</td>
-                            <td>@vehicle.VehicleModel</td>
-                            <td>@vehicle.VehicleRegistration</td>
-                            <td>@vehicle.OwnerName</td>
-                            <td>@vehicle.GarageCustomerMobileNumber</td>
-                            <td>@vehicle.GarageCustomerPhoneNumber</td>
-                            <td>@vehicle.GarageCustomerEmailAddress</td>
+                            <td>
+                                <div class="vehicle-identity">
+                                    <span class="vehicle-avatar"><i class="bi bi-car-front"></i></span>
+                                    <div>
+                                        <strong>@(string.IsNullOrWhiteSpace(vehicleName) ? "Unnamed vehicle" : vehicleName)</strong>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(vehicle.VehicleRegistration))
+                                {
+                                    <span class="registration-plate">@vehicle.VehicleRegistration</span>
+                                }
+                                else
+                                {
+                                    <span class="empty-value">No registration</span>
+                                }
+                            </td>
+
+                            <td>
+                                <div class="vehicle-owner">
+                                    <strong>@ownerName</strong>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="vehicle-contact-list">
+                                    @if (!string.IsNullOrWhiteSpace(vehicle.GarageCustomerMobileNumber))
+                                    {
+                                        <span><i class="bi bi-phone"></i>@vehicle.GarageCustomerMobileNumber</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(vehicle.GarageCustomerPhoneNumber))
+                                    {
+                                        <span><i class="bi bi-telephone"></i>@vehicle.GarageCustomerPhoneNumber</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(vehicle.GarageCustomerEmailAddress))
+                                    {
+                                        <a href="mailto:@vehicle.GarageCustomerEmailAddress"><i class="bi bi-envelope"></i>@vehicle.GarageCustomerEmailAddress</a>
+                                    }
+                                    @if (string.IsNullOrWhiteSpace(vehicle.GarageCustomerMobileNumber) &&
+                                         string.IsNullOrWhiteSpace(vehicle.GarageCustomerPhoneNumber) &&
+                                         string.IsNullOrWhiteSpace(vehicle.GarageCustomerEmailAddress))
+                                    {
+                                        <span class="text-muted">No contact details</span>
+                                    }
+                                </div>
+                            </td>
+
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-primary"
                                    asp-controller="CustomerVehicle"
                                    asp-action="EditCustomerVehicle"
                                    asp-route-CustomerVehicleId="@vehicle.VehicleId"
                                    asp-route-userId="@userId"
-                                   title="Edit">
-                                    <i class="bi bi-pencil"></i>
+                                   title="Edit vehicle">
+                                    <i class="bi bi-pencil me-1"></i>Edit
                                 </a>
                             </td>
                         </tr>
@@ -105,27 +204,83 @@
         </table>
     </div>
 
-    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+    <div class="vehicle-table-footer">
         <span class="text-muted small">
-            Showing <span id="visibleCount"></span> of <span id="totalCount"></span>
+            Showing <span id="visibleCount"></span> of <span id="totalFooterCount"></span>
         </span>
-
-        <a class="btn btn-sm btn-light"
-           asp-controller="CustomerVehicle"
-           asp-action="CustomerVehicleList"
-           asp-route-garageBusinessId="@garageBusinessId"
-           asp-route-userId="@userId">
-            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-        </a>
     </div>
+</section>
+
+<div class="vehicle-card-list" id="vehiclesCards">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var vehicle in Model)
+        {
+            var vehicleName = $"{vehicle.VehicleMake} {vehicle.VehicleModel}".Trim();
+            var ownerName = string.IsNullOrWhiteSpace(vehicle.OwnerName) ? "No owner linked" : vehicle.OwnerName;
+
+            <article class="vehicle-mobile-card">
+                <div class="vehicle-mobile-top">
+                    <div class="vehicle-identity">
+                        <span class="vehicle-avatar"><i class="bi bi-car-front"></i></span>
+                        <div>
+                            <strong>@(string.IsNullOrWhiteSpace(vehicleName) ? "Unnamed vehicle" : vehicleName)</strong>
+                            <small>ID @vehicle.VehicleId</small>
+                        </div>
+                    </div>
+                    <a class="btn btn-sm btn-outline-primary"
+                       asp-controller="CustomerVehicle"
+                       asp-action="EditCustomerVehicle"
+                       asp-route-CustomerVehicleId="@vehicle.VehicleId"
+                       asp-route-userId="@userId"
+                       aria-label="Edit @vehicleName">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </div>
+
+                <div class="vehicle-card-details">
+                    @if (!string.IsNullOrWhiteSpace(vehicle.VehicleRegistration))
+                    {
+                        <span class="registration-plate">@vehicle.VehicleRegistration</span>
+                    }
+                    <span><i class="bi bi-person"></i>@ownerName</span>
+                </div>
+
+                <div class="vehicle-contact-list">
+                    @if (!string.IsNullOrWhiteSpace(vehicle.GarageCustomerMobileNumber))
+                    {
+                        <span><i class="bi bi-phone"></i>@vehicle.GarageCustomerMobileNumber</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(vehicle.GarageCustomerEmailAddress))
+                    {
+                        <a href="mailto:@vehicle.GarageCustomerEmailAddress"><i class="bi bi-envelope"></i>@vehicle.GarageCustomerEmailAddress</a>
+                    }
+                </div>
+            </article>
+        }
+    }
+    else
+    {
+        <article class="vehicle-mobile-card">
+            <div class="vehicle-empty-state">
+                <span><i class="bi bi-car-front"></i></span>
+                <div>
+                    <strong>No vehicles found</strong>
+                    <p class="mb-0">Add a vehicle to start building the register.</p>
+                </div>
+            </div>
+        </article>
+    }
 </div>
 
 @section Scripts {
     <script>
         $(function () {
-            const $rows = $("#vehiclesTable tbody tr").not(":has(td[colspan])"); // ignore empty-state row
+            const $rows = $("#vehiclesTable tbody tr").not(":has(td[colspan])");
+            const $cards = $("#vehiclesCards .vehicle-mobile-card");
 
             $("#totalCount").text($rows.length);
+            $("#totalFooterCount").text($rows.length);
             $("#visibleCount").text($rows.length);
             $("#rowCount").text($rows.length + " vehicles");
 
@@ -137,6 +292,11 @@
                     const show = $(this).text().toLowerCase().indexOf(value) > -1;
                     $(this).toggle(show);
                     if (show) visible++;
+                });
+
+                $cards.each(function () {
+                    const show = $(this).text().toLowerCase().indexOf(value) > -1;
+                    $(this).toggle(show);
                 });
 
                 $("#visibleCount").text(visible);

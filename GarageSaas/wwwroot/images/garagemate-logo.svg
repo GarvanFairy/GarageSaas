@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">GarageMate</title>
+  <desc id="logoDesc">GarageMate logo with a garage door icon and the tagline Your Smart Garage Dashboard.</desc>
+  <g fill="none" fill-rule="evenodd">
+    <g transform="translate(24 20)">
+      <path fill="#14765F" d="M8 0h140c4.42 0 8 3.58 8 8v148H0V8c0-4.42 3.58-8 8-8Z"/>
+      <path fill="#0F664F" d="M0 156h156v4H0z"/>
+      <rect width="128" height="28" x="16" y="16" fill="#22A17E" rx="4"/>
+      <rect width="128" height="28" x="16" y="52" fill="#229C7A" rx="4"/>
+      <rect width="128" height="28" x="16" y="88" fill="#229977" rx="4"/>
+      <rect width="128" height="28" x="16" y="124" fill="#5BC6A2" rx="4"/>
+      <circle cx="80" cy="174" r="10" fill="#A7E3CF"/>
+    </g>
+    <path stroke="#A8C7CE" stroke-linecap="round" stroke-width="2" d="M216 36v128"/>
+    <text fill="#075F74" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="58" font-weight="800" letter-spacing="-2" transform="translate(246 64)">
+      <tspan x="0" y="58">Garage</tspan>
+    </text>
+    <text fill="#16C886" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="58" font-weight="300" letter-spacing="-3" transform="translate(246 64)">
+      <tspan x="244" y="58">Mate</tspan>
+    </text>
+    <text fill="#4EA7B7" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="7" transform="translate(248 144)">
+      <tspan x="0" y="18">YOUR SMART GARAGE DASHBOARD</tspan>
+    </text>
+  </g>
+</svg>
