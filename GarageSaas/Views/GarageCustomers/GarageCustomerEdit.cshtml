@@ -220,6 +220,27 @@
                         </div>
                     }
                 </div>
+
+                <div class="workspace-panel linked-invoices-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow mb-1">Financial</p>
+                            <h2>Invoices</h2>
+                        </div>
+
+                        <a class="btn btn-sm btn-primary"
+                           asp-controller="VehicleInvoice"
+                           asp-action="CustomerInvoices"
+                           asp-route-customerId="@Model.Customer.Id">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </a>
+                    </div>
+
+                    <div class="empty-panel">
+                        <i class="bi bi-receipt"></i>
+                        View customer invoices
+                    </div>
+                </div>
             }
 
             <div class="workspace-panel save-panel">

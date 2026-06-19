@@ -40,63 +40,63 @@ $(function () {
     });
 });
 
+
 function SubmitVehicleCustomers() {
-    const vehicleId = parseInt($('input[name="Vehicle.Id"]').val() || "0", 10);
+    const selected = (selector) => {
+        const option = $(`${selector} option:selected`);
+        return {
+            Value: (option.val() || "").trim(),
+            Text: (option.text() || "").trim()
+        };
+    };
+
+    const toNullableInt = (value) => {
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? null : parsed;
+    };
+
+    const vehicleId = toNullableInt($('input[name="Vehicle.Id"]').val()) || 0;
+
+    const owner = selected("#ddlVehicleOwner");
+    const make = selected("#ddlVehicleMake");
+    const model = selected("#ddlVehicleModel");
+    const fuel = selected("#ddlFuelType");
+    const mileage = selected("#ddlMileage");
+    const transmission = selected("#ddlTransmission");
+    const year = selected("#ddlVehicleYears");
+    const nctMonth = selected("#ddlNCTMonth");
+    const nctYear = selected("#ddlNCTYear");
+    const taxMonth = selected("#ddlTaxMonth");
+    const taxYear = selected("#ddlTaxYear");
 
     const registration = ($("#txtRegistration").val() || "").trim();
-
-    const ownerId = $("#ddlVehicleOwner option:selected").val();
-    const ownerText = $("#ddlVehicleOwner option:selected").text();
-
-    const makeId = $("#ddlVehicleMake option:selected").val();
-    const makeText = $("#ddlVehicleMake option:selected").text();
-
-    const modelId = $("#ddlVehicleModel option:selected").val();
-    const modelText = $("#ddlVehicleModel option:selected").text();
-
-    const fuelId = $("#ddlFuelType option:selected").val();
-    const fuelText = $("#ddlFuelType option:selected").text();
-
-    const mileageId = $("#ddlMileage option:selected").val();
-    const mileageText = $("#ddlMileage option:selected").text();
-
-    const transmissionVal = $("#ddlTransmission option:selected").val();
-    const transmissionText = $("#ddlTransmission option:selected").text();
-
-    const yearId = $("#ddlVehicleYears option:selected").val();
-    const yearText = $("#ddlVehicleYears option:selected").text();
+    const isNewCustomer = $("#chkNewCustomer").is(":checked");
 
     const mileageDateIso = toIsoDate($("#txtDate").val()) || new Date().toISOString();
-
-    const nctMonth = $("#ddlNCTMonth option:selected").val();
-    const nctMonthText = $("#ddlNCTMonth option:selected").text();
-    const nctYear = $("#ddlNCTYear option:selected").val();
-    const nctYearText = $("#ddlNCTYear option:selected").text();
-
-    const taxMonth = $("#ddlTaxMonth option:selected").val();
-    const taxMonthText = $("#ddlTaxMonth option:selected").text();
-    const taxYear = $("#ddlTaxYear option:selected").val();
-    const taxYearText = $("#ddlTaxYear option:selected").text();
-
-    const isNewCustomer = $('#chkNewCustomer').is(':checked');
 
     const errors = [];
 
     if (!registration) errors.push("Registration is required.");
-    if (!makeId) errors.push("Make is required.");
-    if (!modelId) errors.push("Model is required.");
-    if (!fuelId) errors.push("Fuel type is required.");
-    if (!yearId) errors.push("Vehicle year is required.");
+    if (!make.Value) errors.push("Make is required.");
+    if (!model.Value) errors.push("Model is required.");
+    if (!fuel.Value) errors.push("Fuel type is required.");
+    if (!year.Value) errors.push("Vehicle year is required.");
 
-    if (!isNewCustomer && !ownerId) {
+    if (!isNewCustomer && !owner.Value) {
         errors.push("Owner is required.");
     }
 
-    if (isNewCustomer) {
-        const newForename = ($('#txtNewCustomerForename').val() || '').trim();
-        const newSurname = ($('#txtNewCustomerSurname').val() || '').trim();
+    let newCustomerModel = null;
 
-        if (!newForename && !newSurname) {
+    if (isNewCustomer) {
+        newCustomerModel = {
+            Forename: ($("#txtNewCustomerForename").val() || "").trim(),
+            Surname: ($("#txtNewCustomerSurname").val() || "").trim(),
+            MobileNumber: ($("#txtNewCustomerMobile").val() || "").trim(),
+            EmailAddress: ($("#txtNewCustomerEMail").val() || "").trim()
+        };
+
+        if (!newCustomerModel.Forename && !newCustomerModel.Surname) {
             errors.push("New customer first name or surname is required.");
         }
     }
@@ -106,50 +106,43 @@ function SubmitVehicleCustomers() {
         return;
     }
 
-    const vehicleViewModel = {
-        Id: vehicleId,
-        VehicleRegistration: registration,
-        VehicleMake: makeText,
-        VehicleModel: modelText,
-        VehicleFuelType: fuelText,
-        VehicleMileage: mileageText,
-        VehicleYear: yearText,
-        VehicleTransmission: transmissionText,
-        VehicleNCTDue: (nctMonthText && nctYearText) ? (nctMonthText + " " + nctYearText) : "",
-        VehicleTaxDue: (taxMonthText && taxYearText) ? (taxMonthText + " " + taxYearText) : "",
-        VehicleMileageDate: mileageDateIso,
-        GarageOwned: false
-    };
-
-    let newCustomerModel = null;
-
-    if (isNewCustomer) {
-        newCustomerModel = {
-            Forename: ($('#txtNewCustomerForename').val() || '').trim(),
-            Surname: ($('#txtNewCustomerSurname').val() || '').trim(),
-            MobileNumber: ($('#txtNewCustomerMobile').val() || '').trim(),
-            EmailAddress: ($('#txtNewCustomerEMail').val() || '').trim()
-        };
-    }
-
     const vehicleAndCustomers = {
-        Vehicle: vehicleViewModel,
-        AddNewCustomer: isNewCustomer,
-        GarageVehicleOwnerListItem: { Value: ownerId, Text: ownerText },
-        VehicleMakeListItem: { Value: makeId, Text: makeText },
-        VehicleModelListItem: { Value: modelId, Text: modelText },
-        FuelTypeListItem: { Value: fuelId, Text: fuelText },
-        VehicleMileageListItem: { Value: mileageId, Text: mileageText },
-        VehicleYearListItem: { Value: yearId, Text: yearText },
-        TransmissionListItem: { Value: transmissionVal, Text: transmissionText },
+        Vehicle: {
+            Id: vehicleId,
+            VehicleRegistration: registration,
 
-        NCTMonthListItem: { Value: nctMonth, Text: nctMonthText },
-        NCTYearListItem: { Value: nctYear, Text: nctYearText },
-        TaxMonthListItem: { Value: taxMonth, Text: taxMonthText },
-        TaxYearListItem: { Value: taxYear, Text: taxYearText },
+            VehicleMakeId: toNullableInt(make.Value),
+            VehicleModelId: toNullableInt(model.Value),
+            VehicleFuelTypeId: toNullableInt(fuel.Value),
+            VehicleMileageId: toNullableInt(mileage.Value),
+            VehicleTransmissionId: toNullableInt(transmission.Value),
+            VehicleYearId: toNullableInt(year.Value),
+
+            VehicleNCTDue: `${nctMonth.Text} ${nctYear.Text}`.trim(),
+            VehicleTaxDue: `${taxMonth.Text} ${taxYear.Text}`.trim(),
+            VehicleMileageDate: mileageDateIso,
+            GarageOwned: false
+        },
+
+        AddNewCustomer: isNewCustomer,
+
+        GarageVehicleOwnerListItem: isNewCustomer ? null : owner,
+        VehicleMakeListItem: make,
+        VehicleModelListItem: model,
+        FuelTypeListItem: fuel,
+        VehicleMileageListItem: mileage,
+        VehicleYearListItem: year,
+        TransmissionListItem: transmission,
+
+        NCTMonthListItem: nctMonth,
+        NCTYearListItem: nctYear,
+        TaxMonthListItem: taxMonth,
+        TaxYearListItem: taxYear,
 
         NewCustomer: newCustomerModel
     };
+
+    console.log("Posting:", JSON.stringify(vehicleAndCustomers));
 
     $("#btnSavejs").prop("disabled", true);
 
@@ -159,15 +152,131 @@ function SubmitVehicleCustomers() {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         processData: false,
-        data: JSON.stringify(vehicleAndCustomers)
+        data: JSON.stringify(vehicleAndCustomers),
+        headers: {
+            "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+        }
     })
         .done(function () {
             showStatus("success", "Saved successfully.");
             window.location = "/CustomerVehicle/CustomerVehicleList";
         })
         .fail(function (xhr) {
-            const msg = xhr.responseText || "Save failed.";
-            showStatus("danger", msg);
+            showStatus("danger", xhr.responseText || "Save failed.");
+        })
+        .always(function () {
+            $("#btnSavejs").prop("disabled", false);
+        });
+}
+
+function SubmitVehicleCustomers_notUsed() {
+    const vehicleId = parseInt($('input[name="Vehicle.Id"]').val() || "0", 10);
+
+    const isNewCustomer = $('#chkNewCustomer').is(':checked');
+
+    const vehicleAndCustomers = {
+        Vehicle: {
+            Id: vehicleId,
+            VehicleRegistration: ($("#txtRegistration").val() || "").trim(),
+            VehicleMakeId: parseInt($("#ddlVehicleMake").val() || "0", 10),
+            VehicleModelId: parseInt($("#ddlVehicleModel").val() || "0", 10),
+            VehicleFuelTypeId: parseInt($("#ddlFuelType").val() || "0", 10),
+            VehicleMileageId: parseInt($("#ddlMileage").val() || "0", 10),
+            VehicleTransmissionId: parseInt($("#ddlTransmission").val() || "0", 10),
+            VehicleYearId: parseInt($("#ddlVehicleYears").val() || "0", 10),
+            VehicleMileageDate: toIsoDate($("#txtDate").val()) || new Date().toISOString(),
+            VehicleNCTDue: `${$("#ddlNCTMonth").val()} ${$("#ddlNCTYear").val()}`,
+            VehicleTaxDue: `${$("#ddlTaxMonth").val()} ${$("#ddlTaxYear").val()}`,
+            GarageOwned: false
+        },
+
+        AddNewCustomer: isNewCustomer,
+
+        GarageVehicleOwnerListItem: isNewCustomer ? null : {
+            Value: $("#ddlVehicleOwner").val(),
+            Text: $("#ddlVehicleOwner option:selected").text()
+        },
+
+        VehicleMakeListItem: {
+            Value: $("#ddlVehicleMake").val(),
+            Text: $("#ddlVehicleMake option:selected").text()
+        },
+
+        VehicleModelListItem: {
+            Value: $("#ddlVehicleModel").val(),
+            Text: $("#ddlVehicleModel option:selected").text()
+        },
+
+        FuelTypeListItem: {
+            Value: $("#ddlFuelType").val(),
+            Text: $("#ddlFuelType option:selected").text()
+        },
+
+        VehicleMileageListItem: {
+            Value: $("#ddlMileage").val(),
+            Text: $("#ddlMileage option:selected").text()
+        },
+
+        VehicleYearListItem: {
+            Value: $("#ddlVehicleYears").val(),
+            Text: $("#ddlVehicleYears option:selected").text()
+        },
+
+        TransmissionListItem: {
+            Value: $("#ddlTransmission").val(),
+            Text: $("#ddlTransmission option:selected").text()
+        },
+
+        NCTMonthListItem: {
+            Value: $("#ddlNCTMonth").val(),
+            Text: $("#ddlNCTMonth option:selected").text()
+        },
+
+        NCTYearListItem: {
+            Value: $("#ddlNCTYear").val(),
+            Text: $("#ddlNCTYear option:selected").text()
+        },
+
+        TaxMonthListItem: {
+            Value: $("#ddlTaxMonth").val(),
+            Text: $("#ddlTaxMonth option:selected").text()
+        },
+
+        TaxYearListItem: {
+            Value: $("#ddlTaxYear").val(),
+            Text: $("#ddlTaxYear option:selected").text()
+        },
+
+        NewCustomer: isNewCustomer ? {
+            Forename: ($("#txtNewCustomerForename").val() || "").trim(),
+            Surname: ($("#txtNewCustomerSurname").val() || "").trim(),
+            MobileNumber: ($("#txtNewCustomerMobile").val() || "").trim(),
+            EmailAddress: ($("#txtNewCustomerEMail").val() || "").trim()
+        } : null
+    };
+
+    console.log("Posting vehicleAndCustomers:", vehicleAndCustomers);
+    console.log(JSON.stringify(vehicleAndCustomers));
+
+    $("#btnSavejs").prop("disabled", true);
+
+    $.ajax({
+        url: "/CustomerVehicle/AddUpdateCustomerVehicle",
+        type: "POST",
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        processData: false,
+        data: JSON.stringify(vehicleAndCustomers),
+        headers: {
+            "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+        }
+    })
+        .done(function () {
+            showStatus("success", "Saved successfully.");
+            window.location = "/CustomerVehicle/CustomerVehicleList";
+        })
+        .fail(function (xhr) {
+            showStatus("danger", xhr.responseText || "Save failed.");
         })
         .always(function () {
             $("#btnSavejs").prop("disabled", false);

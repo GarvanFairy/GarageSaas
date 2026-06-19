@@ -1,0 +1,260 @@
+@model SignupAPI.Models.VehicleInvoice
+
+@{
+    ViewData["Title"] = $"Invoice {Model?.InvoiceNumber}";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Invoice Details</h1>
+        <div class="btn-group" role="group">
+            <a asp-action="AddEdit" asp-route-id="@Model.Id" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- ================= HEADER ================= -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-muted">Invoice Number</h5>
+                    <h3 class="mb-3">@Model?.InvoiceNumber</h3>
+                </div>
+                <div class="col-md-6 text-end">
+                    @if (Model?.Paid == true)
+                    {
+                        <span class="badge bg-success p-2">PAID</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning p-2">PENDING</span>
+                    }
+                </div>
+            </div>
+            <hr />
+            <div class="row">
+                <div class="col-md-3">
+                    <small class="text-muted">Invoice Date</small>
+                    <p>@Model?.InvoiceDate?.ToString("dd/MM/yyyy")</p>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Due Date</small>
+                    <p>@Model?.DateDue?.ToString("dd/MM/yyyy")</p>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Status</small>
+                    <p>@Model?.InvoiceStatus</p>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Type</small>
+                    <p>@Model?.InvoiceType</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CUSTOMER & VEHICLE ================= -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Customer & Vehicle Information</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Customer Name</label>
+                        <p>@(Model?.GarageBusinessCustomer != null ? $"{Model.GarageBusinessCustomer.GarageCustomerForename} {Model.GarageBusinessCustomer.GarageCustomerSurname}" : "N/A")</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Vehicle Make</label>
+                        <p>@(Model?.Vehicle?.VehicleMake?.Make ?? "N/A")</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Vehicle Model</label>
+                        <p>@(Model?.Vehicle?.VehicleModel?.Model ?? "N/A")</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Vehicle Registration</label>
+                        <p>@Model?.Vehicle?.VehicleRegistration</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= COSTS BREAKDOWN ================= -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Costs Breakdown</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Labour</label>
+                        <p class="h6">€@Model?.Labour?.ToString("F2")</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Paint</label>
+                        <p class="h6">€@Model?.Paint?.ToString("F2")</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Environment Cost</label>
+                        <p class="h6">€@Model?.EnvironmentCost?.ToString("F2")</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Car Hire</label>
+                        <p class="h6">€@Model?.CarHire?.ToString("F2")</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Sundry Expenses</label>
+                        <p class="h6">€@Model?.SundryExpenses?.ToString("F2")</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Invoice Amount</label>
+                        <p class="h6">@Model?.InvoiceAmount</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TOTALS ================= -->
+    <div class="card shadow-sm mb-4 border-primary">
+        <div class="card-body">
+            <h5 class="mb-3">Totals</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Sub Total</label>
+                        <p class="h5">€@Model?.SubTotal?.ToString("F2")</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">VAT (23.5%)</label>
+                        <p class="h5">€@Model?.Vat?.ToString("F2")</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Total</label>
+                        <p class="h4 text-primary fw-bold">€@Model?.Total?.ToString("F2")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= PAYMENT STATUS ================= -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Payment Information</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Payment Status</label>
+                        <p>
+                            @if (Model?.Paid.HasValue == true && Model.Paid.Value)
+                            {
+                                <span class="badge bg-success">Paid</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning">Pending</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Due Date</label>
+                        <p>@Model?.DateDue?.ToString("dd/MM/yyyy")</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Paid Date</label>
+                        <p>@Model?.PaidDate?.ToString("dd/MM/yyyy")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= DESCRIPTION & COMMENTS ================= -->
+    @if (!string.IsNullOrEmpty(Model?.InvoiceDescription) || !string.IsNullOrEmpty(Model?.Comment))
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="mb-3">Additional Information</h5>
+                @if (!string.IsNullOrEmpty(Model?.InvoiceDescription))
+                {
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Description</label>
+                        <p>@Model.InvoiceDescription</p>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model?.Comment))
+                {
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Comments</label>
+                        <p>@Model.Comment</p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- ================= AUDIT INFO ================= -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h6 class="text-muted mb-3">Audit Information</h6>
+            <div class="row small">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Created:</strong> @Model?.CreatedDate.ToString("dd/MM/yyyy HH:mm") by @Model?.CreatedBy</p>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1">
+                        <strong>Updated:</strong> 
+                        @if (Model?.UpdatedDate.HasValue == true)
+                        {
+                            @Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm") @("by") @Model?.UpdatedBy
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not updated</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ACTIONS ================= -->
+    <div class="d-flex gap-2 mb-4">
+        <a asp-action="AddEdit" asp-route-id="@Model.Id" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Edit Invoice
+        </a>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>

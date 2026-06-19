@@ -84,6 +84,7 @@ namespace GarageSaas.Controllers
         [HttpPost]
         public IActionResult AddUpdateCustomerVehicle([FromBody] VehicleAndCustomers vehicleCustomerVm)
         {
+            
             if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int sessionGarageBusinessId))
             {
                 return StatusCode(500, "Session GarageBusinessId not valid");

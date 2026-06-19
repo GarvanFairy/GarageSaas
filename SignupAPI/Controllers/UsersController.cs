@@ -31,7 +31,7 @@ namespace SignupAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Users>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            return await ((IQueryable<Users>)_context.Users).ToListAsync();
         }
 
         // GET: api/Users/5
@@ -144,11 +144,14 @@ namespace SignupAPI.Controllers
                  * */
 
                 //Check if email exists already. If so retrieve name, garage business name and garage business ID
-              Users emailAddressFromUsers = _context.Users.Where(u => u.EmailAddress.ToLower() == newUser.EmailAddress.Trim().ToLower()).ToList().FirstOrDefault();
+                Users emailAddressFromUsers = await ((IQueryable<Users>)_context.Users).FirstOrDefaultAsync(u => u.EmailAddress.ToLower() == newUser.EmailAddress.Trim().ToLower());
                 if (emailAddressFromUsers != null && !string.IsNullOrEmpty(emailAddressFromUsers.EmailAddress))
                 {
-                    GarageBusiness gb = _context.GarageBusiness.Where(u => u.Id == emailAddressFromUsers.GarageBusinessId).ToList().FirstOrDefault();
-                    garageBusinessId = gb.Id.ToString();
+                    GarageBusiness gb = await ((IQueryable<GarageBusiness>)_context.GarageBusiness).FirstOrDefaultAsync(u => u.Id == emailAddressFromUsers.GarageBusinessId);
+                    if (gb != null)
+                    {
+                        garageBusinessId = gb.Id.ToString();
+                    }
                 }
                 else
                 {

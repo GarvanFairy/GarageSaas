@@ -44,7 +44,7 @@ namespace GarageSaas.Controllers
                 }
                 if (ident.Type == "emails")
                 {
-                    Users loggedInUser = _context.Users.Where(u => u.EmailAddress == ident.Value).ToList().FirstOrDefault();
+                    Users loggedInUser = ((IQueryable<Users>)_context.Users).FirstOrDefault(u => u.EmailAddress == ident.Value);
 
                     if (loggedInUser != null && !string.IsNullOrEmpty(loggedInUser.EmailAddress))
                     {
@@ -74,14 +74,14 @@ namespace GarageSaas.Controllers
                 TempData.Keep("userName");
             }
 
-            if (model.GarageBusinessId.HasValue)
+                if (model.GarageBusinessId.HasValue)
             {
                 try
                 {
-                    model.CustomerCount = _context.GarageBusinessCustomer.Count(c => c.GarageBusinessId == model.GarageBusinessId.Value);
-                    model.VehicleCount = _context.CustomerVehicle.Count(v => v.GarageBusinessId == model.GarageBusinessId.Value);
-                    model.InvoiceCount = _context.VehicleInvoice.Count(i => i.GarageBusinessId == model.GarageBusinessId.Value);
-                    model.OutstandingTotal = _context.VehicleInvoice
+                    model.CustomerCount = ((IQueryable<GarageBusinessCustomer>)_context.GarageBusinessCustomer).Count(c => c.GarageBusinessId == model.GarageBusinessId.Value);
+                    model.VehicleCount = ((IQueryable<CustomerVehicle>)_context.CustomerVehicle).Count(v => v.GarageBusinessId == model.GarageBusinessId.Value);
+                    model.InvoiceCount = ((IQueryable<VehicleInvoice>)_context.VehicleInvoice).Count(i => i.GarageBusinessId == model.GarageBusinessId.Value);
+                    model.OutstandingTotal = ((IQueryable<VehicleInvoice>)_context.VehicleInvoice)
                         .Where(i => i.GarageBusinessId == model.GarageBusinessId.Value && i.Paid != true)
                         .Sum(i => i.Total ?? 0);
                 }

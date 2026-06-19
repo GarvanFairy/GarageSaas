@@ -24,7 +24,7 @@ namespace SignupAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GarageBusiness>>> GetGaragebusiness()
         {
-            return await _context.GarageBusiness.ToListAsync();
+            return await ((IQueryable<GarageBusiness>)_context.GarageBusiness).ToListAsync();
         }
 
         // GET: api/Garagebusinesses/5

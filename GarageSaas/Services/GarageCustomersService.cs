@@ -58,7 +58,7 @@ namespace GarageSaas.Services
         public ServiceResult<List<CustomerVehicleListVM>> GetGarageCustomersForList(int garageBusinessId)
         {
             var customers =
-                _context.GarageBusinessCustomer
+                ((IQueryable<GarageBusinessCustomer>)_context.GarageBusinessCustomer)
                     .Where(c => c.GarageBusinessId == garageBusinessId)
                     .ToList();
 
@@ -92,7 +92,7 @@ namespace GarageSaas.Services
                  }).ToList();
 
             var customersWithNoVehicles =
-                _context.GarageBusinessCustomer
+                ((IQueryable<GarageBusinessCustomer>)_context.GarageBusinessCustomer)
                     .Where(c => c.GarageBusinessId == garageBusinessId)
                     .Where(c => !_context.CustomerOwnedVehicles.Any(cov => cov.GarageBusinessCustomerId == c.Id))
                     .Select(c => new CustomerVehicleListVM
@@ -228,6 +228,32 @@ namespace GarageSaas.Services
                 _context.CustomerOwnedVehicles.Add(customerOwnedVehicle);
                 _context.SaveChanges();
             }
+
+            return ServiceResult.Ok();
+        }
+
+        public ServiceResult DeleteGarageCustomer(int garageCustomerId, int garageBusinessId)
+        {
+            var customer = _context.GarageBusinessCustomer
+                .FirstOrDefault(c => c.Id == garageCustomerId && c.GarageBusinessId == garageBusinessId);
+
+            if (customer == null)
+            {
+                return ServiceResult.Fail("Garage customer couldn't be found");
+            }
+
+            // Delete associated customer-owned vehicles
+            var customerOwnedVehicles = ((IQueryable<CustomerOwnedVehicles>)_context.CustomerOwnedVehicles)
+                .Where(cov => cov.GarageBusinessCustomerId == garageCustomerId)
+                .ToList();
+
+            foreach (var cov in customerOwnedVehicles)
+            {
+                _context.CustomerOwnedVehicles.Remove(cov);
+            }
+
+            _context.GarageBusinessCustomer.Remove(customer);
+            _context.SaveChanges();
 
             return ServiceResult.Ok();
         }

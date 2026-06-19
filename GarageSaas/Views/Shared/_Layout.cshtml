@@ -60,6 +60,13 @@
                         </li>
 
                         <li class="nav-item">
+                            <a class="nav-link @IsActive("VehicleInvoice","Index")"
+                               asp-controller="VehicleInvoice" asp-action="Index">
+                                <i class="bi bi-receipt me-1"></i> Invoices
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
                             <a class="nav-link @IsActive("GarageBusiness","GarageBusinessDetail")"
                                asp-controller="GarageBusiness" asp-action="GarageBusinessDetail"
                                asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
@@ -96,6 +103,10 @@
                asp-controller="GarageBusiness" asp-action="GarageBusinessDetail"
                asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
                 <i class="bi bi-building-gear"></i><span>Garage profile</span>
+            </a>
+            <a class="sidebar-link @IsActive("VehicleInvoice","Index")"
+               asp-controller="VehicleInvoice" asp-action="Index">
+                <i class="bi bi-receipt"></i><span>Invoices</span>
             </a>
 
             <div class="sidebar-label mt-4">Create</div>

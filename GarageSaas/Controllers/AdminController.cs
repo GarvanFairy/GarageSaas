@@ -134,16 +134,23 @@ namespace GarageSaas.Controllers
                 {
                     if (string.IsNullOrEmpty(ident.Value))
                     {
-                        Users userOwner = _context.Users.Where(u => u.EmailAddress == ownerEmail).ToList().FirstOrDefault();
-                        garageBusinessId = userOwner.GarageBusinessId;
+                        Users userOwner = ((IQueryable<Users>)_context.Users).FirstOrDefault(u => u.EmailAddress == ownerEmail);
+                        if (userOwner != null)
+                        {
+                            garageBusinessId = userOwner.GarageBusinessId;
+                            GarageBusinessId = garageBusinessId;
+                        }
                     }
                     else
                     {
-                        int.TryParse(ident.Value, out garageBusinessId);
-                        GarageBusinessId = garageBusinessId;
+                        if (int.TryParse(ident.Value, out garageBusinessId))
+                        {
+                            GarageBusinessId = garageBusinessId;
+                        }
                     }
-                    //List<Garagebusiness> listGarageBusinesses = _context.Garagebusiness.ToList();
-                    garageBusiness = _context.GarageBusiness.Where(g => g.Id == GarageBusinessId).ToList().FirstOrDefault();
+
+                    // Query directly for the GarageBusiness without creating an intermediate list
+                    garageBusiness = ((IQueryable<GarageBusiness>)_context.GarageBusiness).FirstOrDefault(g => g.Id == GarageBusinessId);
                     TempData["GarageBusinessId"] = garageBusinessId;
                 }
             }

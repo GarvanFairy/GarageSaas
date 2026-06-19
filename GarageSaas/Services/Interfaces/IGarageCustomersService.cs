@@ -16,6 +16,7 @@ namespace GarageSaas.Services.Interfaces
             ServiceResult AddOrUpdateGarageCustomer(GarageBusinessCustomer garageCustomer, int garageBusinessId, string userName);
             Task<ServiceResult<GarageCustomerWithVehicleVM>> BuildAddCustomerWithVehicleVmAsync();
             ServiceResult AddGarageCustomerWithVehicle(GarageCustomerWithVehicleVM model, int garageBusinessId, string userName);
+            ServiceResult DeleteGarageCustomer(int garageCustomerId, int garageBusinessId);
         }
 
 }

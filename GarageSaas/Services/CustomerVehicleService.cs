@@ -413,7 +413,7 @@ namespace GarageSaas.Services
                 });
             }
 
-            var garageCustomers = _context.GarageBusinessCustomer
+            var garageCustomers = ((IQueryable<GarageBusinessCustomer>)_context.GarageBusinessCustomer)
                 .Where(c => c.GarageBusinessId == sessionGarageBusinessId)
                 .OrderBy(c => c.GarageCustomerForename)
                 .ThenBy(c => c.GarageCustomerSurname)

@@ -31,7 +31,7 @@ namespace GarageSaas.Services
 
         public ServiceResult<List<WorkItem>> GetWorkItemsForVehicle(int vehicleId, int garageBusinessId)
         {
-            var workItems = _context.WorkItem
+            var workItems = ((IQueryable<WorkItem>)_context.WorkItem)
                 .Where(w => w.VehicleId == vehicleId && w.GarageBusinessCustomerId == garageBusinessId)
                 .OrderByDescending(w => w.CreatedDate)
                 .ToList();

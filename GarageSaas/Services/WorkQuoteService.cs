@@ -206,7 +206,7 @@ namespace GarageSaas.Services
                 return ServiceResult.Fail("WorkQuote not found.");
             }
 
-            var links = _context.WorkQuoteWorkItem
+            var links = ((IQueryable<WorkQuoteWorkItem>)_context.WorkQuoteWorkItem)
                 .Where(x => x.WorkQuoteId == workQuoteId && x.GarageBusinessCustomerId == garageBusinessId)
                 .ToList();
 

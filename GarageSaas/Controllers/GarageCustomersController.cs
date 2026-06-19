@@ -175,5 +175,31 @@ namespace GarageSaas.Controllers
 
             return RedirectToAction("GarageCustomersList");
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteGarageCustomer(int garageCustomerId)
+        {
+            if (garageCustomerId <= 0)
+            {
+                return BadRequest("Invalid customer ID");
+            }
+
+            if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int garageBusinessId))
+            {
+                return StatusCode(500, "Session GarageBusinessId not valid");
+            }
+
+            var result = _garageCustomersService.DeleteGarageCustomer(garageCustomerId, garageBusinessId);
+
+            if (!result.Success)
+            {
+                TempData["Error"] = result.ErrorMessage ?? "Unable to delete garage customer.";
+                return RedirectToAction("GarageCustomersList");
+            }
+
+            TempData["Success"] = "Garage customer deleted successfully.";
+            return RedirectToAction("GarageCustomersList");
+        }
     }
 }

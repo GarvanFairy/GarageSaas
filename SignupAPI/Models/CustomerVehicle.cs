@@ -30,5 +30,7 @@ namespace SignupAPI.Models
         public bool? GarageOwned { get; set; }
 
         public virtual GarageBusiness GarageBusiness { get; set; }
+        public virtual VehicleMake VehicleMake { get; set; }
+        public virtual VehicleModel VehicleModel { get; set; }
     }
 }
