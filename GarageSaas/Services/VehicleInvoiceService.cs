@@ -290,5 +290,37 @@ namespace GarageSaas.Services
 
             return vehicles;
         }
+
+        public List<VehicleDropdownItem> GetVehicleDropdownItems(
+    int garageBusinessId)
+        {
+            var vehicles =
+                (from vehicle in _context.CustomerVehicle
+                 join customerVehicle in _context.CustomerOwnedVehicles
+                     on vehicle.Id equals customerVehicle.VehicleId
+                 join make in _context.VehicleMake
+                     on vehicle.VehicleMakeId equals make.Id into makeJoin
+                 from make in makeJoin.DefaultIfEmpty()
+                 join model in _context.VehicleModel
+                     on vehicle.VehicleModelId equals model.Id into modelJoin
+                 from model in modelJoin.DefaultIfEmpty()
+                 where vehicle.GarageBusinessId == garageBusinessId
+                 select new VehicleDropdownItem
+                 {
+                     Id = vehicle.Id,
+
+                     GarageBusinessCustomerId =
+                         customerVehicle.GarageBusinessCustomerId,
+
+                     Text =
+                         ((make != null ? make.Make : string.Empty) + " " +
+                          (model != null ? model.Model : string.Empty) + " " +
+                          vehicle.VehicleRegistration).Trim()
+                 })
+                .OrderBy(x => x.Text)
+                .ToList();
+
+            return vehicles;
+        }
     }
 }

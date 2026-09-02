@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
-using GarageSaas.Services.Models;
+﻿using GarageSaas.Services.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using SignupAPI.Models;
+using System.Collections.Generic;
+
 
 namespace GarageSaas.Services.Interfaces
 {
@@ -11,5 +13,10 @@ namespace GarageSaas.Services.Interfaces
         ServiceResult<List<CombinedWorkQuoteWorkitem>> GetWorkQuotesForWorkItem(int workItemId, int garageBusinessId);
         ServiceResult<CombinedWorkQuoteWorkitem> AddOrUpdateWorkQuote(CombinedWorkQuoteWorkitem model, int garageBusinessId, string userName);
         ServiceResult DeleteWorkQuote(int workQuoteId, int garageBusinessId);
+        List<SelectListItem> GetCustomerDropdownItems(int garageBusinessId);
+
+        List<SelectListItem> GetVehicleDropdownItems(int garageBusinessId);
+        ServiceResult<List<CombinedWorkQuoteWorkitem>> GetWorkQuotes(int garageBusinessId);
+        ServiceResult<List<VehicleBriefInfo>> GetVehiclesForGarageCustomer(int garageCustomerId, int garageBusinessId);
     }
 }
