@@ -1,4 +1,5 @@
 ﻿using GarageSaas.Services.Interfaces;
+using GarageSaas.Services.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -31,28 +32,33 @@ namespace GarageSaas.Controllers
 
             if (!result.Success)
             {
-                return Json(new { status = "Error", message = result.ErrorMessage });
+                return NotFound(new
+                {
+                    status = "Error",
+                    message = result.ErrorMessage
+                });
             }
 
-            return Json(result.Data);
+            return Json(new
+            {
+                status = "Success",
+                data = result.Data
+            });
         }
+
 
         [HttpGet]
         public IActionResult GetByVehicle(int vehicleId)
         {
             if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int garageBusinessId))
-            {
                 return StatusCode(500, "Session GarageBusinessId no valid");
-            }
 
             var result = _workItemService.GetWorkItemsForVehicle(vehicleId, garageBusinessId);
 
             if (!result.Success)
-            {
                 return Json(new { status = "Error", message = result.ErrorMessage });
-            }
 
-            return Json(result.Data);
+            return Json(new { status = "Success", data = result.Data });
         }
 
         [HttpPost]
@@ -80,5 +86,119 @@ namespace GarageSaas.Controllers
                 data = result.Data
             });
         }
+
+        //[HttpPost]
+        //public IActionResult CreateForQuote([FromBody] CreateWorkItemRequest request)
+        //{
+        //    if (!int.TryParse(
+        //            HttpContext.Session.GetString("GarageBusinessId"),
+        //            out int garageBusinessId))
+        //    {
+        //        return StatusCode(500, new
+        //        {
+        //            status = "Error",
+        //            message = "Garage business session is invalid."
+        //        });
+        //    }
+
+        //    var result = _workItemService.CreateWorkItemForQuote(
+        //        request,
+        //        garageBusinessId);
+
+        //    if (!result.Success)
+        //    {
+        //        return Json(new
+        //        {
+        //            status = "Error",
+        //            message = result.ErrorMessage
+        //        });
+        //    }
+
+        //    return Json(new
+        //    {
+        //        status = "Success",
+        //        data = new
+        //        {
+        //            id = result.Data!.Id,
+        //            repairInstructions =
+        //                result.Data.RepairInstructions
+        //        }
+        //    });
+        //}
+
+        [HttpGet]
+        public IActionResult GetAvailableForQuote(int? workQuoteId)
+        {
+            if (!int.TryParse(
+                    HttpContext.Session.GetString("GarageBusinessId"),
+                    out int garageBusinessId))
+            {
+                return StatusCode(500, new
+                {
+                    status = "Error",
+                    message = "Garage business session is invalid."
+                });
+            }
+
+            var result = _workItemService.GetAvailableWorkItemsForQuote(
+                garageBusinessId,
+                workQuoteId);
+
+            if (!result.Success)
+            {
+                return Json(new
+                {
+                    status = "Error",
+                    message = result.ErrorMessage
+                });
+            }
+
+            return Json(new
+            {
+                status = "Success",
+                data = result.Data
+            });
+        }
+
+        [HttpPost]
+        public IActionResult SaveForQuote([FromBody] CreateWorkItemRequest request)
+        {
+            if (!int.TryParse(
+                    HttpContext.Session.GetString("GarageBusinessId"),
+                    out int garageBusinessId))
+            {
+                return StatusCode(500, new
+                {
+                    status = "Error",
+                    message = "Garage business session is invalid."
+                });
+            }
+
+            var result = _workItemService.AddOrUpdateWorkItemForQuote(
+                request,
+                garageBusinessId,
+                User.Identity?.Name);
+
+            if (!result.Success)
+            {
+                return Json(new
+                {
+                    status = "Error",
+                    message = result.ErrorMessage
+                });
+            }
+
+            return Json(new
+            {
+                status = "Success",
+                data = new
+                {
+                    id = result.Data.Id,
+                    repairInstructions =
+                        result.Data.RepairInstructions
+                }
+            });
+        }
+
     }
 }

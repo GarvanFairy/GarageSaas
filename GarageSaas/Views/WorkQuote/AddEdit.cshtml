@@ -1,0 +1,1224 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@using GarageSaas.Services.Models;
+
+@{
+    var workQuoteId = Convert.ToInt32(ViewData["WorkQuoteId"] ?? 0);
+    var isEditMode = workQuoteId > 0;
+
+    ViewData["Title"] = isEditMode ? "Edit Work Quote" : "Create Work Quote";
+
+    var customers = ViewData["Customers"] as List<SelectListItem> ?? new List<SelectListItem>();
+    var vehicles = ViewData["Vehicles"] as List<VehicleDropdownItem> ?? new List<VehicleDropdownItem>();
+
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h1 class="mb-1">@ViewData["Title"]</h1>
+            <div class="text-muted small">
+                @(isEditMode
+                    ? "Edit quote details and manage linked work items."
+                    : "Create a quote by selecting a customer, vehicle and work items.")
+            </div>
+        </div>
+
+        <a asp-controller="WorkQuote" asp-action="Index" class="btn btn-light">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+
+    <input type="hidden" id="workQuoteId" value="@workQuoteId" />
+
+    <div id="statusArea"></div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Customer and vehicle</h5>
+
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Customer</label>
+
+                    @if (isEditMode)
+                    {
+                        <input type="text" id="txtCustomerDisplay" class="form-control" readonly />
+                        <input type="hidden" id="ddlCustomer" />
+                    }
+                    else
+                    {
+                        <select id="ddlCustomer" class="form-select">
+                            <option value="">-- Select customer --</option>
+
+                            @foreach (var customer in customers)
+                            {
+                                <option value="@customer.Value">
+                                    @customer.Text
+                                </option>
+                            }
+                        </select>
+                    }
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Vehicle</label>
+
+                    @if (isEditMode)
+                    {
+                        <input type="text" id="txtVehicleDisplay" class="form-control" readonly />
+                        <input type="hidden" id="ddlVehicle" />
+                    }
+                    else
+                    {
+                        <select id="ddlVehicle"
+                                class="form-select">
+                            <option value="">-- Select vehicle --</option>
+
+                            @foreach (var vehicle in vehicles)
+                            {
+                                <option value="@vehicle.Id"
+                                        data-customer-id="@vehicle.GarageBusinessCustomerId">
+                                    @vehicle.Text
+                                </option>
+                            }
+                        </select>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="button"
+            id="btnClearCustomerVehicle"
+            class="btn btn-outline-secondary">
+        Clear selection
+    </button>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Work Items</h5>
+
+        <button type="button"
+                class="btn btn-outline-primary"
+                id="btnAddWorkItem">
+            Add Work Item
+        </button>
+    </div>
+
+    <div class="modal fade"
+         id="workItemModal"
+         tabindex="-1"
+         aria-hidden="true"
+         role="dialog"
+         aria-labelledby="workItemModalLabel">
+
+        <input type="hidden" id="editWorkItemId" value="0" />
+
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Work Item</h5>
+
+                    <button type="button"
+                            class="close"
+                            data-dismiss="modal"
+                            aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label for="txtNewRepairInstructions"
+                               class="form-label">
+                            Repair Instructions
+                        </label>
+
+                        <textarea id="txtNewRepairInstructions"
+                                  class="form-control"
+                                  rows="4"></textarea>
+                    </div>
+
+                    <div id="workItemModalStatus"></div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="button"
+                            id="btnSaveWorkItem"
+                            class="btn btn-primary">
+                        Save Work Item
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="workItemsContainer" class="row g-3"></div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Quote details</h5>
+
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Quote date</label>
+                    <input type="date" id="txtWorkQuoteDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="col-12 col-md-8">
+                    <label class="form-label">Work request</label>
+                    <input type="text" id="txtWorkRequest" class="form-control" />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Vehicle problem</label>
+                    <textarea id="txtVehicleProblem" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Comment</label>
+                    <textarea id="txtComment" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Work items</h5>
+                <span class="badge bg-secondary" id="selectedWorkItemCount">0 selected</span>
+            </div>
+
+            <div id="workItemsContainer" class="row g-3">
+                <div class="col-12 text-muted">
+                    @(isEditMode ? "Loading linked work items..." : "Select a vehicle to load work items.")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Quote totals</h5>
+
+            <div class="row g-3">
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Labour (€)</label>
+                    <input type="number" step="0.01" id="txtLabour" class="form-control quote-amount" value="0" />
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Environment cost (€)</label>
+                    <input type="number" step="0.01" id="txtEnvironmentCost" class="form-control quote-amount" value="0" />
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Sundry expenses (€)</label>
+                    <input type="number" step="0.01" id="txtSundryExpenses" class="form-control quote-amount" value="0" />
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Paint (€)</label>
+                    <input type="number" step="0.01" id="txtPaint" class="form-control quote-amount" value="0" />
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Car hire (€)</label>
+                    <input type="number" step="0.01" id="txtCarHire" class="form-control quote-amount" value="0" />
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Sub total (€)</label>
+                    <input type="number" step="0.01" id="txtSubTotal" class="form-control" readonly />
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">VAT (€)</label>
+                    <input type="number" step="0.01" id="txtVat" class="form-control" readonly />
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Total (€)</label>
+                    <input type="number" step="0.01" id="txtTotal" class="form-control fw-bold" readonly />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="button" id="btnSaveQuote" class="btn btn-primary" onclick="saveWorkQuote();">
+            <i class="bi bi-check-lg me-1"></i> Save Quote
+        </button>
+
+        <a asp-controller="WorkQuote" asp-action="Index" class="btn btn-light">Cancel</a>
+    </div>
+</div>
+
+<input type="hidden" id="WorkQuoteId" value="@workQuoteId" />
+
+@section Scripts {
+    <script>
+        const workQuoteId = parseInt($("#workQuoteId").val() || "0", 10);
+        const isEditMode = workQuoteId > 0;
+        const vatRate = 0.23;
+        let selectedWorkItemIds = [];
+
+                $("#btnClearCustomerVehicle").on("click", function () {
+            changingCustomerOrVehicle = true;
+            $("#ddlCustomer").val("");
+            $("#ddlVehicle").val("");
+
+            $("#ddlCustomer option")
+                .prop("hidden", false)
+                .prop("disabled", false);
+
+            $("#ddlVehicle option")
+                .prop("hidden", false)
+                .prop("disabled", false);
+
+            changingCustomerOrVehicle = false;
+
+            clearWorkItems();
+        });
+
+                let changingCustomerOrVehicle = false;
+
+        $("#ddlCustomer").on("change", function () {
+            const customerId =
+                parseInt($(this).val() || "0", 10);
+
+            loadVehiclesForCustomer(
+                customerId,
+                null,
+                []
+            );
+        });
+
+                $("#workItemModal").on("hidden.bs.modal", function () {
+            $("#workItemModalStatus").empty();
+            $("#txtNewRepairInstructions").val("");
+        });
+
+                let workItemModal = null;
+
+        $(document).ready(function () {
+            const modalElement =
+                document.getElementById("workItemModal");
+
+            if (modalElement) {
+                workItemModal =
+                    new bootstrap.Modal(modalElement);
+            }
+
+        $("#btnAddWorkItem").on("click", function () {
+            const customerId =
+                parseInt($("#ddlCustomer").val() || "0", 10);
+
+            const vehicleId =
+                parseInt($("#ddlVehicle").val() || "0", 10);
+
+            if (customerId <= 0) {
+                showStatus(
+                    "warning",
+                    "Select a customer before adding a work item."
+                );
+                return;
+            }
+
+            if (vehicleId <= 0) {
+                showStatus(
+                    "warning",
+                    "Select a vehicle before adding a work item."
+                );
+                return;
+            }
+
+            $("#editWorkItemId").val("0");
+            $("#txtNewRepairInstructions").val("");
+            $("#workItemModalStatus").empty();
+
+            $("#workItemModal .modal-title").text("Add Work Item");
+            $("#btnSaveWorkItem").text("Save Work Item");
+
+            $("#workItemModal").modal("show");
+        });
+
+        });
+
+        $(document).on("click", ".edit-work-item", function () {
+            const workItemId = parseInt(
+                $(this).data("work-item-id"),
+                10
+            );
+
+            if (!workItemId || workItemId <= 0) {
+                showStatus(
+                    "danger",
+                    "The selected work item ID is invalid."
+                );
+                return;
+            }
+
+            $.getJSON("/WorkItem/Get", {
+                workItemId: workItemId
+            })
+            .done(function (response) {
+                if (response.status !== "Success") {
+                    showStatus(
+                        "danger",
+                        response.message || "Unable to load work item."
+                    );
+                    return;
+                }
+
+                const item = response.data;
+
+                $("#editWorkItemId").val(
+                    item.id ?? item.Id
+                );
+
+                $("#txtNewRepairInstructions").val(
+                    item.repairInstructions ??
+                    item.RepairInstructions ??
+                    ""
+                );
+
+                $("#workItemModalStatus").empty();
+
+                $("#workItemModal .modal-title").text(
+                    `Edit Work Item #${item.id ?? item.Id}`
+                );
+
+                $("#btnSaveWorkItem").text("Update Work Item");
+
+                $("#workItemModal").modal("show");
+            })
+            .fail(function (xhr) {
+                console.error(
+                    "Get work item failed:",
+                    xhr.status,
+                    xhr.responseText
+                );
+
+                const message =
+                    xhr.responseJSON?.message ||
+                    xhr.responseText ||
+                    "Unable to load work item.";
+
+                showStatus("danger", message);
+            });
+        });
+
+
+        function loadVehiclesForCustomer(
+            garageCustomerId,
+            selectedVehicleId,
+            selectedWorkItemIds
+        ) {
+            const vehicleDropdown = $("#ddlVehicle");
+
+            if (!garageCustomerId || garageCustomerId <= 0) {
+                vehicleDropdown
+                    .empty()
+                    .append(
+                        '<option value="">-- Select customer first --</option>'
+                    )
+                    .prop("disabled", true);
+
+                clearWorkItems();
+                return;
+            }
+
+            vehicleDropdown
+                .empty()
+                .append(
+                    '<option value="">Loading vehicles...</option>'
+                )
+                .prop("disabled", true);
+
+            $.getJSON(
+                "/WorkQuote/GetVehiclesForCustomer",
+                {
+                    garageCustomerId: garageCustomerId
+                }
+            )
+                .done(function (response) {
+                    if (response.status !== "Success") {
+                        vehicleDropdown
+                            .empty()
+                            .append(
+                                '<option value="">Unable to load vehicles</option>'
+                            )
+                            .prop("disabled", true);
+
+                        showStatus(
+                            "danger",
+                            response.message ||
+                            "Unable to load vehicles."
+                        );
+
+                        return;
+                    }
+
+                    const vehicles =
+                        response.data ||
+                        response.Data ||
+                        [];
+
+                    vehicleDropdown.empty();
+
+                    if (vehicles.length === 0) {
+                        vehicleDropdown
+                            .append(
+                                '<option value="">No vehicles found for this customer</option>'
+                            )
+                            .prop("disabled", true);
+
+                        clearWorkItems();
+                        return;
+                    }
+
+                    vehicleDropdown.append(
+                        '<option value="">-- Select vehicle --</option>'
+                    );
+
+                    vehicles.forEach(function (vehicle) {
+                        const id =
+                            vehicle.id ||
+                            vehicle.Id;
+
+                        const make =
+                            vehicle.make ||
+                            vehicle.Make ||
+                            "";
+
+                        const model =
+                            vehicle.model ||
+                            vehicle.Model ||
+                            "";
+
+                        const registration =
+                            vehicle.vehicleRegistration ||
+                            vehicle.VehicleRegistration ||
+                            "";
+
+                        const description =
+                            `${registration} - ${make} ${model}`.trim();
+
+                        vehicleDropdown.append(
+                            $("<option>", {
+                                value: id,
+                                text: description
+                            })
+                        );
+                    });
+
+                    vehicleDropdown.prop("disabled", false);
+
+        if (selectedVehicleId) {
+            vehicleDropdown.val(
+                selectedVehicleId.toString()
+            );
+
+        loadWorkItems(
+            selectedWorkItemIds || []
+        );
+        }
+                })
+                .fail(function () {
+                    vehicleDropdown
+                        .empty()
+                        .append(
+                            '<option value="">Unable to load vehicles</option>'
+                        )
+                        .prop("disabled", true);
+
+                    showStatus(
+                        "danger",
+                        "Unable to load vehicles."
+                    );
+                });
+        }
+
+        function filterVehiclesByCustomer() {
+            const customerId = ($("#ddlCustomer").val() || "").toString();
+
+            changingCustomerOrVehicle = true;
+
+            const vehicleDropdown = $("#ddlVehicle");
+            const currentVehicleId = vehicleDropdown.val();
+
+            vehicleDropdown.find("option").each(function () {
+                const option = $(this);
+
+                if (!option.val()) {
+                    option.prop("hidden", false);
+                    option.prop("disabled", false);
+                    return;
+                }
+
+                const optionCustomerId =
+                    (option.data("customer-id") || "").toString();
+
+                const shouldShow =
+                    !customerId || optionCustomerId === customerId;
+
+                option.prop("hidden", !shouldShow);
+                option.prop("disabled", !shouldShow);
+            });
+
+            const selectedVehicleOption =
+                vehicleDropdown.find("option:selected");
+
+            if (currentVehicleId &&
+                selectedVehicleOption.prop("disabled")) {
+                vehicleDropdown.val("");
+                clearWorkItems();
+            }
+
+            changingCustomerOrVehicle = false;
+        }
+
+        function selectCustomerForVehicle() {
+            const selectedVehicle =
+                $("#ddlVehicle option:selected");
+
+            const vehicleId = selectedVehicle.val();
+
+            changingCustomerOrVehicle = true;
+
+            if (!vehicleId) {
+                // Show all customers again when no vehicle is selected.
+                $("#ddlCustomer option").prop("hidden", false);
+                $("#ddlCustomer option").prop("disabled", false);
+
+                changingCustomerOrVehicle = false;
+                clearWorkItems();
+                return;
+            }
+
+            const customerId =
+                (selectedVehicle.data("customer-id") || "").toString();
+
+            if (customerId) {
+                $("#ddlCustomer").val(customerId);
+            }
+
+            // Optionally show only the owner associated with the vehicle.
+            $("#ddlCustomer option").each(function () {
+                const option = $(this);
+
+                if (!option.val()) {
+                    option.prop("hidden", false);
+                    option.prop("disabled", false);
+                    return;
+                }
+
+                const shouldShow =
+                    option.val().toString() === customerId;
+
+                option.prop("hidden", !shouldShow);
+                option.prop("disabled", !shouldShow);
+            });
+
+            changingCustomerOrVehicle = false;
+
+            const parsedVehicleId = parseInt(vehicleId, 10);
+
+            if (parsedVehicleId > 0) {
+                loadWorkItems(selectedWorkItemIds);
+            }
+        }
+
+        function clearWorkItems() {
+            $("#workItemsContainer").html(`
+                <div class="col-12 text-muted">
+                    Select a vehicle to load available work items.
+                </div>
+            `);
+
+            $("#selectedWorkItemCount").text("0 selected");
+        }
+
+        $("#ddlVehicle").on("change", function () {
+            const vehicleId = parseInt(
+                $(this).val() || "0",
+                10
+            );
+
+            if (vehicleId <= 0) {
+                clearWorkItems();
+                return;
+            }
+
+            loadWorkItems([]);
+        });
+
+                function loadAvailableWorkItems(vehicleId) {
+            const customerId = parseInt(
+                $("#ddlCustomer").val() || "0",
+                10
+            );
+
+            loadWorkItems(selectedWorkItemIds);
+        }
+
+        $(function () {
+            $(".quote-amount").on("input", recalculateTotals);
+
+            $("#ddlVehicle").on("change", function () {
+                const vehicleId = parseInt($(this).val() || "0", 10);
+
+                if (!vehicleId) {
+                    $("#workItemsContainer").html('<div class="col-12 text-muted">Select a vehicle to load work items.</div>');
+                    return;
+                }
+
+                loadWorkItems([]);
+            });
+
+            if (isEditMode) {
+                loadExistingQuote(workQuoteId);
+            }
+        });
+
+        function loadExistingQuote(id) {
+            $.getJSON(`/WorkQuote/Get?workQuoteId=${id}`)
+                .done(function (response) {
+                    if (response.status !== "Success") {
+                        showStatus(
+                            "danger",
+                            response.message || "Failed to load quote."
+                        );
+                        return;
+                    }
+
+                    const quote = response.data;
+
+                    const customerId =
+                        quote.customerId ||
+                        quote.CustomerId;
+
+                    const vehicleId =
+                        quote.vehicleId ||
+                        quote.VehicleId;
+
+                    $("#ddlCustomer").val(customerId);
+
+                    $("#txtCustomerDisplay").val(
+                        quote.customerName ||
+                        quote.CustomerName ||
+                        `Customer #${customerId}`
+                    );
+
+        $("#txtVehicleDisplay").val(
+            quote.vehicleDescription ||
+            quote.VehicleDescription ||
+            ""
+        );
+
+                    const quoteDate =
+                        quote.workQuoteDate ||
+                        quote.WorkQuoteDate;
+
+                    if (quoteDate) {
+                        $("#txtWorkQuoteDate").val(
+                            quoteDate.substring(0, 10)
+                        );
+                    }
+
+                    $("#txtWorkRequest").val(
+                        quote.workRequest ||
+                        quote.WorkRequest ||
+                        ""
+                    );
+
+                    $("#txtVehicleProblem").val(
+                        quote.vehicleProblem ||
+                        quote.VehicleProblem ||
+                        ""
+                    );
+
+                    $("#txtComment").val(
+                        quote.comment ||
+                        quote.Comment ||
+                        ""
+                    );
+
+                    $("#txtLabour").val(
+                        quote.labour ??
+                        quote.Labour ??
+                        0
+                    );
+
+                    $("#txtEnvironmentCost").val(
+                        quote.environmentCost ??
+                        quote.EnvironmentCost ??
+                        0
+                    );
+
+                    $("#txtSundryExpenses").val(
+                        quote.sundryExpenses ??
+                        quote.SundryExpenses ??
+                        0
+                    );
+
+                    $("#txtPaint").val(
+                        quote.paint ??
+                        quote.Paint ??
+                        0
+                    );
+
+                    $("#txtCarHire").val(
+                        quote.carHire ??
+                        quote.CarHire ??
+                        0
+                    );
+
+                    // selectedWorkItemIds =
+                    //     quote.workItemIds ||
+                    //     quote.WorkItemIds ||
+                    //     [];
+
+                    recalculateTotals();
+
+                    const selectedWorkItemIds =
+            (quote.workItemIds || []).map(Number);
+
+                    loadVehiclesForCustomer(
+                        customerId,
+                        vehicleId,
+                        selectedWorkItemIds
+                    );
+                })
+                .fail(function () {
+                    showStatus(
+                        "danger",
+                        "Failed to load quote."
+                    );
+                });
+        }
+
+        function loadWorkItems(selectedIds) {
+
+            selectedIds = (selectedIds || []).map(Number);
+
+            const workQuoteId =
+                parseInt($("#WorkQuoteId").val() || "0", 10);
+
+            const checkedIds = (selectedIds || [])
+                .map(function (id) {
+                    return parseInt(id, 10);
+                })
+                .filter(function (id) {
+                    return !Number.isNaN(id);
+                });
+
+            $("#workItemsContainer").html(`
+                <div class="col-12 text-muted">
+                    Loading available work items...
+                </div>
+            `);
+
+            $.getJSON(
+                "/WorkItem/GetAvailableForQuote",
+                {
+                    workQuoteId: workQuoteId > 0
+                        ? workQuoteId
+                        : null
+                }
+            )
+                .done(function (response) {
+                    if (response.status !== "Success") {
+                        $("#workItemsContainer").html(`
+                            <div class="col-12">
+                                <div class="alert alert-danger mb-0">
+                                    ${response.message ||
+                                      "Failed to load available work items."}
+                                </div>
+                            </div>
+                        `);
+
+                        updateSelectedCount();
+                        return;
+                    }
+
+                    const items =
+                        response.data ||
+                        response.Data ||
+                        [];
+
+                    if (!items || items.length === 0) {
+                        $("#workItemsContainer").html(`
+                            <div class="col-12">
+                                <div class="alert alert-warning mb-0">
+                                    No available work items found.
+                                </div>
+                            </div>
+                        `);
+
+                        updateSelectedCount();
+                        return;
+                    }
+
+        let html = "";
+
+        items.forEach(function (item) {
+            const id = parseInt(item.id ?? item.Id, 10);
+
+            const repairInstructions =
+                item.repairInstructions ??
+                item.RepairInstructions ??
+                "";
+
+            const isChecked = checkedIds.includes(id);
+
+            html += `
+                <div class="col-12 col-md-6">
+                    <div class="card h-100 border ${isChecked ? "border-primary" : ""}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input work-item-check"
+                                        type="checkbox"
+                                        id="workItem_${id}"
+                                        value="${id}"
+                                        ${isChecked ? "checked" : ""}>
+
+                                    <label
+                                        class="form-check-label fw-semibold"
+                                        for="workItem_${id}">
+                                        Work item #${id}
+                                    </label>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-secondary edit-work-item"
+                                    data-work-item-id="${id}"
+                                    data-repair-instructions="${escapeHtmlAttribute(repairInstructions)}">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                            </div>
+
+                            <div class="text-muted small mt-2 work-item-description">
+                                ${escapeHtml(
+                                    repairInstructions ||
+                                    "No repair instructions entered."
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        });
+
+        $("#workItemsContainer").html(html);
+
+                $(".work-item-check").on("change", function () {
+            selectedWorkItemIds = $(".work-item-check:checked")
+                .map(function () {
+                    return parseInt(this.value, 10);
+                })
+                .get();
+
+            const card = $(this).closest(".card");
+
+            card.toggleClass(
+                "border-primary",
+                this.checked
+            );
+
+            updateSelectedCount();
+        });
+
+                    updateSelectedCount();
+                })
+                .fail(function () {
+                    $("#workItemsContainer").html(`
+                        <div class="col-12">
+                            <div class="alert alert-danger mb-0">
+                                Failed to load available work items.
+                            </div>
+                        </div>
+                    `);
+
+                    updateSelectedCount();
+                });
+
+                selectedWorkItemIds = [...selectedIds];
+        }
+
+
+                function escapeHtml(value) {
+            return $("<div>")
+                .text(value || "")
+                .html();
+        }
+
+
+
+        function getSelectedWorkItemIds() {
+            return $(".work-item-check:checked")
+                .map(function () {
+                    return parseInt($(this).val(), 10);
+                })
+                .get()
+                .filter(function (id) {
+                    return !Number.isNaN(id);
+                });
+        }
+
+        function updateSelectedCount() {
+            const count = getSelectedWorkItemIds().length;
+            $("#selectedWorkItemCount").text(`${count} selected`);
+        }
+
+        function moneyValue(selector) {
+            const value = parseFloat($(selector).val());
+            return isNaN(value) ? 0 : value;
+        }
+
+        function recalculateTotals() {
+            const labour = moneyValue("#txtLabour");
+            const environmentCost = moneyValue("#txtEnvironmentCost");
+            const sundryExpenses = moneyValue("#txtSundryExpenses");
+            const paint = moneyValue("#txtPaint");
+            const carHire = moneyValue("#txtCarHire");
+
+            const subTotal = labour + environmentCost + sundryExpenses + paint + carHire;
+            const vat = subTotal * vatRate;
+            const total = subTotal + vat;
+
+            $("#txtSubTotal").val(subTotal.toFixed(2));
+            $("#txtVat").val(vat.toFixed(2));
+            $("#txtTotal").val(total.toFixed(2));
+        }
+
+        function saveWorkQuote() {
+            const customerId = parseInt($("#ddlCustomer").val() || "0", 10);
+            const vehicleId = parseInt($("#ddlVehicle").val() || "0", 10);
+            const workItemIds = getSelectedWorkItemIds();
+
+            const errors = [];
+
+            if (!customerId) errors.push("Customer is required.");
+            if (!vehicleId) errors.push("Vehicle is required.");
+            if (workItemIds.length === 0) errors.push("At least one work item must be selected.");
+
+            if (errors.length > 0) {
+                showStatus("danger", errors.join("<br/>"));
+                return;
+            }
+
+            recalculateTotals();
+
+            const payload = {
+                WorkQuoteId: workQuoteId,
+                CustomerId: customerId,
+                VehicleId: vehicleId,
+                WorkQuoteDate: $("#txtWorkQuoteDate").val(),
+                WorkRequest: ($("#txtWorkRequest").val() || "").trim(),
+                VehicleProblem: ($("#txtVehicleProblem").val() || "").trim(),
+                Comment: ($("#txtComment").val() || "").trim(),
+                Labour: moneyValue("#txtLabour"),
+                EnvironmentCost: moneyValue("#txtEnvironmentCost"),
+                SundryExpenses: moneyValue("#txtSundryExpenses"),
+                Paint: moneyValue("#txtPaint"),
+                CarHire: moneyValue("#txtCarHire"),
+                SubTotal: moneyValue("#txtSubTotal"),
+                Vat: moneyValue("#txtVat"),
+                Total: moneyValue("#txtTotal"),
+                WorkItemIds: workItemIds
+            };
+
+            $("#btnSaveQuote").prop("disabled", true);
+
+            $.ajax({
+                url: "/WorkQuote/AddWorkQuote",
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                processData: false,
+                data: JSON.stringify(payload)
+            })
+            .done(function (response) {
+
+                 // Close the modal
+            $("#workItemModal").modal("hide");
+
+                if (response.status === "Success") {
+                    window.location = "/WorkQuote/Index";
+                } else {
+                    showStatus("danger", response.message || "Save failed.");
+                }
+            })
+            .fail(function (xhr) {
+                showStatus("danger", xhr.responseText || "Save failed.");
+            })
+            .always(function () {
+                $("#btnSaveQuote").prop("disabled", false);
+            });
+        }
+
+                $("#btnAddWorkItem").on("click", function () {
+            const customerId =
+                parseInt($("#ddlCustomer").val() || "0", 10);
+
+            const vehicleId =
+                parseInt($("#ddlVehicle").val() || "0", 10);
+
+            if (customerId <= 0) {
+                showStatus(
+                    "warning",
+                    "Select a customer before adding a work item."
+                );
+
+                return;
+            }
+
+            if (vehicleId <= 0) {
+                showStatus(
+                    "warning",
+                    "Select a vehicle before adding a work item."
+                );
+
+                return;
+            }
+
+            $("#txtNewRepairInstructions").val("");
+            $("#workItemModalStatus").empty();
+
+        $("#workItemModal").modal("show");
+        });
+
+         $("#btnSaveWorkItem").on("click", function () {
+            const workItemId =
+                parseInt($("#editWorkItemId").val() || "0", 10);
+
+            const customerId =
+                parseInt($("#ddlCustomer").val() || "0", 10);
+
+            const vehicleId =
+                parseInt($("#ddlVehicle").val() || "0", 10);
+
+            const repairInstructions =
+                ($("#txtNewRepairInstructions").val() || "").trim();
+
+            if (!repairInstructions) {
+                $("#workItemModalStatus").html(`
+                    <div class="alert alert-warning">
+                        Enter repair instructions.
+                    </div>
+                `);
+
+                return;
+            }
+
+            const button = $(this);
+
+            button
+                .prop("disabled", true)
+                .text(workItemId > 0 ? "Updating..." : "Adding...");
+
+            $.ajax({
+                url: "/WorkItem/SaveForQuote",
+                method: "POST",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify({
+                    id: workItemId,
+                    customerId: customerId,
+                    vehicleId: vehicleId,
+                    repairInstructions: repairInstructions
+                })
+            })
+                .done(function (response) {
+                    if (response.status !== "Success") {
+                        $("#workItemModalStatus").html(`
+                            <div class="alert alert-danger">
+                                ${response.message ||
+                                  "Failed to save work item."}
+                            </div>
+                        `);
+
+                        return;
+                    }
+
+                    const savedWorkItemId =
+                        response.data?.id ??
+                        response.data?.Id;
+
+                    if (!savedWorkItemId) {
+                        $("#workItemModalStatus").html(`
+                            <div class="alert alert-danger">
+                                The work item was saved, but no ID was returned.
+                            </div>
+                        `);
+
+                        return;
+                    }
+
+                    if (!selectedWorkItemIds.includes(savedWorkItemId)) {
+                        selectedWorkItemIds.push(savedWorkItemId);
+                    }
+
+                    selectedWorkItemIds = [
+                        ...new Set(selectedWorkItemIds)
+                    ];
+
+                    $("#workItemModal").modal("hide");
+
+                    $("#editWorkItemId").val("0");
+                    $("#txtNewRepairInstructions").val("");
+                    $("#workItemModalStatus").empty();
+
+                    loadWorkItems(selectedWorkItemIds);
+                })
+                .fail(function (xhr) {
+                    const message =
+                        xhr.responseJSON?.message ||
+                        "Failed to save work item.";
+
+                    $("#workItemModalStatus").html(`
+                        <div class="alert alert-danger">
+                            ${message}
+                        </div>
+                    `);
+                })
+                .always(function () {
+                    button
+                        .prop("disabled", false)
+                        .text("Save Work Item");
+                });
+        });
+
+                function escapeHtmlAttribute(value) {
+            return $("<div>")
+                .text(value || "")
+                .html()
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function showStatus(type, htmlMessage) {
+            $("#statusArea").html(`
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${htmlMessage}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>`);
+        }
+    </script>
+}

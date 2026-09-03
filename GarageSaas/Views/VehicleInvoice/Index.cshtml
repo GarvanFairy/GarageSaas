@@ -46,6 +46,40 @@
                 </div>
             </div>
 
+            <!--search added-->
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search"></i>
+                                </span>
+
+                                <input type="text"
+                                       id="invoiceSearch"
+                                       class="form-control"
+                                       placeholder="Search invoice number, customer, vehicle, phone, email or amount..." />
+
+                                <button type="button"
+                                        id="clearInvoiceSearch"
+                                        class="btn btn-outline-secondary">
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 text-end mt-2 mt-md-0">
+                            <span class="text-muted">
+                                <span id="invoiceSearchCount">@Model.Count</span> invoice(s)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
@@ -61,13 +95,13 @@
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="invoiceTableBody">
                         @foreach (var invoice in Model)
                         {
                             var isPaid = invoice.Paid == true;
                             var total = invoice.Total.ToString() ?? invoice.InvoiceAmount ?? 0.ToString();
 
-                            <tr>
+                            <tr class="invoice-row" data-search="@($"{invoice.InvoiceNumber}{invoice.CustomerName}{invoice.VehicleRegistration}{invoice.PhoneNumber} {invoice.EmailAddress}{invoice.Total}")">
                                 <td>
                                     <strong>@(!string.IsNullOrWhiteSpace(invoice.InvoiceNumber) ? invoice.InvoiceNumber : $"INV-{invoice.Id}")</strong>
                                 </td>
@@ -202,5 +236,58 @@
                 alert('Delete failed.');
             });
         }
+
+                $(function () {
+
+            $("#invoiceSearch").on("keyup", filterInvoices);
+
+            $("#clearInvoiceSearch").on("click", function () {
+
+                $("#invoiceSearch").val("");
+
+                filterInvoices();
+
+            });
+
+            function filterInvoices() {
+
+                const search = ($("#invoiceSearch").val() || "")
+                    .toLowerCase()
+                    .trim();
+
+                let visibleCount = 0;
+
+                $(".invoice-row").each(function () {
+
+                    const rowText = ($(this).data("search") || "")
+                        .toString()
+                        .toLowerCase();
+
+                    const show = search === "" || rowText.indexOf(search) >= 0;
+
+                    $(this).toggle(show);
+
+                    if (show)
+                        visibleCount++;
+
+                });
+
+                $("#invoiceSearchCount").text(visibleCount);
+
+                $("#noInvoiceResults").remove();
+
+                if (visibleCount === 0) {
+
+                    $("#invoiceTableBody").append(`
+                        <tr id="noInvoiceResults">
+                            <td colspan="8" class="text-center text-muted py-4">
+                                No invoices found.
+                            </td>
+                        </tr>`);
+
+                }
+            }
+
+        });
     </script>
 }

@@ -1,9 +1,11 @@
-﻿using System;
+﻿using GarageSaas.Services.Interfaces;
+using GarageSaas.Services.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using SignupAPI.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using GarageSaas.Services.Interfaces;
-using GarageSaas.Services.Models;
-using SignupAPI.Models;
 
 namespace GarageSaas.Services
 {
@@ -68,7 +70,10 @@ namespace GarageSaas.Services
                 return ServiceResult<WorkItem>.Ok(workItemToAdd);
             }
 
-            var workItemToUpdate = _context.WorkItem.Find(workItem.Id);
+            var workItemToUpdate = _context.WorkItem
+    .FirstOrDefault(w => w.Id == workItem.Id &&
+                         w.GarageBusinessCustomerId == garageBusinessId);
+
             if (workItemToUpdate == null)
             {
                 return ServiceResult<WorkItem>.Fail("WorkItem not found.");
@@ -84,6 +89,93 @@ namespace GarageSaas.Services
             _context.SaveChanges();
 
             return ServiceResult<WorkItem>.Ok(workItemToUpdate);
+        }
+
+        public ServiceResult<List<WorkItem>> GetAvailableWorkItemsForQuote(int garageBusinessId, int? workQuoteId)
+        {
+            var query = ((IQueryable<WorkItem>)_context.WorkItem)
+                .Where(workItem =>
+                    workItem.GarageBusinessCustomerId == garageBusinessId);
+
+            query = query.Where(workItem =>
+                !_context.WorkQuoteWorkItem.Any(link =>
+                    link.WorkItemId == workItem.Id)
+                ||
+                (
+                    workQuoteId.HasValue &&
+                    _context.WorkQuoteWorkItem.Any(link =>
+                        link.WorkQuoteId == workQuoteId.Value &&
+                        link.WorkItemId == workItem.Id)
+                ));
+
+            var workItems = query
+                .OrderByDescending(workItem => workItem.Id)
+                .ToList();
+
+            return ServiceResult<List<WorkItem>>.Ok(workItems);
+        }
+
+        public ServiceResult<WorkItem> AddOrUpdateWorkItemForQuote(
+            CreateWorkItemRequest request,
+            int garageBusinessId,
+            string userName)
+        {
+            if (request == null)
+            {
+                return ServiceResult<WorkItem>.Fail(
+                    "Work item request is required.");
+            }
+
+            if (request.VehicleId <= 0)
+            {
+                return ServiceResult<WorkItem>.Fail(
+                    "A vehicle is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.RepairInstructions))
+            {
+                return ServiceResult<WorkItem>.Fail(
+                    "Repair instructions are required.");
+            }
+
+            if (request.Id == 0)
+            {
+                var newWorkItem = new WorkItem
+                {
+                    GarageBusinessCustomerId = garageBusinessId,
+                    CustomerId = request.CustomerId,
+                    VehicleId = request.VehicleId,
+                    RepairInstructions = request.RepairInstructions.Trim(),
+                    CreatedDate = DateTime.Now,
+                    CreatedBy = userName
+                };
+
+                _context.WorkItem.Add(newWorkItem);
+                _context.SaveChanges();
+
+                return ServiceResult<WorkItem>.Ok(newWorkItem);
+            }
+
+            var existingWorkItem = _context.WorkItem
+                .FirstOrDefault(item =>
+                    item.Id == request.Id &&
+                    item.GarageBusinessCustomerId == garageBusinessId);
+
+            if (existingWorkItem == null)
+            {
+                return ServiceResult<WorkItem>.Fail(
+                    "Work item was not found.");
+            }
+
+            existingWorkItem.RepairInstructions =
+                request.RepairInstructions.Trim();
+
+            existingWorkItem.UpdatedDate = DateTime.Now;
+            existingWorkItem.UpdatedBy = userName;
+
+            _context.SaveChanges();
+
+            return ServiceResult<WorkItem>.Ok(existingWorkItem);
         }
     }
 }

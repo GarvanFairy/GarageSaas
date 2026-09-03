@@ -1,0 +1,280 @@
+﻿@model List<SignupAPI.Models.CombinedWorkQuoteWorkitem>
+
+@{
+    ViewData["Title"] = "Work Quotes";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h1 class="mb-1">Work Quotes</h1>
+            <div class="text-muted small">
+                Manage customer quotes made up of one or more work items.
+            </div>
+        </div>
+
+        <a asp-controller="WorkQuote" asp-action="AddEdit" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Create Work Quote
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body border-bottom">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                    <h5 class="mb-0">Quote list</h5>
+                    <span class="badge bg-secondary">@Model.Count quote(s)</span>
+<!--added-->
+                    <div class="mt-3">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text"
+                                   id="workQuoteSearch"
+                                   class="form-control"
+                                   placeholder="Search by quote, customer, vehicle, work request or problem..." />
+                            <button type="button" id="clearWorkQuoteSearch" class="btn btn-outline-secondary">
+                                Clear
+                            </button>
+                        </div>
+                        <div class="text-muted small mt-2">
+                            <span id="workQuoteSearchCount">@Model.Count</span> quote(s) shown
+                        </div>
+                    </div>
+
+                </div>
+
+
+
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Quote #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Vehicle</th>
+                            <th>Work Request</th>
+                            <th>Work Items</th>
+                            <th class="text-end">Labour</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="workQuoteTableBody">
+                        @foreach (var quote in Model)
+                        {
+                            <tr class="work-quote-row"
+                                data-search="@($"{quote.WorkQuoteId} {quote.CustomerName} {quote.VehicleRegistration} {quote.WorkRequest} {quote.VehicleProblem} {quote.Total}")">
+                                <td>
+                                    <strong>Q-@quote.WorkQuoteId</strong>
+                                </td>
+
+                                <td>
+                                    @(quote.WorkQuoteDate == DateTime.MinValue
+                                        ? ""
+                                        : quote.WorkQuoteDate.ToString("dd/MM/yyyy"))
+                                </td>
+
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(quote.CustomerName))
+                                    {
+                                        <div class="fw-semibold">@quote.CustomerName</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Customer #@quote.CustomerId</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(quote.VehicleRegistration))
+                                    {
+                                        <span class="badge bg-light text-dark border">@quote.VehicleRegistration</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Vehicle #@quote.VehicleId</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(quote.WorkRequest))
+                                    {
+                                        <div>@quote.WorkRequest</div>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(quote.VehicleProblem))
+                                    {
+                                        <div class="text-muted small">@quote.VehicleProblem</div>
+                                    }
+                                </td>
+
+                                <td>
+                                    @{
+                                        var itemCount = quote.WorkItems?.Count ?? quote.WorkItemIds?.Count ?? 0;
+                                    }
+
+                                    <span class="badge bg-info text-dark">
+                                        @itemCount item@(itemCount == 1 ? "" : "s")
+                                    </span>
+
+                                    @if (quote.WorkItems != null && quote.WorkItems.Any())
+                                    {
+                                        <div class="text-muted small mt-1">
+                                            @string.Join(", ", quote.WorkItems
+                                                .Where(w => !string.IsNullOrWhiteSpace(w.RepairInstructions))
+                                                .Select(w => w.RepairInstructions)
+                                                .Take(2))
+
+                                            @if (quote.WorkItems.Count > 2)
+                                            {
+                                                <span>...</span>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+
+                                <td class="text-end">
+                                    €@((quote.Labour ?? 0).ToString("F2"))
+                                </td>
+
+                                <td class="text-end">
+                                    <strong>€@((quote.Total ?? 0).ToString("F2"))</strong>
+                                </td>
+
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a asp-controller="WorkQuote"
+                                           asp-action="AddEdit"
+                                           asp-route-id="@quote.WorkQuoteId"
+                                           class="btn btn-outline-primary"
+                                           title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+                                        <button type="button"
+                                                class="btn btn-outline-danger"
+                                                title="Delete"
+                                                onclick="deleteWorkQuote(@quote.WorkQuoteId)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
+                <h5 class="mt-3">No work quotes found</h5>
+                <p class="text-muted mb-3">
+                    Create a quote by selecting a customer, vehicle and one or more work items.
+                </p>
+
+                <a asp-controller="WorkQuote" asp-action="AddEdit" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Create Work Quote
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function deleteWorkQuote(workQuoteId) {
+            if (!confirm("Are you sure you want to delete this work quote?")) {
+                return;
+            }
+
+            fetch(`/WorkQuote/Delete?workQuoteId=${workQuoteId}`, {
+                method: "DELETE",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "Success") {
+                    location.reload();
+                } else {
+                    alert(data.message || "Delete failed.");
+                }
+            })
+            .catch(() => {
+                alert("Delete failed.");
+            });
+        }
+
+        $(function () {
+            $("#workQuoteSearch").on("input", function () {
+                filterWorkQuotes();
+            });
+
+            $("#clearWorkQuoteSearch").on("click", function () {
+                $("#workQuoteSearch").val("");
+                filterWorkQuotes();
+            });
+
+            function filterWorkQuotes() {
+                const searchText = ($("#workQuoteSearch").val() || "").toLowerCase().trim();
+                let visibleCount = 0;
+
+                $(".work-quote-row").each(function () {
+                    const rowText = ($(this).data("search") || "").toString().toLowerCase();
+
+                    const isMatch = !searchText || rowText.indexOf(searchText) >= 0;
+
+                    $(this).toggle(isMatch);
+
+                    if (isMatch) {
+                        visibleCount++;
+                    }
+                });
+
+                $("#workQuoteSearchCount").text(visibleCount);
+
+                if (visibleCount === 0) {
+                    if ($("#noWorkQuoteSearchResults").length === 0) {
+                        $("#workQuoteTableBody").append(`
+                            <tr id="noWorkQuoteSearchResults">
+                                <td colspan="9" class="text-center text-muted py-4">
+                                    No work quotes match your search.
+                                </td>
+                            </tr>
+                        `);
+                    }
+                } else {
+                    $("#noWorkQuoteSearchResults").remove();
+                }
+            }
+        });
+    </script>
+}
