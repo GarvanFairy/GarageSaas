@@ -16,6 +16,9 @@
 <h2>@ViewBag.Title</h2>
 <h3>Id: @Model?.Id</h3>
 
+
+
+
 <form asp-controller="WorkQuote" asp-action="AddWorkQuote" method="post">
     @Html.HiddenFor(model => model.Id)
 

@@ -238,5 +238,54 @@ namespace GarageSaas.Controllers
                 message = "Vehicle invoice deleted successfully"
             });
         }
+
+        [HttpPost]
+        public IActionResult CreateFromWorkQuote(int workQuoteId)
+        {
+            if (workQuoteId <= 0)
+            {
+                return Json(new
+                {
+                    status = "Error",
+                    message = "A valid work quote is required."
+                });
+            }
+
+            if (!int.TryParse(
+                    HttpContext.Session.GetString("GarageBusinessId"),
+                    out int garageBusinessId))
+            {
+                return Json(new
+                {
+                    status = "Error",
+                    message = "Garage business session is invalid."
+                });
+            }
+
+            var result = _vehicleInvoiceService.CreateFromWorkQuote(
+                workQuoteId,
+                garageBusinessId,
+                User.Identity?.Name ?? string.Empty);
+
+            if (!result.Success)
+            {
+                return Json(new
+                {
+                    status = "Error",
+                    message = result.ErrorMessage
+                });
+            }
+
+            return Json(new
+            {
+                status = "Success",
+                message = "Work quote converted to invoice.",
+                data = new
+                {
+                    invoiceId = result.Data.Id,
+                    invoiceNumber = result.Data.InvoiceNumber
+                }
+            });
+        }
     }
 }

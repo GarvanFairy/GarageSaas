@@ -15,5 +15,6 @@ namespace GarageSaas.Services.Interfaces
         List<SelectListItem> GetCustomersForGarageBusiness(int garageBusinessId);
         List<SelectListItem> GetVehiclesForGarageBusiness(int garageBusinessId);
         List<VehicleDropdownItem> GetVehicleDropdownItemsForGarageBusiness(int garageBusinessId);
+        ServiceResult<VehicleInvoice> CreateFromWorkQuote(int workQuoteId, int garageBusinessId, string userName);
     }
 }

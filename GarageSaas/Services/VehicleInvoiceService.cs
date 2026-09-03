@@ -290,5 +290,133 @@ namespace GarageSaas.Services
 
             return vehicles;
         }
+
+        public ServiceResult<VehicleInvoice> CreateFromWorkQuote(
+    int workQuoteId,
+    int garageBusinessId,
+    string userName)
+        {
+            if (workQuoteId <= 0)
+            {
+                return ServiceResult<VehicleInvoice>
+                    .Fail("A valid work quote is required.");
+            }
+
+            var workQuote = _context.WorkQuote
+                .FirstOrDefault(q =>
+                    q.Id == workQuoteId &&
+                    q.GarageBusinessCustomerId == garageBusinessId);
+
+            if (workQuote == null)
+            {
+                return ServiceResult<VehicleInvoice>
+                    .Fail("Work quote not found.");
+            }
+
+            //
+            // Don't convert the same quote twice.
+            //
+            var existingInvoiceLink = _context.InvoiceWorkQuote
+                .FirstOrDefault(link =>
+                    link.WorkQuoteId == workQuoteId &&
+                    link.GarageBusinessCustomerId == garageBusinessId);
+
+            if (existingInvoiceLink != null)
+            {
+                return ServiceResult<VehicleInvoice>
+                    .Fail("This work quote has already been converted to an invoice.");
+            }
+
+            using var transaction = _context.Database.BeginTransaction();
+
+            try
+            {
+                var now = DateTime.Now;
+
+                var invoice = new VehicleInvoice
+                {
+                    GarageBusinessId = garageBusinessId,
+
+                    //
+                    // Your VehicleInvoice service currently uses both.
+                    //
+                    CustomerId = workQuote.CustomerId,
+                    GarageBusinessCustomerId = workQuote.CustomerId,
+
+                    VehicleId = workQuote.VehicleId,
+
+                    //
+                    // Keep this populated because it already exists
+                    // on VehicleInvoice.
+                    //
+                    WorkQuoteId = workQuote.Id,
+
+                    EnvironmentCost = workQuote.EnvironmentCost,
+                    Paint = workQuote.Paint,
+                    SundryExpenses = workQuote.SundryExpenses,
+                    CarHire = workQuote.CarHire,
+                    Labour = workQuote.Labour,
+
+                    Comment = workQuote.Comment,
+                    Tax = workQuote.Tax.ToString(),
+
+                    InvoiceDate = now,
+
+                    Paid = false,
+                    InvoiceStatus = "Pending",
+                    InvoiceType = "Work Quote",
+
+                    InvoiceDescription =
+                        !string.IsNullOrWhiteSpace(workQuote.WorkRequest)
+                            ? workQuote.WorkRequest
+                            : workQuote.VehicleProblem,
+
+                    CreatedDate = now,
+                    CreatedBy = userName
+                };
+
+                //
+                // You already have this method in VehicleInvoiceService.
+                //
+                ApplyInvoiceTotals(invoice);
+
+                _context.VehicleInvoice.Add(invoice);
+                _context.SaveChanges();
+
+                //
+                // Use your existing invoice-number generation here.
+                //
+                // For example:
+                //
+                // invoice.InvoiceNumber =
+                //     GenerateInvoiceNumber(invoice.Id, garageBusinessId);
+                //
+                // If you don't currently have an invoice number generator,
+                // we can add that next.
+                //
+
+                var invoiceWorkQuote = new InvoiceWorkQuote
+                {
+                    GarageBusinessCustomerId = garageBusinessId,
+                    InvoiceId = invoice.Id,
+                    WorkQuoteId = workQuote.Id,
+                    CreatedDate = now,
+                    CreatedBy = userName
+                };
+
+                _context.InvoiceWorkQuote.Add(invoiceWorkQuote);
+
+                _context.SaveChanges();
+
+                transaction.Commit();
+
+                return ServiceResult<VehicleInvoice>.Ok(invoice);
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
     }
 }
