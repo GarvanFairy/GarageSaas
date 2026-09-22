@@ -263,6 +263,31 @@
         </button>
 
         <a asp-controller="WorkQuote" asp-action="Index" class="btn btn-light">Cancel</a>
+
+        <div id="invoiceActions" style="display:none;">
+
+            <button type="button"
+                    id="btnConvertToInvoice"
+                    class="btn btn-success"
+                    style="display:none;">
+                Convert to Invoice
+            </button>
+
+            <a id="btnViewInvoice"
+               class="btn btn-outline-primary"
+               href="#"
+               style="display:none;">
+                View Invoice
+            </a>
+
+        </div>
+
+@*         <a id="btnViewInvoice"
+           class="btn btn-primary"
+           style="display:none;">
+            View Invoice
+        </a> *@
+
     </div>
 </div>
 
@@ -274,6 +299,164 @@
         const isEditMode = workQuoteId > 0;
         const vatRate = 0.23;
         let selectedWorkItemIds = [];
+
+        function updateInvoiceButtons(quote) {
+
+            const workQuoteId =
+                parseInt(
+                    quote.workQuoteId ??
+                    quote.WorkQuoteId ??
+                    "0",
+                    10
+                );
+
+            const hasInvoice =
+                quote.hasInvoice ??
+                quote.HasInvoice ??
+                false;
+
+            const invoiceId =
+                quote.invoiceId ??
+                quote.InvoiceId ??
+                null;
+
+            // New unsaved quote
+            if (workQuoteId <= 0) {
+
+                $("#invoiceActions").hide();
+                $("#btnConvertToInvoice").hide();
+                $("#btnViewInvoice").hide();
+
+                return;
+            }
+
+            $("#invoiceActions").show();
+
+            // Existing quote already converted
+            if (hasInvoice && invoiceId) {
+
+                $("#btnConvertToInvoice").hide();
+
+                $("#btnViewInvoice")
+                    .attr(
+                        "href",
+                        "/VehicleInvoice/AddEdit?Id=" + invoiceId
+                    )
+                    .show();
+
+                return;
+            }
+
+            // Existing quote not converted
+            $("#btnViewInvoice").hide();
+            $("#btnConvertToInvoice").show();
+        }
+
+
+        $("#btnConvertToInvoice").on("click", function () {
+
+            const workQuoteId =
+                parseInt($("#WorkQuoteId").val() || "0", 10);
+
+            if (workQuoteId <= 0) {
+
+                showStatus(
+                    "warning",
+                    "Save the work quote before converting it to an invoice."
+                );
+
+                return;
+            }
+
+            if (!confirm(
+                "Are you sure you want to convert this work quote to an invoice?"
+            )) {
+                return;
+            }
+
+            const button = $(this);
+
+            button
+                .prop("disabled", true)
+                .text("Converting...");
+
+            $.ajax({
+                url: "/VehicleInvoice/CreateFromWorkQuote",
+                type: "POST",
+                data: {
+                    workQuoteId: workQuoteId
+                }
+            })
+            .done(function (response) {
+
+                if (response.status !== "Success") {
+
+                    showStatus(
+                        "danger",
+                        response.message ||
+                        "Unable to convert work quote."
+                    );
+
+                    return;
+                }
+
+                const invoiceId =
+                    response.data?.invoiceId ??
+                    response.data?.InvoiceId;
+
+                if (!invoiceId) {
+
+                    showStatus(
+                        "danger",
+                        "The invoice was created but no invoice ID was returned."
+                    );
+
+                    return;
+                }
+
+                showStatus(
+                    "success",
+                    "Work quote converted to invoice."
+                );
+
+                //
+                // Quote is now converted, so update the buttons.
+                //
+                $("#btnConvertToInvoice").hide();
+
+                $("#btnViewInvoice")
+                    .attr(
+                        "href",
+                        "/VehicleInvoice/AddEdit?Id=" + invoiceId
+                    )
+                    .show();
+
+                //
+                // Open the newly created invoice.
+                //
+                window.location.href =
+                    "/VehicleInvoice/AddEdit?Id=" + invoiceId;
+            })
+            .fail(function (xhr) {
+
+                const message =
+                    xhr.responseJSON?.message ||
+                    "Unable to convert work quote.";
+
+                showStatus(
+                    "danger",
+                    message
+                );
+            })
+            .always(function () {
+
+                button
+                    .prop("disabled", false)
+                    .text("Convert to Invoice");
+            });
+        });
+
+
 
                 $("#btnClearCustomerVehicle").on("click", function () {
             changingCustomerOrVehicle = true;
@@ -695,6 +878,7 @@
         });
 
         function loadExistingQuote(id) {
+
             $.getJSON(`/WorkQuote/Get?workQuoteId=${id}`)
                 .done(function (response) {
                     if (response.status !== "Success") {
@@ -704,8 +888,14 @@
                         );
                         return;
                     }
+                      
 
                     const quote = response.data;
+
+
+                    $("#WorkQuoteId").val(quote.workQuoteId);
+
+                    updateInvoiceButtons(quote);
 
                     const customerId =
                         quote.customerId ||

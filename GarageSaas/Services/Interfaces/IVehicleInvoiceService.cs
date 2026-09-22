@@ -7,7 +7,7 @@ namespace GarageSaas.Services.Interfaces
 {
     public interface IVehicleInvoiceService
     {
-        ServiceResult<VehicleInvoice> GetVehicleInvoice(int invoiceId, int garageBusinessId);
+        ServiceResult<VehicleInvoiceDetailsModel> GetVehicleInvoice(int invoiceId, int garageBusinessId);
         ServiceResult<List<VehicleInvoiceListItem>> GetInvoicesByGarageBusinessId(int garageBusinessId);
         ServiceResult<List<VehicleInvoice>> GetInvoicesByGarageCustomerId(int garageBusinessId, int garageCustomerId);
         ServiceResult<VehicleInvoice> AddOrUpdateVehicleInvoice(VehicleInvoice vehicleInvoice, int garageBusinessId, string userName);
@@ -16,5 +16,6 @@ namespace GarageSaas.Services.Interfaces
         List<SelectListItem> GetVehiclesForGarageBusiness(int garageBusinessId);
         List<VehicleDropdownItem> GetVehicleDropdownItemsForGarageBusiness(int garageBusinessId);
         ServiceResult<VehicleInvoice> CreateFromWorkQuote(int workQuoteId, int garageBusinessId, string userName);
+        ServiceResult<VehicleInvoice> MarkInvoiceAsPaid(int invoiceId, int garageBusinessId, string userName);
     }
 }

@@ -9,7 +9,7 @@ namespace GarageSaas.Services.Interfaces
         ServiceResult<WorkItem> GetWorkItem(int workItemId, int garageBusinessId);
         ServiceResult<List<WorkItem>> GetWorkItemsForVehicle(int vehicleId, int garageBusinessId);
         ServiceResult<WorkItem> AddOrUpdateWorkItem(WorkItem workItem, int garageBusinessId, string userName);
-        ServiceResult<List<WorkItem>> GetAvailableWorkItemsForQuote(int garageBusinessId, int? workQuoteId);
+        ServiceResult<List<WorkItem>> GetAvailableWorkItemsForQuote(int garageBusinessId);
         ServiceResult<WorkItem> AddOrUpdateWorkItemForQuote(CreateWorkItemRequest request, int garageBusinessId, string userName);
     }
 }

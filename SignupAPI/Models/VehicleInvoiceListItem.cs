@@ -25,5 +25,6 @@ namespace SignupAPI.Models
         public decimal? Total { get; set; }
         public DateTime? DateDue { get; set; }
         public string InvoiceNumber { get; set; }
+        public string InvoiceStatus { get; set; }
     }
 }

@@ -43,33 +43,55 @@ namespace GarageSaas.Controllers
         [HttpGet]
         public IActionResult AddEdit(int id = 0)
         {
-            if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int garageBusinessId))
+            if (!int.TryParse(
+                HttpContext.Session.GetString("GarageBusinessId"),
+                out int garageBusinessId))
             {
-                return StatusCode(500, "Session GarageBusinessId no valid");
+                return StatusCode(
+                    500,
+                    "Session GarageBusinessId not valid");
             }
 
-            var invoice = new VehicleInvoice { Id = id };
+            VehicleInvoiceDetailsModel model;
 
             if (id > 0)
             {
-                var result = _vehicleInvoiceService.GetVehicleInvoice(id, garageBusinessId);
+                var result =
+                    _vehicleInvoiceService.GetVehicleInvoice(
+                        id,
+                        garageBusinessId);
+
                 if (!result.Success)
                 {
                     TempData["Error"] = result.ErrorMessage;
                     return RedirectToAction("Index");
                 }
 
-                invoice = result.Data;
+                model = result.Data;
+            }
+            else
+            {
+                model = new VehicleInvoiceDetailsModel
+                {
+                    Invoice = new VehicleInvoice(),
+                    WorkItems = new List<WorkItem>()
+                };
             }
 
-            // Get customer and vehicle lists
-            var customers = _vehicleInvoiceService.GetCustomersForGarageBusiness(garageBusinessId);
-            var vehicleOptions = _vehicleInvoiceService.GetVehicleDropdownItemsForGarageBusiness(garageBusinessId);
+            var customers =
+                _vehicleInvoiceService
+                    .GetCustomersForGarageBusiness(
+                        garageBusinessId);
+
+            var vehicleOptions =
+                _vehicleInvoiceService
+                    .GetVehicleDropdownItemsForGarageBusiness(
+                        garageBusinessId);
 
             ViewData["Customers"] = customers;
             ViewData["VehicleOptions"] = vehicleOptions;
 
-            return View(invoice);
+            return View(model);
         }
 
         [HttpGet]
@@ -88,7 +110,7 @@ namespace GarageSaas.Controllers
                 return RedirectToAction("Index");
             }
 
-            return View(result.Data);
+            return View("Detail_print",result.Data); //return View(result.Data);
         }
 
         [HttpGet]
@@ -166,28 +188,73 @@ namespace GarageSaas.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult AddEdit(VehicleInvoice vehicleInvoice)
+        public IActionResult AddEdit(VehicleInvoiceDetailsModel model)
         {
-            if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int garageBusinessId))
+            if (!int.TryParse(
+                HttpContext.Session.GetString("GarageBusinessId"),
+                out int garageBusinessId))
             {
-                return StatusCode(500, "Session GarageBusinessId no valid");
+                return StatusCode(
+                    500,
+                    "Session GarageBusinessId not valid");
             }
 
+            if (model?.Invoice == null)
+            {
+                TempData["Error"] = "Vehicle invoice details are invalid.";
+                return RedirectToAction("Index");
+            }
+
+            var isNewInvoice = model.Invoice.Id == 0;
+
             var result = _vehicleInvoiceService.AddOrUpdateVehicleInvoice(
-                vehicleInvoice,
+                model.Invoice,
                 garageBusinessId,
-                User.Identity?.Name);
+                User.Identity?.Name ?? string.Empty);
 
             if (!result.Success)
             {
                 TempData["Error"] = result.ErrorMessage;
-                return View(vehicleInvoice);
+
+                //
+                // Reload customer and vehicle dropdowns because
+                // we are returning the AddEdit view.
+                //
+                ViewData["Customers"] =
+                    _vehicleInvoiceService
+                        .GetCustomersForGarageBusiness(
+                            garageBusinessId);
+
+                ViewData["VehicleOptions"] =
+                    _vehicleInvoiceService
+                        .GetVehicleDropdownItemsForGarageBusiness(
+                            garageBusinessId);
+
+                //
+                // If editing an existing invoice, reload its
+                // WorkItems for the page.
+                //
+                if (model.Invoice.Id > 0)
+                {
+                    var invoiceResult =
+                        _vehicleInvoiceService.GetVehicleInvoice(
+                            model.Invoice.Id,
+                            garageBusinessId);
+
+                    if (invoiceResult.Success)
+                    {
+                        model.WorkItems =
+                            invoiceResult.Data.WorkItems;
+                    }
+                }
+
+                return View(model);
             }
 
-            TempData["Success"] = vehicleInvoice.Id == 0 
-                ? "Vehicle invoice added successfully" 
+            TempData["Success"] = isNewInvoice
+                ? "Vehicle invoice added successfully"
                 : "Vehicle invoice updated successfully";
-            
+
             return RedirectToAction("Index");
         }
 
@@ -286,6 +353,42 @@ namespace GarageSaas.Controllers
                     invoiceNumber = result.Data.InvoiceNumber
                 }
             });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult MarkAsPaid(int invoiceId)
+        {
+            if (!int.TryParse(
+                HttpContext.Session.GetString("GarageBusinessId"),
+                out int garageBusinessId))
+            {
+                return StatusCode(
+                    500,
+                    "Session GarageBusinessId not valid");
+            }
+
+            var result =
+                _vehicleInvoiceService.MarkInvoiceAsPaid(
+                    invoiceId,
+                    garageBusinessId,
+                    User.Identity?.Name ?? string.Empty);
+
+            if (!result.Success)
+            {
+                TempData["Error"] = result.ErrorMessage;
+
+                return RedirectToAction(
+                    "Details",
+                    new { id = invoiceId });
+            }
+
+            TempData["Success"] =
+                "Invoice marked as paid successfully.";
+
+            return RedirectToAction(
+                "Detail",
+                new { id = invoiceId });
         }
     }
 }

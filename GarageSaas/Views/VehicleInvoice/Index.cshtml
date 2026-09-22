@@ -98,7 +98,6 @@
                     <tbody id="invoiceTableBody">
                         @foreach (var invoice in Model)
                         {
-                            var isPaid = invoice.Paid == true;
                             var total = invoice.Total.ToString() ?? invoice.InvoiceAmount ?? 0.ToString();
 
                             <tr class="invoice-row" data-search="@($"{invoice.InvoiceNumber}{invoice.CustomerName}{invoice.VehicleRegistration}{invoice.PhoneNumber} {invoice.EmailAddress}{invoice.Total}")">
@@ -147,14 +146,49 @@
                                     <span class="fw-semibold">€@invoice.Total</span>
                                 </td>
 
+                                @{
+                                    var isOverdue =
+                                        invoice.InvoiceStatus == "Pending" &&
+                                        invoice.DateDue.HasValue &&
+                                        invoice.DateDue.Value.Date < DateTime.Today;
+                                }
+
                                 <td>
-                                    @if (isPaid)
+                                    @if (isOverdue)
                                     {
-                                        <span class="badge bg-success">Paid</span>
+                                        <span class="badge badge-danger">
+                                            Overdue
+                                        </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-warning text-dark">Not Paid</span>
+                                        switch (invoice.InvoiceStatus)
+                                        {
+                                            case "Paid":
+                                                <span class="badge badge-success">
+                                                    Paid
+                                                </span>
+                                                break;
+
+                                            case "Pending":
+                                                <span class="badge badge-warning">
+                                                    Pending
+                                                </span>
+                                                break;
+
+                                            case "Cancelled":
+                                                <span class="badge badge-danger">
+                                                    Cancelled
+                                                </span>
+                                                break;
+
+                                            case "Draft":
+                                            default:
+                                                <span class="badge badge-secondary">
+                                                    Draft
+                                                </span>
+                                                break;
+                                        }
                                     }
                                 </td>
 

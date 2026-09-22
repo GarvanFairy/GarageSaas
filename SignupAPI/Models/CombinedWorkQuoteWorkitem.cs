@@ -8,6 +8,8 @@ namespace SignupAPI.Models
         public int Id { get; set; }
         public int GarageBusinessCustomerId { get; set; }
         public int WorkQuoteId { get; set; }
+        public bool HasInvoice { get; set; }
+        public int? InvoiceId { get; set; }
 
         // Keep this for backwards compatibility / single work item support
         public int WorkItemId { get; set; }

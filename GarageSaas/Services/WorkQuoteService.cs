@@ -105,10 +105,18 @@ namespace GarageSaas.Services
                 }
                 .Where(value => !string.IsNullOrWhiteSpace(value)));
 
+            var invoiceLink = _context.InvoiceWorkQuote
+    .FirstOrDefault(link =>
+        link.WorkQuoteId == workQuote.Id &&
+        link.GarageBusinessCustomerId == garageBusinessId);
+
             var viewModel = new CombinedWorkQuoteWorkitem
             {
                 Id = workItemLinks.FirstOrDefault()?.Id ?? 0,
                 GarageBusinessCustomerId = garageBusinessId,
+
+                HasInvoice = invoiceLink != null,
+                InvoiceId = invoiceLink?.InvoiceId,
 
                 WorkQuoteId = workQuote.Id,
 
@@ -334,8 +342,7 @@ namespace GarageSaas.Services
 
             var validWorkItemIds = ((IQueryable<WorkItem>)_context.WorkItem)
                 .Where(w => workItemIds.Contains(w.Id) &&
-                            w.GarageBusinessCustomerId == garageBusinessId &&
-                            w.VehicleId == model.VehicleId)
+                            w.GarageBusinessCustomerId == garageBusinessId )
                 .Select(w => w.Id)
                 .ToList();
 

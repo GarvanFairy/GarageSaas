@@ -141,8 +141,7 @@ namespace GarageSaas.Controllers
             }
 
             var result = _workItemService.GetAvailableWorkItemsForQuote(
-                garageBusinessId,
-                workQuoteId);
+                garageBusinessId);
 
             if (!result.Success)
             {

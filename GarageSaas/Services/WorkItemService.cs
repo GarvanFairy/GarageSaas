@@ -91,24 +91,11 @@ namespace GarageSaas.Services
             return ServiceResult<WorkItem>.Ok(workItemToUpdate);
         }
 
-        public ServiceResult<List<WorkItem>> GetAvailableWorkItemsForQuote(int garageBusinessId, int? workQuoteId)
+        public ServiceResult<List<WorkItem>> GetAvailableWorkItemsForQuote(int garageBusinessId)
         {
-            var query = ((IQueryable<WorkItem>)_context.WorkItem)
+            var workItems = ((IQueryable<WorkItem>)_context.WorkItem)
                 .Where(workItem =>
-                    workItem.GarageBusinessCustomerId == garageBusinessId);
-
-            query = query.Where(workItem =>
-                !_context.WorkQuoteWorkItem.Any(link =>
-                    link.WorkItemId == workItem.Id)
-                ||
-                (
-                    workQuoteId.HasValue &&
-                    _context.WorkQuoteWorkItem.Any(link =>
-                        link.WorkQuoteId == workQuoteId.Value &&
-                        link.WorkItemId == workItem.Id)
-                ));
-
-            var workItems = query
+                    workItem.GarageBusinessCustomerId == garageBusinessId)
                 .OrderByDescending(workItem => workItem.Id)
                 .ToList();
 

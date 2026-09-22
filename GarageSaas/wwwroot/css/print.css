@@ -1,0 +1,41 @@
+﻿@media print {
+
+    body {
+        background: #fff !important;
+    }
+
+    .no-print,
+    header,
+    nav,
+    footer {
+        display: none !important;
+    }
+
+    .container,
+    .invoice-page {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .invoice-document {
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .invoice-table,
+    .invoice-totals {
+        page-break-inside: avoid;
+    }
+
+    .invoice-footer {
+        page-break-inside: avoid;
+    }
+
+    a[href]:after {
+        content: none !important;
+    }
+}

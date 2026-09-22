@@ -1,0 +1,442 @@
+﻿@model GarageSaas.Services.Models.VehicleInvoiceDetailsModel
+
+@{
+    ViewData["Title"] = "Invoice Details";
+
+    var invoice = Model?.Invoice;
+
+    var isOverdue =
+        invoice != null &&
+        invoice.InvoiceStatus == "Pending" &&
+        invoice.Paid != true &&
+        invoice.DateDue.HasValue &&
+        invoice.DateDue.Value.Date < DateTime.Today;
+}
+
+<div class="container invoice-page">
+
+    <!-- Screen-only action buttons -->
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+
+        <a asp-controller="VehicleInvoice"
+           asp-action="Index"
+           class="btn btn-outline-secondary">
+            Back to Invoices
+        </a>
+
+        <div>
+
+            @if (invoice != null)
+            {
+                <a asp-controller="VehicleInvoice"
+                   asp-action="AddEdit"
+                   asp-route-id="@invoice.Id"
+                   class="btn btn-outline-primary">
+                    Edit Invoice
+                </a>
+
+                @if (invoice.WorkQuoteId.HasValue)
+                {
+                    <a asp-controller="WorkQuote"
+                       asp-action="AddEdit"
+                       asp-route-id="@invoice.WorkQuoteId.Value"
+                       class="btn btn-outline-secondary">
+                        View / Edit Work Quote
+                    </a>
+                }
+
+                @if (invoice.InvoiceStatus != "Paid" &&
+                     invoice.InvoiceStatus != "Cancelled")
+                {
+                    <form asp-controller="VehicleInvoice"
+                          asp-action="MarkAsPaid"
+                          method="post"
+                          class="d-inline">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="invoiceId"
+                               value="@invoice.Id" />
+
+                        <button type="submit"
+                                class="btn btn-success"
+                                onclick="return confirm('Mark this invoice as paid?');">
+                            Mark as Paid
+                        </button>
+
+                    </form>
+                }
+
+                <button type="button"
+                        class="btn btn-primary"
+                        onclick="window.print();">
+                    Print Invoice
+                </button>
+            }
+
+        </div>
+    </div>
+
+
+    <!-- Actual printable invoice -->
+    <div class="invoice-document">
+
+        <!-- Header -->
+        <div class="row invoice-header">
+
+            @if (Model?.GarageBusiness != null)
+            {
+                <h2 class="mb-1">
+                    @Model.GarageBusiness.GarageBusinessName
+                </h2>
+
+                <div>
+                    @Model.GarageBusiness.GarageAddressLine1
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(
+                    Model.GarageBusiness.GarageAddressLine2))
+                {
+                    <div>
+                        @Model.GarageBusiness.GarageAddressLine3
+                    </div>
+                }
+
+                <div>
+                    @Model.GarageBusiness.GarageAddressLine4
+                </div>
+
+                <div>
+                    @Model.GarageBusiness.Postcode
+                </div>
+
+                <div class="mt-2">
+                    Tel: @Model.GarageBusiness.GaragePhoneNumber
+                </div>
+
+                <div class="mt-2">
+                    Tel: @Model.GarageBusiness.GarageMobileNumber
+                </div>
+
+                <div>
+                    Email: @Model.GarageBusiness.GarageEmailAddress
+                </div>
+            }
+
+            <div class="col-md-5 text-right">
+
+                <h1 class="invoice-title">
+                    INVOICE
+                </h1>
+
+                @if (isOverdue)
+                {
+                    <span class="badge badge-danger p-2">
+                        OVERDUE
+                    </span>
+                }
+                else
+                {
+                    switch (invoice?.InvoiceStatus)
+                    {
+                        case "Paid":
+                            <span class="badge badge-success p-2">
+                                PAID
+                            </span>
+                            break;
+
+                        case "Pending":
+                            <span class="badge badge-warning p-2">
+                                PENDING
+                            </span>
+                            break;
+
+                        case "Cancelled":
+                            <span class="badge badge-danger p-2">
+                                CANCELLED
+                            </span>
+                            break;
+
+                        case "Draft":
+                        default:
+                            <span class="badge badge-secondary p-2">
+                                DRAFT
+                            </span>
+                            break;
+                    }
+                }
+
+            </div>
+
+        </div>
+
+        <hr />
+
+
+        <!-- Invoice information -->
+        <div class="row mb-4">
+
+            <div class="col-md-3">
+                <small class="text-muted">
+                    Invoice Number
+                </small>
+
+                <p class="font-weight-bold">
+                    @invoice?.InvoiceNumber
+                </p>
+            </div>
+
+            <div class="col-md-3">
+                <small class="text-muted">
+                    Invoice Date
+                </small>
+
+                <p>
+                    @(invoice?.InvoiceDate?.ToString("dd/MM/yyyy") ?? "-")
+                </p>
+            </div>
+
+            <div class="col-md-3">
+                <small class="text-muted">
+                    Due Date
+                </small>
+
+                <p>
+                    @(invoice?.DateDue?.ToString("dd/MM/yyyy") ?? "-")
+                </p>
+            </div>
+
+            <div class="col-md-3">
+
+                @if (invoice?.PaidDate.HasValue == true)
+                {
+                    <small class="text-muted">
+                        Paid Date
+                    </small>
+
+                    <p>
+                        @invoice.PaidDate.Value.ToString("dd/MM/yyyy")
+                    </p>
+                }
+
+            </div>
+
+        </div>
+
+
+        <!-- Customer / vehicle -->
+        <div class="row mb-4">
+
+            <div class="col-md-6">
+
+                <div class="invoice-section-title">
+                    BILL TO
+                </div>
+
+                @if (invoice?.GarageBusinessCustomer != null)
+                {
+                    <strong>
+                        @invoice.GarageBusinessCustomer.GarageCustomerForename
+                        @invoice.GarageBusinessCustomer.GarageCustomerSurname
+                    </strong>
+
+                    <!-- Add the customer address/phone/email
+                         properties that exist on your model here -->
+                }
+
+            </div>
+
+            <div class="col-md-6">
+
+                <div class="invoice-section-title">
+                    VEHICLE
+                </div>
+
+                @if (invoice?.Vehicle != null)
+                {
+                    <div>
+                        <strong>
+                            @invoice.Vehicle.VehicleRegistration
+                        </strong>
+                    </div>
+
+                    <div>
+                        @invoice.Vehicle.VehicleMake?.Make
+                        @invoice.Vehicle.VehicleModel?.Model
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+
+        <!-- Work Items -->
+        <div class="invoice-section-title">
+            WORK CARRIED OUT
+        </div>
+
+        @if (Model?.WorkItems != null &&
+             Model.WorkItems.Any())
+        {
+            <table class="table invoice-table">
+
+                <thead>
+                    <tr>
+                        <th>Work Description</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var item in Model.WorkItems)
+                    {
+                        <tr>
+                            <td>
+                                @item.RepairInstructions
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+        }
+        else
+        {
+            <p class="text-muted">
+                No work items recorded.
+            </p>
+        }
+
+
+        <!-- Invoice Description -->
+        @if (!string.IsNullOrWhiteSpace(
+            invoice?.InvoiceDescription))
+        {
+            <div class="mt-4">
+
+                <div class="invoice-section-title">
+                    DESCRIPTION
+                </div>
+
+                <p>
+                    @invoice.InvoiceDescription
+                </p>
+
+            </div>
+        }
+
+
+        <!-- Costs -->
+        <div class="row mt-4">
+
+            <div class="col-md-6">
+
+                @if (!string.IsNullOrWhiteSpace(invoice?.Comment))
+                {
+                    <div class="invoice-section-title">
+                        COMMENTS
+                    </div>
+
+                    <p>
+                        @invoice.Comment
+                    </p>
+                }
+
+            </div>
+
+            <div class="col-md-6">
+
+                <table class="table invoice-totals">
+
+                    <tbody>
+
+                        <tr>
+                            <td>Labour</td>
+                            <td class="text-right">
+                                €@((invoice?.Labour ?? 0).ToString("N2"))
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Paint</td>
+                            <td class="text-right">
+                                €@((invoice?.Paint ?? 0).ToString("N2"))
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Environmental Cost</td>
+                            <td class="text-right">
+                                €@((invoice?.EnvironmentCost ?? 0).ToString("N2"))
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Sundry Expenses</td>
+                            <td class="text-right">
+                                €@((invoice?.SundryExpenses ?? 0).ToString("N2"))
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Car Hire</td>
+                            <td class="text-right">
+                                €@((invoice?.CarHire ?? 0).ToString("N2"))
+                            </td>
+                        </tr>
+
+                        <tr class="font-weight-bold">
+                            <td>Subtotal</td>
+                            <td class="text-right">
+                                €@((invoice?.SubTotal ?? 0).ToString("N2"))
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>VAT</td>
+                            <td class="text-right">
+                                €@((invoice?.Vat ?? 0).ToString("N2"))
+                            </td>
+                        </tr>
+
+                        <tr class="invoice-total">
+                            <td>
+                                TOTAL
+                            </td>
+
+                            <td class="text-right">
+                                €@((invoice?.Total ?? 0).ToString("N2"))
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <button type="button"
+                class="btn btn-primary"
+                onclick="window.print();">
+            Print Invoice
+        </button>
+
+        <!-- Footer -->
+        <div class="invoice-footer text-center">
+
+            <hr />
+
+            <small class="text-muted">
+                Thank you for your business.
+            </small>
+
+        </div>
+
+    </div>
+</div>
