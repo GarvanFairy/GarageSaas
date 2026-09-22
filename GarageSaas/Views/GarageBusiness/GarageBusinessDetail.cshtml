@@ -20,6 +20,19 @@
         <div class="text-muted">Business details used across customer records, quotes, and invoices.</div>
     </div>
 
+            <aside class="workspace-panel">
+        <div class="panel-heading">
+            @if (!string.IsNullOrWhiteSpace(Model.LogoImage))
+{
+    <div class="mb-4">
+        <img src="@Model.LogoImage"
+             alt="@Model.GarageBusinessName logo"
+             class="garage-business-logo" />
+    </div>
+}
+        </div>
+  </aside>
+
     <div class="page-actions">
         <a class="btn btn-light" asp-controller="Home" asp-action="Index">
             <i class="bi bi-arrow-left me-2"></i>Dashboard
@@ -123,6 +136,68 @@
         </div>
     </div>
 
+
+<div class="workspace-panel">
+    <div class="panel-heading">
+        <div>
+            <p class="eyebrow mb-1">Business details</p>
+            <h2>Invoicing details</h2>
+        </div>
+    </div>
+
+    <div class="contact-card-list">
+
+        <!-- VAT Number -->
+        <div class="contact-card">
+            <span class="contact-icon">
+                <i class="bi bi-receipt"></i>
+            </span>
+
+            <div>
+                <span>VAT Number</span>
+
+                @if (!string.IsNullOrWhiteSpace(Model.VatNumber))
+                {
+                    <strong>@Model.VatNumber</strong>
+                }
+                else
+                {
+                    <strong class="text-muted">
+                        Not provided
+                    </strong>
+                }
+            </div>
+        </div>
+
+        <!-- Business Registration Number -->
+        <div class="contact-card">
+            <span class="contact-icon">
+                <i class="bi bi-building"></i>
+            </span>
+
+            <div>
+                <span>Business Registration Number</span>
+
+                @if (!string.IsNullOrWhiteSpace(
+                    Model.BusinessRegistrationNumber))
+                {
+                    <strong>
+                        @Model.BusinessRegistrationNumber
+                    </strong>
+                }
+                else
+                {
+                    <strong class="text-muted">
+                        Not provided
+                    </strong>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
     <aside class="workspace-panel">
         <div class="panel-heading">
             <div>
@@ -148,7 +223,10 @@
             </div>
         }
     </aside>
+
 </section>
+
+
 
 <section class="workspace-panel mt-3">
     <div class="panel-heading">

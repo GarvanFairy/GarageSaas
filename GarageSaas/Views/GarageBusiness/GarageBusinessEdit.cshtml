@@ -7,7 +7,11 @@
 <h2>Edit Garage Business</h2>
 
 
-@using (Html.BeginForm("UpdateGarageBusiness", "GarageBusiness"))
+@using (Html.BeginForm(
+    "UpdateGarageBusiness",
+    "GarageBusiness",
+    FormMethod.Post,
+    new { enctype = "multipart/form-data" }))
 {
     @Html.AntiForgeryToken()
 
@@ -88,6 +92,47 @@
                 @Html.ValidationMessageFor(model => model.GarageMobileNumber, "", new { @class = "text-danger" })
             </div>
         </div>
+
+        <div class="form-group">
+    <label asp-for="VatNumber">VAT Number</label>
+    <input asp-for="VatNumber"
+           class="form-control"
+           placeholder="e.g. IE1234567A" />
+</div>
+
+<div class="form-group">
+    <label asp-for="BusinessRegistrationNumber">
+        Business Registration Number
+    </label>
+    <input asp-for="BusinessRegistrationNumber"
+           class="form-control"
+           placeholder="Registration number" />
+</div>
+
+        <div class="form-group">
+    <label for="logoFile">
+        Garage Logo
+    </label>
+
+    <input type="file"
+           id="logoFile"
+           name="logoFile"
+           class="form-control-file"
+           accept=".jpg,.jpeg,.png" />
+
+    <small class="form-text text-muted">
+        Upload a JPG or PNG logo.
+    </small>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.LogoImage))
+{
+    <div class="mb-3">
+        <img src="@Model.LogoImage"
+             alt="Garage logo"
+             class="garage-logo-preview" />
+    </div>
+}
 
         <div class="form-group">
             <div class="col-md-offset-2 col-md-10">

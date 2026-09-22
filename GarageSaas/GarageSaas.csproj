@@ -29,6 +29,7 @@
   <ItemGroup>
     <Folder Include="helpers\" />
     <Folder Include="ViewModels\" />
+    <Folder Include="wwwroot\uploads\garage-logos\" />
   </ItemGroup>
 
 </Project>

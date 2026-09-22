@@ -82,94 +82,174 @@
     <!-- Actual printable invoice -->
     <div class="invoice-document">
 
-        <!-- Header -->
-        <div class="row invoice-header">
+<!-- Header -->
+<div class="row invoice-header">
 
-            @if (Model?.GarageBusiness != null)
-            {
-                <h2 class="mb-1">
-                    @Model.GarageBusiness.GarageBusinessName
-                </h2>
+    <!-- Garage details -->
+    <div class="col-md-7">
 
-                <div>
-                    @Model.GarageBusiness.GarageAddressLine1
-                </div>
+        @if (Model?.GarageBusiness != null)
+        {
+            <div class="d-flex align-items-start">
 
                 @if (!string.IsNullOrWhiteSpace(
-                    Model.GarageBusiness.GarageAddressLine2))
+                    Model.GarageBusiness.LogoImage))
                 {
-                    <div>
-                        @Model.GarageBusiness.GarageAddressLine3
+                    <div class="mr-3">
+                        <img src="@Model.GarageBusiness.LogoImage"
+                             alt="@Model.GarageBusiness.GarageBusinessName"
+                             class="invoice-garage-logo" />
                     </div>
                 }
 
-                <div>
-                    @Model.GarageBusiness.GarageAddressLine4
+                <div class="garage-details">
+
+                    <h2 class="mb-2">
+                        @Model.GarageBusiness.GarageBusinessName
+                    </h2>
+
+                    <div class="garage-address">
+                        <div>
+                            @Model.GarageBusiness.GarageAddressLine1
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.GarageBusiness.GarageAddressLine2))
+                        {
+                            <div>
+                                @Model.GarageBusiness.GarageAddressLine2
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.GarageBusiness.GarageAddressLine3))
+                        {
+                            <div>
+                                @Model.GarageBusiness.GarageAddressLine3
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.GarageBusiness.GarageAddressLine4))
+                        {
+                            <div>
+                                @Model.GarageBusiness.GarageAddressLine4
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.GarageBusiness.Postcode))
+                        {
+                            <div>
+                                @Model.GarageBusiness.Postcode
+                            </div>
+                        }
+                    </div>
+
+                    <div class="garage-contact-details mt-2">
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.GarageBusiness.GaragePhoneNumber))
+                        {
+                            <div>
+                                Tel: @Model.GarageBusiness.GaragePhoneNumber
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.GarageBusiness.GarageMobileNumber))
+                        {
+                            <div>
+                                Mobile: @Model.GarageBusiness.GarageMobileNumber
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Model.GarageBusiness.GarageEmailAddress))
+                        {
+                            <div>
+                                Email: @Model.GarageBusiness.GarageEmailAddress
+                            </div>
+                        }
+
+                    </div>
+
+                            <div class="garage-registration-details mt-2">
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                    Model.GarageBusiness.VatNumber))
+                                {
+                                    <div>
+                                        VAT No: @Model.GarageBusiness.VatNumber
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                    Model.GarageBusiness.BusinessRegistrationNumber))
+                                {
+                                    <div>
+                                        Registration No:
+                                        @Model.GarageBusiness.BusinessRegistrationNumber
+                                    </div>
+                                }
+
+                            </div>
+
                 </div>
-
-                <div>
-                    @Model.GarageBusiness.Postcode
-                </div>
-
-                <div class="mt-2">
-                    Tel: @Model.GarageBusiness.GaragePhoneNumber
-                </div>
-
-                <div class="mt-2">
-                    Tel: @Model.GarageBusiness.GarageMobileNumber
-                </div>
-
-                <div>
-                    Email: @Model.GarageBusiness.GarageEmailAddress
-                </div>
-            }
-
-            <div class="col-md-5 text-right">
-
-                <h1 class="invoice-title">
-                    INVOICE
-                </h1>
-
-                @if (isOverdue)
-                {
-                    <span class="badge badge-danger p-2">
-                        OVERDUE
-                    </span>
-                }
-                else
-                {
-                    switch (invoice?.InvoiceStatus)
-                    {
-                        case "Paid":
-                            <span class="badge badge-success p-2">
-                                PAID
-                            </span>
-                            break;
-
-                        case "Pending":
-                            <span class="badge badge-warning p-2">
-                                PENDING
-                            </span>
-                            break;
-
-                        case "Cancelled":
-                            <span class="badge badge-danger p-2">
-                                CANCELLED
-                            </span>
-                            break;
-
-                        case "Draft":
-                        default:
-                            <span class="badge badge-secondary p-2">
-                                DRAFT
-                            </span>
-                            break;
-                    }
-                }
 
             </div>
+        }
 
-        </div>
+    </div>
+
+
+    <!-- Invoice heading -->
+    <div class="col-md-5 text-right">
+
+        <h1 class="invoice-title">
+            INVOICE
+        </h1>
+
+        @if (isOverdue)
+        {
+            <span class="badge badge-danger p-2">
+                OVERDUE
+            </span>
+        }
+        else
+        {
+            switch (invoice?.InvoiceStatus)
+            {
+                case "Paid":
+                    <span class="badge badge-success p-2">
+                        PAID
+                    </span>
+                    break;
+
+                case "Pending":
+                    <span class="badge badge-warning p-2">
+                        PENDING
+                    </span>
+                    break;
+
+                case "Cancelled":
+                    <span class="badge badge-danger p-2">
+                        CANCELLED
+                    </span>
+                    break;
+
+                case "Draft":
+                default:
+                    <span class="badge badge-secondary p-2">
+                        DRAFT
+                    </span>
+                    break;
+            }
+        }
+
+    </div>
+
+</div>
 
         <hr />
 

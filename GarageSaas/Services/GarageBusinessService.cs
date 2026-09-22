@@ -120,6 +120,19 @@ namespace GarageSaas.Services
             garageToUpdate.UpdatedDate = DateTime.Now;
             garageToUpdate.UpdatedBy = userName;
 
+            garageToUpdate.VatNumber =
+    garageBusiness.VatNumber;
+
+            garageToUpdate.BusinessRegistrationNumber =
+                garageBusiness.BusinessRegistrationNumber;
+
+            if (!string.IsNullOrWhiteSpace(
+    garageBusiness.LogoImage))
+            {
+                garageToUpdate.LogoImage =
+                    garageBusiness.LogoImage;
+            }
+
             _context.SaveChanges();
 
             return ServiceResult<GarageBusiness>.Ok(garageToUpdate);

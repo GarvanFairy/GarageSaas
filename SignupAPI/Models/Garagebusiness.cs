@@ -28,6 +28,9 @@ namespace SignupAPI.Models
         public string GarageEmailAddress { get; set; }
         public string GaragePhoneNumber { get; set; }
         public string GarageMobileNumber { get; set; }
+        public string LogoImage { get; set; }
+        public string VatNumber { get; set; }
+        public string BusinessRegistrationNumber { get; set; }
         public DateTime CreatedDate { get; set; }
         public string CreatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }

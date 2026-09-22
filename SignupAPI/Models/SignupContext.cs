@@ -103,6 +103,9 @@ namespace SignupAPI.Models
                 entity.Property(e => e.UpdatedBy).HasMaxLength(255);
 
                 entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+                entity.Property(e => e.LogoImage).HasMaxLength(255);
+                entity.Property(e => e.VatNumber).HasMaxLength(255);
+                entity.Property(e => e.BusinessRegistrationNumber).HasMaxLength(255);
             });
 
             modelBuilder.Entity<GarageBusinessCustomer>(entity =>

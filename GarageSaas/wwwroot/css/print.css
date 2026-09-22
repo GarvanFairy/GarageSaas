@@ -38,4 +38,27 @@
     a[href]:after {
         content: none !important;
     }
+
+    .garage-details {
+        line-height: 1.4;
+    }
+
+    .garage-address {
+        display: block;
+        line-height: 1.5;
+    }
+
+        .garage-address > div {
+            display: block;
+        }
+
+    .garage-contact-details {
+        display: block;
+        line-height: 1.5;
+    }
+
+        .garage-contact-details > div {
+            display: block;
+        }
+
 }
