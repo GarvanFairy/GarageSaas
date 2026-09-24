@@ -1,23 +1,26 @@
-﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+﻿using GarageSaas.Configuration;
+using GarageSaas.Middleware;
+using GarageSaas.Models;
+using GarageSaas.Services;
+using GarageSaas.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
 using Microsoft.VisualBasic;
+using SignupAPI.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Identity.Web;
-using Microsoft.Identity.Web.UI;
-using Microsoft.EntityFrameworkCore;
-using SignupAPI.Models;
-using GarageSaas.Models;
-using GarageSaas.Services;
-using GarageSaas.Services.Interfaces;
+
 
 namespace GarageSaas
 {
@@ -66,6 +69,7 @@ namespace GarageSaas
   });
              * */
             services.Configure<AppSettingsModel>(Configuration.GetSection("AppSettings"));
+            services.Configure<EmailSettings>(Configuration.GetSection("EmailSettings"));
 
             services.AddDbContext<SignupContext>(opt =>
             opt.UseSqlServer(Configuration.GetConnectionString("GarageSaasDBConnection")));
@@ -79,17 +83,24 @@ namespace GarageSaas
             services.AddScoped<ICustomerVehicleService, CustomerVehicleService>();
             services.AddScoped<IVehicleLookupService, VehicleLookupService>();
 
+            services.AddHttpContextAccessor();
+
+            services.AddScoped<ICurrentGarageUserService, CurrentGarageUserService>();
+
             services.AddScoped<IGarageBusinessService, GarageBusinessService>();
             services.AddScoped<IGarageCustomersService, GarageCustomersService>();
             services.AddScoped<IWorkItemService, WorkItemService>();
             services.AddScoped<IWorkQuoteService, WorkQuoteService>();
             services.AddScoped<IVehicleInvoiceService, VehicleInvoiceService>();
             services.AddScoped<IVehiclePartService, VehiclePartService>();
+            services.AddScoped<IEmailService, MailKitEmailService>();
+            services.AddScoped<IInvitationIdentityVerificationService,InvitationIdentityVerificationService>();
+            services.AddScoped<IGarageAuthorizationService,GarageAuthorizationService>();
 
             // 🔹 EF DbContext (example)
-            services.AddDbContext<SignupContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
+            //services.AddDbContext<SignupContext>(options =>
+            //    options.UseSqlServer(
+            //        Configuration.GetConnectionString("DefaultConnection")));
 
             //services.AddDistributedMemoryCache();
             services.AddSession();
@@ -117,6 +128,7 @@ namespace GarageSaas
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseSession();
+            app.UseMiddleware<GarageAccessMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {

@@ -9,68 +9,94 @@ using SignupAPI.Models;
 using System;
 using System.Diagnostics;
 using System.IO;
+using Microsoft.AspNetCore.Authorization;
+using System.Threading.Tasks;
 
 namespace GarageSaas.Controllers
 {
+    [Authorize]
     public class GarageBusinessController : Controller
     {
         private readonly ILogger<GarageBusinessController> _logger;
         private readonly IGarageBusinessService _garageBusinessService;
         private readonly IWebHostEnvironment _environment;
+        private readonly ICurrentGarageUserService _currentGarageUserService;
+        private readonly IGarageAuthorizationService _authorizationService;
 
         public GarageBusinessController(
-            IGarageBusinessService garageBusinessService, IWebHostEnvironment environment,
-            ILogger<GarageBusinessController> logger)
+            IGarageBusinessService garageBusinessService,
+            ICurrentGarageUserService currentGarageUserService,
+            IWebHostEnvironment environment,
+            ILogger<GarageBusinessController> logger, IGarageAuthorizationService authorizationService)
         {
             _garageBusinessService = garageBusinessService;
+            _currentGarageUserService = currentGarageUserService;
             _environment = environment;
             _logger = logger;
+            _authorizationService = authorizationService;
         }
 
-        public IActionResult GarageBusinessDetail(int? garageBusinessId, int? userId)
+        public IActionResult GarageBusinessDetail()
         {
-            var result = _garageBusinessService.GetGarageBusinessDetail(garageBusinessId, userId);
+            var currentUser =
+                _currentGarageUserService.GetCurrentUser();
+
+            var result =
+                _garageBusinessService.GetGarageBusinessDetail(
+                    currentUser.GarageBusinessId,
+                    currentUser.UserId);
 
             if (!result.Success)
             {
-                return StatusCode(500, result.ErrorMessage);
+                return StatusCode(
+                    500,
+                    result.ErrorMessage);
             }
 
-            return View("GarageBusinessDetail", result.Data);
+            return View(
+                "GarageBusinessDetail",
+                result.Data);
         }
 
-        public IActionResult EditGarageBusiness(int? garageBusinessId)
+        public async Task<IActionResult> EditGarageBusiness(int? garageBusinessId)
         {
-            if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int sessionGarageBusinessId))
+            if (!await _authorizationService.CanManageGarageAsync())
             {
-                return StatusCode(500, "Session GarageBusinessId no valid");
+                return Forbid();
             }
 
-            var sessionUserId = HttpContext.Session.GetInt32("userId");
-            if (sessionUserId == null || sessionUserId == 0)
-            {
-                return StatusCode(500, "Session userId no valid");
-            }
+            var currentUser =
+                _currentGarageUserService.GetCurrentUser();
 
-            var result = _garageBusinessService.GetGarageBusinessForEdit(
-                garageBusinessId,
-                sessionGarageBusinessId,
-                sessionUserId.Value);
+            var result =
+                _garageBusinessService.GetGarageBusinessForEdit(
+                    garageBusinessId,
+                    currentUser.GarageBusinessId,
+                    currentUser.UserId);
 
             if (!result.Success)
             {
-                return StatusCode(500, result.ErrorMessage);
+                return StatusCode(
+                    500,
+                    result.ErrorMessage);
             }
 
-            return View("GarageBusinessEdit", result.Data);
+            return View(
+                "GarageBusinessEdit",
+                result.Data);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult UpdateGarageBusiness(
+        public async Task<IActionResult> UpdateGarageBusiness(
             [FromForm] GarageBusiness garageBusiness,
             IFormFile logoFile)
         {
+            if (!await _authorizationService.CanManageGarageAsync())
+            {
+                return Forbid();
+            }
+
             if (garageBusiness == null)
             {
                 return BadRequest("Garage business is null");
@@ -81,25 +107,14 @@ namespace GarageSaas.Controllers
                 return View("GarageBusinessEdit", garageBusiness);
             }
 
-            if (!int.TryParse(
-                HttpContext.Session.GetString("GarageBusinessId"),
-                out int sessionGarageBusinessId))
-            {
-                return StatusCode(
-                    500,
-                    "Session GarageBusinessId not valid");
-            }
+            var currentUser =
+                _currentGarageUserService.GetCurrentUser();
 
-            var sessionUserId =
-                HttpContext.Session.GetInt32("userId");
+            var garageBusinessId =
+                currentUser.GarageBusinessId;
 
-            if (sessionUserId == null ||
-                sessionUserId == 0)
-            {
-                return StatusCode(
-                    500,
-                    "Session userId not valid");
-            }
+            var userId =
+                currentUser.UserId;
 
             /*
              * Upload Garage Logo
@@ -153,7 +168,7 @@ namespace GarageSaas.Controllers
                     uploadDirectory);
 
                 var fileName =
-                    $"garage-{sessionGarageBusinessId}-{Guid.NewGuid():N}{extension}";
+                    $"garage-{garageBusinessId}-{Guid.NewGuid():N}{extension}";
 
                 var filePath =
                     Path.Combine(
@@ -175,8 +190,8 @@ namespace GarageSaas.Controllers
             var result =
                 _garageBusinessService.UpdateGarageBusiness(
                     garageBusiness,
-                    sessionGarageBusinessId,
-                    sessionUserId.Value,
+                    garageBusinessId,
+                    userId,
                     User.Identity?.Name);
 
             if (!result.Success)
@@ -195,6 +210,7 @@ namespace GarageSaas.Controllers
                 result.Data);
         }
 
+        [AllowAnonymous]
         public IActionResult Privacy()
         {
             return View();

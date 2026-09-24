@@ -1,3 +1,5 @@
+@using GarageSaas.Services.Interfaces
+@inject IGarageAuthorizationService GarageAuthorizationService
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,11 +16,28 @@
 
 <body>
     @{
-        var garageBusinessId = TempData["GarageBusinessId"];
-        var userId = TempData["userId"];
-        TempData.Keep("GarageBusinessId");
-        TempData.Keep("userId");
+
+    var garageBusinessId = TempData["GarageBusinessId"];
+    var userId = TempData["userId"];
+
+    TempData.Keep("GarageBusinessId");
+    TempData.Keep("userId");
+
+    var isAuthenticated =
+        User.Identity?.IsAuthenticated == true;
+
+    var canManageTeam = false;
+    var canManageGarage = false;
+
+    if (isAuthenticated)
+    {
+        canManageTeam =
+            await GarageAuthorizationService.CanManageTeamAsync();
+
+        canManageGarage =
+            await GarageAuthorizationService.CanManageGarageAsync();
     }
+}
 
     <header class="app-topbar">
         <nav class="navbar navbar-expand-lg navbar-light">
@@ -66,25 +85,66 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @IsActive("VehicleInvoice", "Index")"
-                               asp-controller="WorkQuote" asp-action="Index">
+                            <a class="nav-link @IsActive("WorkQuote", "Index")"
+                               asp-controller="WorkQuote"
+                               asp-action="Index">
                                 <i class="bi bi-receipt me-1"></i> Work Quote
                             </a>
                         </li>
      
+                        @if (canManageGarage)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link @IsActive("GarageBusiness", "GarageBusinessDetail")"
+                                   asp-controller="GarageBusiness"
+                                   asp-action="GarageBusinessDetail"
+                                   asp-route-garageBusinessId="@garageBusinessId"
+                                   asp-route-userId="@userId">
+                                    <i class="bi bi-building-gear me-1"></i> Garage
+                                </a>
+                            </li>
+                        }
 
-                        <li class="nav-item">
-                            <a class="nav-link @IsActive("GarageBusiness","GarageBusinessDetail")"
-                               asp-controller="GarageBusiness" asp-action="GarageBusinessDetail"
-                               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
-                                <i class="bi bi-building-gear me-1"></i> Garage
-                            </a>
-                        </li>
+                        @if (canManageTeam)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link @IsActive("GarageTeam", "Index")"
+                                   asp-controller="GarageTeam"
+                                   asp-action="Index">
+                                    <i class="bi bi-person-gear me-1"></i> Team
+                                </a>
+                            </li>
+                        }
+
                     </ul>
 
                     <div class="d-flex align-items-center gap-2">
                         <partial name="_LoginPartial" />
                     </div>
+
+@if (User.Identity != null &&
+     User.Identity.IsAuthenticated)
+{
+    <li class="nav-item">
+        <a class="nav-link text-dark"
+           asp-area="MicrosoftIdentity"
+           asp-controller="Account"
+           asp-action="SignOut">
+            Logout
+        </a>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link text-dark"
+           asp-area="MicrosoftIdentity"
+           asp-controller="Account"
+           asp-action="SignIn">
+            Login
+        </a>
+    </li>
+}
                 </div>
             </div>
         </nav>
@@ -106,11 +166,27 @@
                asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
                 <i class="bi bi-car-front"></i><span>Vehicles</span>
             </a>
-            <a class="sidebar-link @IsActive("GarageBusiness","GarageBusinessDetail")"
-               asp-controller="GarageBusiness" asp-action="GarageBusinessDetail"
-               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
-                <i class="bi bi-building-gear"></i><span>Garage profile</span>
-            </a>
+            @if (canManageGarage)
+            {
+                <a class="sidebar-link @IsActive("GarageBusiness", "GarageBusinessDetail")"
+                   asp-controller="GarageBusiness"
+                   asp-action="GarageBusinessDetail"
+                   asp-route-garageBusinessId="@garageBusinessId"
+                   asp-route-userId="@userId">
+                    <i class="bi bi-building-gear"></i>
+                    <span>Garage profile</span>
+                </a>
+            }
+
+            @if (canManageTeam)
+            {
+                <a class="sidebar-link @IsActive("GarageTeam", "Index")"
+                   asp-controller="GarageTeam"
+                   asp-action="Index">
+                    <i class="bi bi-person-gear"></i>
+                    <span>Team members</span>
+                </a>
+            }
             <a class="sidebar-link @IsActive("WorkQuote", "Index")"
                asp-controller="WorkQuote" asp-action="Index">
                 <i class="bi bi-receipt"></i><span>WorkQuote</span>

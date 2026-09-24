@@ -1,0 +1,102 @@
+﻿@model GarageSaas.Models.AcceptGarageInvitationViewModel
+
+@{
+    ViewData["Title"] = "Accept Garage Invitation";
+}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-8 col-lg-6">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body p-4">
+
+                    <h3 class="mb-3">
+                        You've been invited!
+                    </h3>
+
+                    <p class="text-muted">
+                        You've been invited to join
+                        <strong>@Model.GarageBusinessName</strong>
+                        on GarageSaas.
+                    </p>
+
+                    <div class="border rounded p-3 mb-4">
+
+                        <p class="mb-2">
+                            <strong>Email:</strong>
+                            @Model.EmailAddress
+                        </p>
+
+                        <p class="mb-2">
+                            <strong>Role:</strong>
+                            @Model.Role
+                        </p>
+
+                        <p class="mb-0">
+                            <strong>Invitation expires:</strong>
+                            @Model.ExpiresDate.ToString("dd/MM/yyyy")
+                        </p>
+
+                    </div>
+
+                    @if (!Model.IsAuthenticated)
+                    {
+                        <p>
+                            Please sign up or sign in to
+                            accept this invitation.
+                        </p>
+
+                        <form asp-controller="GarageInvitation"
+                              asp-action="SignIn"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="token"
+                                   value="@Model.Token" />
+
+                            <button type="submit"
+                                    class="btn btn-primary btn-block">
+
+                                Continue to Sign In
+
+                            </button>
+
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-controller="GarageInvitation"
+                              asp-action="Complete"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="token"
+                                   value="@Model.Token" />
+
+                            <button type="submit"
+                                    class="btn btn-primary btn-block">
+
+                                Accept Invitation
+
+                            </button>
+
+                        </form>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
