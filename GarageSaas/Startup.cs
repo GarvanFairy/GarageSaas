@@ -1,9 +1,11 @@
-﻿using GarageSaas.Configuration;
+﻿using GarageSaas.Authorization;
+using GarageSaas.Configuration;
 using GarageSaas.Middleware;
 using GarageSaas.Models;
 using GarageSaas.Services;
 using GarageSaas.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -58,7 +60,20 @@ namespace GarageSaas
             //Configuring appsettings section AzureAdB2C, into IOptions
             services.AddOptions();
             services.Configure<OpenIdConnectOptions>(Configuration.GetSection("AzureAdB2C"));
-            
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(
+                    "PlatformAdministrator",
+                    policy =>
+                    {
+                        policy.RequireAuthenticatedUser();
+
+                        policy.AddRequirements(
+                            new PlatformAdministratorRequirement());
+                    });
+            });
+
 
             /*
              *   app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
@@ -96,6 +111,7 @@ namespace GarageSaas
             services.AddScoped<IEmailService, MailKitEmailService>();
             services.AddScoped<IInvitationIdentityVerificationService,InvitationIdentityVerificationService>();
             services.AddScoped<IGarageAuthorizationService,GarageAuthorizationService>();
+            services.AddScoped<IAuthorizationHandler,PlatformAdministratorHandler>();
 
             // 🔹 EF DbContext (example)
             //services.AddDbContext<SignupContext>(options =>

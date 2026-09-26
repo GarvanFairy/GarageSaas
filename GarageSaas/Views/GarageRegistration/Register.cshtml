@@ -1,0 +1,272 @@
+﻿@model GarageSaas.Models.GarageRegistrationRequestViewModel
+
+@{
+    ViewData["Title"] = "Register Your Garage";
+}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-9">
+
+            <div class="text-center mb-4">
+                <h1>Register Your Garage</h1>
+
+                <p class="text-muted">
+                    Interested in using GarageSaas?
+                    Tell us about your garage and we'll
+                    review your registration request.
+                </p>
+            </div>
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body p-4 p-md-5">
+
+                    <form asp-action="Register"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger mb-3">
+                        </div>
+
+                        <h4 class="mb-3">
+                            Garage Details
+                        </h4>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="GarageBusinessName">
+                                </label>
+
+                                <input asp-for="GarageBusinessName"
+                                       class="form-control" />
+
+                                <span asp-validation-for="GarageBusinessName"
+                                      class="text-danger">
+                                </span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="BusinessType">
+                                </label>
+
+                                <select asp-for="BusinessType"
+                                        class="form-control">
+
+                                    <option value="">
+                                        -- Select business type --
+                                    </option>
+
+                                    <option value="Independent Garage">
+                                        Independent Garage
+                                    </option>
+
+                                    <option value="Main Dealer">
+                                        Main Dealer
+                                    </option>
+
+                                    <option value="Body Repair">
+                                        Body Repair
+                                    </option>
+
+                                    <option value="Tyre Centre">
+                                        Tyre Centre
+                                    </option>
+
+                                    <option value="Service Centre">
+                                        Service Centre
+                                    </option>
+
+                                    <option value="Other">
+                                        Other
+                                    </option>
+
+                                </select>
+
+                                <span asp-validation-for="BusinessType"
+                                      class="text-danger">
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="AddressLine1">
+                                </label>
+
+                                <input asp-for="AddressLine1"
+                                       class="form-control" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="AddressLine2">
+                                </label>
+
+                                <input asp-for="AddressLine2"
+                                       class="form-control" />
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="TownOrCity">
+                                </label>
+
+                                <input asp-for="TownOrCity"
+                                       class="form-control" />
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="County">
+                                </label>
+
+                                <input asp-for="County"
+                                       class="form-control" />
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Eircode">
+                                </label>
+
+                                <input asp-for="Eircode"
+                                       class="form-control" />
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="BusinessPhone">
+                                </label>
+
+                                <input asp-for="BusinessPhone"
+                                       class="form-control" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="BusinessEmail">
+                                </label>
+
+                                <input asp-for="BusinessEmail"
+                                       class="form-control" />
+                            </div>
+
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Website">
+                            </label>
+
+                            <input asp-for="Website"
+                                   class="form-control"
+                                   placeholder="https://" />
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <h4 class="mb-3">
+                            Your Details
+                        </h4>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ContactFirstName">
+                                </label>
+
+                                <input asp-for="ContactFirstName"
+                                       class="form-control" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ContactLastName">
+                                </label>
+
+                                <input asp-for="ContactLastName"
+                                       class="form-control" />
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ContactEmail">
+                                </label>
+
+                                <input asp-for="ContactEmail"
+                                       class="form-control" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ContactMobile">
+                                </label>
+
+                                <input asp-for="ContactMobile"
+                                       class="form-control" />
+                            </div>
+
+                        </div>
+
+                        <div class="mb-4">
+
+                            <label asp-for="AdditionalInformation">
+                            </label>
+
+                            <textarea asp-for="AdditionalInformation"
+                                      class="form-control"
+                                      rows="4"></textarea>
+
+                        </div>
+
+                        <div class="form-check mb-4">
+
+                            <input asp-for="AuthorisedToRegister"
+                                   class="form-check-input" />
+
+                            <label asp-for="AuthorisedToRegister"
+                                   class="form-check-label">
+                                I confirm that I am authorised
+                                to register this business with
+                                GarageSaas.
+                            </label>
+
+                            <div>
+                                <span asp-validation-for="AuthorisedToRegister"
+                                      class="text-danger">
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary btn-lg">
+                            Submit Registration Request
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+}

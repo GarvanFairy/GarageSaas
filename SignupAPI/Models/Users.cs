@@ -24,5 +24,6 @@ namespace SignupAPI.Models
         public bool Active { get; set; }
         public bool Blocked { get; set; }
         public int GarageBusinessId { get; set; } //Legacy remove later
+        public bool IsPlatformAdministrator { get; set; }
     }
 }
