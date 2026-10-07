@@ -58,7 +58,8 @@ namespace GarageSaas.Controllers
                 result.Data);
         }
 
-        public async Task<IActionResult> EditGarageBusiness(int? garageBusinessId)
+        [HttpGet]
+        public async Task<IActionResult> EditGarageBusiness()
         {
             if (!await _authorizationService.CanManageGarageAsync())
             {
@@ -70,7 +71,6 @@ namespace GarageSaas.Controllers
 
             var result =
                 _garageBusinessService.GetGarageBusinessForEdit(
-                    garageBusinessId,
                     currentUser.GarageBusinessId,
                     currentUser.UserId);
 
@@ -205,9 +205,11 @@ namespace GarageSaas.Controllers
                     garageBusiness);
             }
 
-            return View(
-                "GarageBusinessDetail",
-                result.Data);
+            TempData["Success"] =
+                "Garage details updated successfully.";
+
+            return RedirectToAction(
+                nameof(GarageBusinessDetail));
         }
 
         [AllowAnonymous]

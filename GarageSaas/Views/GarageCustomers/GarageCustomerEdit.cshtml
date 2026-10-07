@@ -6,10 +6,7 @@
     var displayName = string.IsNullOrWhiteSpace(customerName) ? "New customer" : customerName;
     var initial = string.IsNullOrWhiteSpace(displayName) ? "?" : displayName.Substring(0, 1).ToUpperInvariant();
     var vehicleCount = Model?.Vehicles?.Count ?? 0;
-    var garageBusinessId = TempData["GarageBusinessId"];
-    var userId = TempData["userId"];
-    TempData.Keep("GarageBusinessId");
-    TempData.Keep("userId");
+
 
     ViewData["Title"] = isEdit ? "Edit Garage Customer" : "Add Garage Customer";
 }
@@ -25,9 +22,8 @@
 
     <div class="page-actions">
         <a class="btn btn-outline-secondary"
-           asp-action="GarageCustomersList"
-           asp-route-garageBusinessId="@garageBusinessId"
-           asp-route-userId="@userId">
+           asp-controller="GarageCustomers"
+           asp-action="GarageCustomersList">
             <i class="bi bi-arrow-left me-2"></i>Customers
         </a>
     </div>
@@ -185,9 +181,7 @@
 
                         <a class="btn btn-sm btn-primary"
                            asp-controller="CustomerVehicle"
-                           asp-action="DisplayAddCustomerVehicle"
-                           asp-route-garageBusinessId="@garageBusinessId"
-                           asp-route-userId="@userId">
+                           asp-action="DisplayAddCustomerVehicle">
                             <i class="bi bi-plus-lg"></i>
                         </a>
                     </div>
@@ -200,8 +194,7 @@
                                 <a class="linked-vehicle-item"
                                    asp-controller="CustomerVehicle"
                                    asp-action="EditCustomerVehicle"
-                                   asp-route-CustomerVehicleId="@Model.Vehicles[i].Id"
-                                   asp-route-userId="@userId">
+                                   asp-route-CustomerVehicleId="@Model.Vehicles[i].Id">
                                     <span class="vehicle-avatar"><i class="bi bi-car-front"></i></span>
                                     <span>
                                         <strong>@Model.Vehicles[i].Make @Model.Vehicles[i].Model</strong>
@@ -249,9 +242,8 @@
                 </button>
 
                 <a class="btn btn-light w-100"
-                   asp-action="GarageCustomersList"
-                   asp-route-garageBusinessId="@garageBusinessId"
-                   asp-route-userId="@userId">
+                   asp-controller="GarageCustomers"
+                   asp-action="GarageCustomersList">
                     Cancel
                 </a>
             </div>

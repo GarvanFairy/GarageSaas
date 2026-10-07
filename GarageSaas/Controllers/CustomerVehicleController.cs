@@ -17,119 +17,151 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Text;
 using GarageSaas.Services;
 using GarageSaas.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace GarageSaas.Controllers
 {
+    [Authorize]
     public class CustomerVehicleController : Controller
     {
+
         private readonly ICustomerVehicleService _customerVehicleService;
         private readonly IVehicleLookupService _vehicleLookupService;
-
+        private readonly ICurrentGarageUserService _currentGarageUserService;
         public CustomerVehicleController(
             ICustomerVehicleService customerVehicleService,
-            IVehicleLookupService vehicleLookupService)
+            IVehicleLookupService vehicleLookupService,
+            ICurrentGarageUserService currentGarageUserService)
         {
-            _customerVehicleService = customerVehicleService;
-            _vehicleLookupService = vehicleLookupService;
+            _customerVehicleService =
+                customerVehicleService;
+
+            _vehicleLookupService =
+                vehicleLookupService;
+
+            _currentGarageUserService =
+                currentGarageUserService;
         }
 
-        public async Task<IActionResult> DisplayAddCustomerVehicle(int? garageBusinessId, int? userId)
+        [HttpGet]
+        public async Task<IActionResult>
+            DisplayAddCustomerVehicle()
         {
-            if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int sessionGarageBusinessId))
-            {
-                return StatusCode(500, "Session GarageBusinessId not valid");
-            }
+            var currentUser =
+                _currentGarageUserService
+                    .GetCurrentUser();
 
-            var vmResult = await _customerVehicleService.BuildAddCustomerVehicleVmAsync(userId, sessionGarageBusinessId);
+            var vmResult =
+                await _customerVehicleService
+                    .BuildAddCustomerVehicleVmAsync(
+                        currentUser.GarageBusinessId);
 
             if (!vmResult.Success)
             {
-                return StatusCode(500, vmResult.ErrorMessage);
+                return StatusCode(
+                    500,
+                    vmResult.ErrorMessage);
             }
 
-            TempData["GarageBusinessId"] = garageBusinessId ?? sessionGarageBusinessId;
-            TempData["userId"] = userId;
-
-            return View("CustomerVehicleEdit", vmResult.Data);
+            return View(
+                "CustomerVehicleEdit",
+                vmResult.Data);
         }
 
-        public async Task<IActionResult> EditCustomerVehicle(int? customerVehicleId, int? userId)
+        [HttpGet]
+        public async Task<IActionResult>
+            EditCustomerVehicle(
+                int? customerVehicleId)
         {
             if (customerVehicleId == null)
             {
-                return BadRequest("CustomerVehicleId is required");
+                return BadRequest(
+                    "CustomerVehicleId is required");
             }
 
-            if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int sessionGarageBusinessId))
-            {
-                return StatusCode(500, "Session GarageBusinessId not valid");
-            }
+            var currentUser =
+                _currentGarageUserService
+                    .GetCurrentUser();
 
-            var vmResult = await _customerVehicleService.GetCustomerVehicleForEditAsync(
-                customerVehicleId.Value,
-                userId,
-                sessionGarageBusinessId);
+            var vmResult =
+                await _customerVehicleService
+                    .GetCustomerVehicleForEditAsync(
+                        customerVehicleId.Value,
+                        currentUser.GarageBusinessId);
 
             if (!vmResult.Success)
             {
-                return StatusCode(500, vmResult.ErrorMessage);
+                TempData["Error"] =
+                    vmResult.ErrorMessage ??
+                    "Vehicle could not be found.";
+
+                return RedirectToAction(
+                    nameof(CustomerVehicleList));
             }
 
-            TempData["userId"] = userId;
-
-            return View("CustomerVehicleEdit", vmResult.Data);
+            return View(
+                "CustomerVehicleEdit",
+                vmResult.Data);
         }
 
         [HttpPost]
-        public IActionResult AddUpdateCustomerVehicle([FromBody] VehicleAndCustomers vehicleCustomerVm)
+        public IActionResult AddUpdateCustomerVehicle(
+            [FromBody] VehicleAndCustomers vehicleCustomerVm)
         {
-            
-            if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int sessionGarageBusinessId))
+            if (vehicleCustomerVm == null)
             {
-                return StatusCode(500, "Session GarageBusinessId not valid");
+                return BadRequest(
+                    "Vehicle model is required.");
             }
 
-            var result = _customerVehicleService.AddOrUpdateCustomerVehicle(
-                vehicleCustomerVm,
-                sessionGarageBusinessId,
-                User.Identity?.Name);
+            var currentUser =
+                _currentGarageUserService
+                    .GetCurrentUser();
+
+            var result =
+                _customerVehicleService
+                    .AddOrUpdateCustomerVehicle(
+                        vehicleCustomerVm,
+                        currentUser.GarageBusinessId,
+                        currentUser.EmailAddress ??
+                            User.Identity?.Name ??
+                            string.Empty);
 
             if (!result.Success)
             {
-                return Json(new { status = "Error", message = result.ErrorMessage });
+                return Json(new
+                {
+                    status = "Error",
+                    message = result.ErrorMessage
+                });
             }
 
             return Json("Success");
         }
 
-        public IActionResult CustomerVehicleList(int? garageBusinessId, int? userId)
+        [HttpGet]
+        public IActionResult CustomerVehicleList()
         {
-            if (!int.TryParse(HttpContext.Session.GetString("GarageBusinessId"), out int sessionGarageBusinessId))
-            {
-                return StatusCode(500, "Session GarageBusinessId no valid");
-            }
+            var currentUser =
+                _currentGarageUserService
+                    .GetCurrentUser();
 
-            var sessionUserId = HttpContext.Session.GetInt32("userId");
-            if (sessionUserId == null || sessionUserId == 0)
-            {
-                return StatusCode(500, "Session userId no valid");
-            }
-
-            garageBusinessId ??= sessionGarageBusinessId;
-            userId ??= sessionUserId;
-
-            TempData["GarageBusinessId"] = garageBusinessId;
-            TempData["userId"] = userId;
-
-            var result = _customerVehicleService.GetCustomerVehiclesForList(garageBusinessId.Value);
+            var result =
+                _customerVehicleService
+                    .GetCustomerVehiclesForList(
+                        currentUser.GarageBusinessId);
 
             if (!result.Success)
             {
-                return StatusCode(500, result.ErrorMessage);
+                return StatusCode(
+                    500,
+                    result.ErrorMessage);
             }
 
-            return View("CustomerVehicleList", result.Data);
+            return View(
+                "CustomerVehicleList",
+                result.Data);
         }
 
         [HttpGet]

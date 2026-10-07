@@ -32,7 +32,6 @@ namespace GarageSaas.Controllers
         [AllowAnonymous]
         public IActionResult Index()
         {
-
             if (User.Identity?.IsAuthenticated != true)
             {
                 return View("Login");
@@ -41,41 +40,21 @@ namespace GarageSaas.Controllers
             var currentUser =
                 _currentGarageUserService.GetCurrentUser();
 
+            var garageBusinessId =
+                currentUser.GarageBusinessId;
+
             var model = new DashboardViewModel
             {
                 GarageBusinessId =
-                    currentUser.GarageBusinessId,
+                    garageBusinessId,
 
                 UserId =
                     currentUser.UserId,
 
                 UserName =
-                    $"{currentUser.FirstName} {currentUser.LastName}".Trim()
+                    $"{currentUser.FirstName} {currentUser.LastName}"
+                        .Trim()
             };
-
-            /*
-             * Keep these temporarily because other parts of the
-             * application may still depend on TempData / Session.
-             *
-             * These can be removed later as we migrate the
-             * other controllers to CurrentGarageUserService.
-             */
-            TempData["GarageBusinessId"] =
-                currentUser.GarageBusinessId.ToString();
-
-            TempData["userName"] =
-                model.UserName;
-
-            TempData["userId"] =
-                currentUser.UserId;
-
-            HttpContext.Session.SetString(
-                "GarageBusinessId",
-                currentUser.GarageBusinessId.ToString());
-
-            HttpContext.Session.SetInt32(
-                "userId",
-                currentUser.UserId);
 
             try
             {
@@ -83,37 +62,37 @@ namespace GarageSaas.Controllers
                     _context.GarageBusinessCustomer
                         .Count(c =>
                             c.GarageBusinessId ==
-                            currentUser.GarageBusinessId);
+                                garageBusinessId);
 
                 model.VehicleCount =
                     _context.CustomerVehicle
                         .Count(v =>
                             v.GarageBusinessId ==
-                            currentUser.GarageBusinessId);
+                                garageBusinessId);
 
                 model.InvoiceCount =
                     _context.VehicleInvoice
                         .Count(i =>
                             i.GarageBusinessId ==
-                            currentUser.GarageBusinessId);
+                                garageBusinessId);
 
                 model.OutstandingTotal =
-                    ((IQueryable<VehicleInvoice>)_context.VehicleInvoice)
-                        .Where(i =>
-                            i.GarageBusinessId == currentUser.GarageBusinessId &&
-                            i.Paid != true)
-                        .Sum(i => i.Total ?? 0);
+                    ((IQueryable<VehicleInvoice>)
+                        _context.VehicleInvoice)
+                    .Where(i =>
+                        i.GarageBusinessId ==
+                            garageBusinessId &&
+                        i.Paid != true)
+                    .Sum(i =>
+                        i.Total ?? 0);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(
                     ex,
-                    "Unable to load dashboard counts.");
+                    "Unable to load dashboard counts for garage {GarageBusinessId}.",
+                    garageBusinessId);
             }
-
-            TempData.Keep("GarageBusinessId");
-            TempData.Keep("userName");
-            TempData.Keep("userId");
 
             return View(model);
         }

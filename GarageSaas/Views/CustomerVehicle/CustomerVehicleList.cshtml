@@ -3,12 +3,8 @@
 @model List<SignupAPI.Models.CustomerVehicleListVM>
 
 @{
-    ViewData["Title"] = "Vehicles";
+    ViewData["Title"] = "Vehicles"; 
 
-    var garageBusinessId = TempData["GarageBusinessId"];
-    var userId = TempData["userId"];
-    TempData.Keep("GarageBusinessId");
-    TempData.Keep("userId");
 
     var vehicleCount = Model?.Count ?? 0;
     var ownerCount = Model?
@@ -33,17 +29,13 @@
     <div class="page-actions">
         <a class="btn btn-primary"
            asp-controller="CustomerVehicle"
-           asp-action="DisplayAddCustomerVehicle"
-           asp-route-garageBusinessId="@garageBusinessId"
-           asp-route-userId="@userId">
+           asp-action="DisplayAddCustomerVehicle">
             <i class="bi bi-plus-lg me-2"></i>Add vehicle
         </a>
 
         <a class="btn btn-outline-secondary"
            asp-controller="GarageCustomers"
-           asp-action="GarageCustomersList"
-           asp-route-garageBusinessId="@garageBusinessId"
-           asp-route-userId="@userId">
+           asp-action="GarageCustomersList">
             <i class="bi bi-arrow-left me-2"></i>Customers
         </a>
     </div>
@@ -96,9 +88,7 @@
             <span class="badge text-bg-light border" id="rowCount"></span>
             <a class="btn btn-light"
                asp-controller="CustomerVehicle"
-               asp-action="CustomerVehicleList"
-               asp-route-garageBusinessId="@garageBusinessId"
-               asp-route-userId="@userId">
+               asp-action="CustomerVehicleList">
                 <i class="bi bi-arrow-clockwise"></i>
             </a>
         </div>
@@ -192,7 +182,6 @@
                                    asp-controller="CustomerVehicle"
                                    asp-action="EditCustomerVehicle"
                                    asp-route-CustomerVehicleId="@vehicle.VehicleId"
-                                   asp-route-userId="@userId"
                                    title="Edit vehicle">
                                     <i class="bi bi-pencil me-1"></i>Edit
                                 </a>
@@ -232,7 +221,6 @@
                        asp-controller="CustomerVehicle"
                        asp-action="EditCustomerVehicle"
                        asp-route-CustomerVehicleId="@vehicle.VehicleId"
-                       asp-route-userId="@userId"
                        aria-label="Edit @vehicleName">
                         <i class="bi bi-pencil"></i>
                     </a>

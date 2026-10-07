@@ -14,10 +14,7 @@
     var selectedFuel = Model?.ListofFuelTypes?.FirstOrDefault(f => f.Selected || f.Value == Model.Vehicle.VehicleFuelTypeId.ToString())?.Text;
     var selectedTransmission = Model?.ListofTransmissionTypes?.FirstOrDefault(t => t.Selected || t.Value == Model.Vehicle.VehicleTransmissionId.ToString())?.Text;
     var vehicleLabel = string.Join(" ", new[] { selectedYear, selectedMake, selectedModel }.Where(v => !string.IsNullOrWhiteSpace(v)));
-    var garageBusinessId = TempData["GarageBusinessId"];
-    var userId = TempData["userId"];
-    TempData.Keep("GarageBusinessId");
-    TempData.Keep("userId");
+
 
     ViewData["Title"] = isEdit ? "Edit Vehicle" : "Add Vehicle";
 
@@ -45,9 +42,8 @@
 
     <div class="page-actions">
         <a class="btn btn-outline-secondary"
-           asp-action="CustomerVehicleList"
-           asp-route-garageBusinessId="@garageBusinessId"
-           asp-route-userId="@userId">
+           asp-controller="CustomerVehicle"
+           asp-action="CustomerVehicleList">
             <i class="bi bi-arrow-left me-2"></i>Vehicles
         </a>
     </div>
@@ -358,9 +354,8 @@
                 </button>
 
                 <a class="btn btn-light w-100"
-                   asp-action="CustomerVehicleList"
-                   asp-route-garageBusinessId="@garageBusinessId"
-                   asp-route-userId="@userId">
+                   asp-controller="CustomerVehicle"
+                   asp-action="CustomerVehicleList">
                     Cancel
                 </a>
             </div>

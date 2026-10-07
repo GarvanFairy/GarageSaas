@@ -2,8 +2,6 @@
 
 @{
     ViewData["Title"] = "Dashboard";
-    var garageBusinessId = Model.GarageBusinessId;
-    var userId = Model.UserId;
     var invoiceProgress = Model.InvoiceCount > 0 ? 72 : 12;
 }
 
@@ -16,16 +14,12 @@
     <div class="dashboard-actions">
         <a class="btn btn-primary"
            asp-controller="GarageCustomers"
-           asp-action="DisplayAddGarageCustomersWithVehicle"
-           asp-route-garageBusinessId="@garageBusinessId"
-           asp-route-userId="@userId">
+           asp-action="DisplayAddGarageCustomersWithVehicle">
             <i class="bi bi-person-plus me-2"></i>Add customer
         </a>
         <a class="btn btn-outline-secondary"
            asp-controller="CustomerVehicle"
-           asp-action="DisplayAddCustomerVehicle"
-           asp-route-garageBusinessId="@garageBusinessId"
-           asp-route-userId="@userId">
+           asp-action="DisplayAddCustomerVehicle">
             <i class="bi bi-car-front me-2"></i>Add vehicle
         </a>
     </div>
@@ -79,9 +73,7 @@
         <div class="workflow-table">
             <a class="workflow-item"
                asp-controller="GarageCustomers"
-               asp-action="GarageCustomersList"
-               asp-route-garageBusinessId="@garageBusinessId"
-               asp-route-userId="@userId">
+               asp-action="GarageCustomersList">
                 <span class="workflow-icon"><i class="bi bi-people"></i></span>
                 <span>
                     <strong>Manage customers</strong>
@@ -92,10 +84,9 @@
             </a>
 
             <a class="workflow-item"
-               asp-controller="CustomerVehicle"
-               asp-action="CustomerVehicleList"
-               asp-route-garageBusinessId="@garageBusinessId"
-               asp-route-userId="@userId">
+                <a class="workflow-item"
+                   asp-controller="CustomerVehicle"
+                   asp-action="CustomerVehicleList">
                 <span class="workflow-icon"><i class="bi bi-car-front"></i></span>
                 <span>
                     <strong>Vehicle register</strong>
@@ -105,11 +96,9 @@
                 <i class="bi bi-chevron-right"></i>
             </a>
 
-            <a class="workflow-item"
-               asp-controller="GarageBusiness"
-               asp-action="GarageBusinessDetail"
-               asp-route-garageBusinessId="@garageBusinessId"
-               asp-route-userId="@userId">
+                <a class="workflow-item"
+                   asp-controller="GarageBusiness"
+                   asp-action="GarageBusinessDetail">
                 <span class="workflow-icon"><i class="bi bi-building-gear"></i></span>
                 <span>
                     <strong>Garage profile</strong>
@@ -178,7 +167,15 @@
                 <a class="btn btn-light" href="@Url.RouteUrl("JWKS")" target="_blank" rel="noreferrer">
                     <i class="bi bi-key me-2"></i>JWKS
                 </a>
+
+                    <a class="btn btn-light"
+                       asp-controller="GarageTeam"
+                       asp-action="Index">
+                        <i class="bi bi-people me-2"></i>Manage team
+                    </a>
             </div>
+
+
 
             @if (!Model.HasGarageContext)
             {

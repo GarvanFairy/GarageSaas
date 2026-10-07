@@ -9,19 +9,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
-using Microsoft.VisualBasic;
 using SignupAPI.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 
 namespace GarageSaas
@@ -46,8 +41,6 @@ namespace GarageSaas
                 // Handling SameSite cookie according to https://docs.microsoft.com/en-us/aspnet/core/security/samesite?view=aspnetcore-3.1
                 options.HandleSameSiteCookieCompatibility();
             });
-
-            services.AddScoped<IGarageCustomersService, GarageCustomersService>();
 
             // Configuration to sign-in users with Azure AD B2C
             services.AddMicrosoftIdentityWebAppAuthentication(Configuration, Microsoft.Identity.Web.Constants.AzureAdB2C);
@@ -118,9 +111,6 @@ namespace GarageSaas
             //    options.UseSqlServer(
             //        Configuration.GetConnectionString("DefaultConnection")));
 
-            //services.AddDistributedMemoryCache();
-            services.AddSession();
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -143,7 +133,6 @@ namespace GarageSaas
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseSession();
             app.UseMiddleware<GarageAccessMiddleware>();
 
             app.UseEndpoints(endpoints =>
@@ -151,9 +140,9 @@ namespace GarageSaas
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
-                endpoints.MapControllerRoute(
-                    name: "AddGarageCustomer",
-                    pattern: "{controller=GarageCustomers}/{action=AddGarageCustomer}/{garageBusinessId}/{userId}");
+                //endpoints.MapControllerRoute(
+                //    name: "AddGarageCustomer",
+                //    pattern: "{controller=GarageCustomers}/{action=AddGarageCustomer}/{garageBusinessId}/{userId}");
                 endpoints.MapControllerRoute(
                     name: "GetModelsByMake",
                     pattern: "{controller=CustomerVehicle}/{action=GetModelsByMake}/{makeId}");

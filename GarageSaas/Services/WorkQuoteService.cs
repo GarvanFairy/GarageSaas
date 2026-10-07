@@ -34,7 +34,9 @@ namespace GarageSaas.Services
             }
 
             var customer = _context.GarageBusinessCustomer
-                .FirstOrDefault(c => c.Id == workQuote.CustomerId);
+                .FirstOrDefault(c =>
+                    c.Id == workQuote.CustomerId &&
+                    c.GarageBusinessId == garageBusinessId);
 
             var customerVehicle = _context.CustomerVehicle
                 .FirstOrDefault(v =>
@@ -316,141 +318,336 @@ namespace GarageSaas.Services
         {
             if (model == null)
             {
-                return ServiceResult<CombinedWorkQuoteWorkitem>.Fail("WorkQuote model is null.");
+                return ServiceResult<CombinedWorkQuoteWorkitem>
+                    .Fail("WorkQuote model is null.");
             }
 
             if (model.VehicleId <= 0)
             {
-                return ServiceResult<CombinedWorkQuoteWorkitem>.Fail("VehicleId is required.");
+                return ServiceResult<CombinedWorkQuoteWorkitem>
+                    .Fail("VehicleId is required.");
             }
 
             if (model.CustomerId <= 0)
             {
-                return ServiceResult<CombinedWorkQuoteWorkitem>.Fail("CustomerId is required.");
+                return ServiceResult<CombinedWorkQuoteWorkitem>
+                    .Fail("CustomerId is required.");
             }
 
-            var workItemIds = model.WorkItemIds?.Any() == true
-                ? model.WorkItemIds.Distinct().ToList()
-                : model.WorkItemId > 0
-                    ? new List<int> { model.WorkItemId }
-                    : new List<int>();
+            // -------------------------------------------------
+            // Validate customer belongs to the current garage
+            // -------------------------------------------------
+            var customerExists =
+                _context.GarageBusinessCustomer
+                    .Any(c =>
+                        c.Id == model.CustomerId &&
+                        c.GarageBusinessId == garageBusinessId);
+
+            if (!customerExists)
+            {
+                return ServiceResult<CombinedWorkQuoteWorkitem>
+                    .Fail(
+                        "Customer could not be found for this garage.");
+            }
+
+            // -------------------------------------------------
+            // Validate vehicle belongs to the current garage
+            // -------------------------------------------------
+            var vehicle =
+                _context.CustomerVehicle
+                    .FirstOrDefault(v =>
+                        v.Id == model.VehicleId &&
+                        v.GarageBusinessId == garageBusinessId);
+
+            if (vehicle == null)
+            {
+                return ServiceResult<CombinedWorkQuoteWorkitem>
+                    .Fail(
+                        "Vehicle could not be found for this garage.");
+            }
+
+            // -------------------------------------------------
+            // If customer-owned, validate vehicle belongs
+            // to the selected customer
+            // -------------------------------------------------
+            if (vehicle.GarageOwned.HasValue &&
+                !vehicle.GarageOwned.Value)
+            {
+                var customerOwnsVehicle =
+                    _context.CustomerOwnedVehicles
+                        .Any(x =>
+                            x.VehicleId == model.VehicleId &&
+                            x.GarageBusinessCustomerId ==
+                                model.CustomerId &&
+                            x.GarageBusinessId ==
+                                garageBusinessId);
+
+                if (!customerOwnsVehicle)
+                {
+                    return ServiceResult<CombinedWorkQuoteWorkitem>
+                        .Fail(
+                            "The selected vehicle does not belong " +
+                            "to the selected customer.");
+                }
+            }
+
+            // -------------------------------------------------
+            // Determine selected work items
+            // -------------------------------------------------
+            var workItemIds =
+                model.WorkItemIds?.Any() == true
+                    ? model.WorkItemIds
+                        .Where(id => id > 0)
+                        .Distinct()
+                        .ToList()
+                    : model.WorkItemId > 0
+                        ? new List<int>
+                        {
+                    model.WorkItemId
+                        }
+                        : new List<int>();
 
             if (!workItemIds.Any())
             {
-                return ServiceResult<CombinedWorkQuoteWorkitem>.Fail("At least one WorkItemId is required.");
+                return ServiceResult<CombinedWorkQuoteWorkitem>
+                    .Fail(
+                        "At least one WorkItemId is required.");
             }
 
-            var validWorkItemIds = ((IQueryable<WorkItem>)_context.WorkItem)
-                .Where(w => workItemIds.Contains(w.Id) &&
-                            w.GarageBusinessCustomerId == garageBusinessId )
-                .Select(w => w.Id)
-                .ToList();
+            // -------------------------------------------------
+            // Validate all work items belong to this garage
+            // -------------------------------------------------
+            var validWorkItemIds =
+                ((IQueryable<WorkItem>)_context.WorkItem)
+                    .Where(w =>
+                        workItemIds.Contains(w.Id) &&
+                        w.GarageBusinessCustomerId ==
+                            garageBusinessId)
+                    .Select(w => w.Id)
+                    .ToList();
 
             if (validWorkItemIds.Count != workItemIds.Count)
             {
-                return ServiceResult<CombinedWorkQuoteWorkitem>.Fail("One or more work items are invalid for this garage or vehicle.");
+                return ServiceResult<CombinedWorkQuoteWorkitem>
+                    .Fail(
+                        "One or more work items are invalid " +
+                        "for this garage or vehicle.");
             }
 
             WorkQuote quote;
 
+            // -------------------------------------------------
+            // ADD
+            // -------------------------------------------------
             if (model.WorkQuoteId == 0)
             {
+                var quoteDate =
+                    model.WorkQuoteDate == default
+                        ? DateTime.Now
+                        : model.WorkQuoteDate;
+
                 quote = new WorkQuote
                 {
-                    GarageBusinessCustomerId = garageBusinessId,
-                    VehicleId = model.VehicleId,
-                    CustomerId = model.CustomerId,
+                    GarageBusinessCustomerId =
+                        garageBusinessId,
 
-                    QuoteDate = model.WorkQuoteDate == default ? DateTime.Now : model.WorkQuoteDate,
-                    WorkQuoteDate = model.WorkQuoteDate == default ? DateTime.Now : model.WorkQuoteDate,
+                    VehicleId =
+                        model.VehicleId,
 
-                    WorkRequest = model.WorkRequest,
-                    VehicleProblem = model.VehicleProblem,
-                    InvoiceNumber = model.InvoiceNumber,
-                    EnvironmentCost = model.EnvironmentCost,
-                    Paint = model.Paint,
-                    SundryExpenses = model.SundryExpenses,
-                    CarHire = model.CarHire,
-                    SubTotal = model.SubTotal,
-                    Vat = model.Vat,
-                    Total = model.Total,
-                    Comment = model.Comment,
-                    Labour = model.Labour,
-                    Tax = model.Tax,
+                    CustomerId =
+                        model.CustomerId,
 
-                    CreatedDate = DateTime.Now,
-                    CreatedBy = userName
+                    QuoteDate =
+                        quoteDate,
+
+                    WorkQuoteDate =
+                        quoteDate,
+
+                    WorkRequest =
+                        model.WorkRequest,
+
+                    VehicleProblem =
+                        model.VehicleProblem,
+
+                    InvoiceNumber =
+                        model.InvoiceNumber,
+
+                    EnvironmentCost =
+                        model.EnvironmentCost,
+
+                    Paint =
+                        model.Paint,
+
+                    SundryExpenses =
+                        model.SundryExpenses,
+
+                    CarHire =
+                        model.CarHire,
+
+                    SubTotal =
+                        model.SubTotal,
+
+                    Vat =
+                        model.Vat,
+
+                    Total =
+                        model.Total,
+
+                    Comment =
+                        model.Comment,
+
+                    Labour =
+                        model.Labour,
+
+                    Tax =
+                        model.Tax,
+
+                    CreatedDate =
+                        DateTime.Now,
+
+                    CreatedBy =
+                        userName
                 };
 
                 _context.WorkQuote.Add(quote);
+
+                // We need the WorkQuote Id before creating
+                // the WorkQuoteWorkItem records.
                 _context.SaveChanges();
             }
+
+            // -------------------------------------------------
+            // UPDATE
+            // -------------------------------------------------
             else
             {
-                quote = _context.WorkQuote
-                    .FirstOrDefault(w => w.Id == model.WorkQuoteId &&
-                                         w.GarageBusinessCustomerId == garageBusinessId);
+                quote =
+                    _context.WorkQuote
+                        .FirstOrDefault(w =>
+                            w.Id == model.WorkQuoteId &&
+                            w.GarageBusinessCustomerId ==
+                                garageBusinessId);
 
                 if (quote == null)
                 {
-                    return ServiceResult<CombinedWorkQuoteWorkitem>.Fail("WorkQuote not found.");
+                    return ServiceResult<CombinedWorkQuoteWorkitem>
+                        .Fail("WorkQuote not found.");
                 }
 
-                quote.VehicleId = model.VehicleId;
-                quote.CustomerId = model.CustomerId;
+                quote.VehicleId =
+                    model.VehicleId;
 
-                quote.QuoteDate = model.WorkQuoteDate == default ? quote.QuoteDate : model.WorkQuoteDate;
-                quote.WorkQuoteDate = model.WorkQuoteDate == default ? quote.WorkQuoteDate : model.WorkQuoteDate;
+                quote.CustomerId =
+                    model.CustomerId;
 
-                quote.WorkRequest = model.WorkRequest;
-                quote.VehicleProblem = model.VehicleProblem;
-                quote.InvoiceNumber = model.InvoiceNumber;
-                quote.EnvironmentCost = model.EnvironmentCost;
-                quote.Paint = model.Paint;
-                quote.SundryExpenses = model.SundryExpenses;
-                quote.CarHire = model.CarHire;
-                quote.SubTotal = model.SubTotal;
-                quote.Vat = model.Vat;
-                quote.Total = model.Total;
-                quote.Comment = model.Comment;
-                quote.Labour = model.Labour;
-                quote.Tax = model.Tax;
+                if (model.WorkQuoteDate != default)
+                {
+                    quote.QuoteDate =
+                        model.WorkQuoteDate;
 
-                quote.UpdatedDate = DateTime.Now;
-                quote.UpdatedBy = userName;
+                    quote.WorkQuoteDate =
+                        model.WorkQuoteDate;
+                }
 
-                var existingLinks = ((IQueryable<WorkQuoteWorkItem>)_context.WorkQuoteWorkItem)
-                    .Where(x => x.WorkQuoteId == quote.Id &&
-                                x.GarageBusinessCustomerId == garageBusinessId)
-                    .ToList();
+                quote.WorkRequest =
+                    model.WorkRequest;
 
-                _context.WorkQuoteWorkItem.RemoveRange(existingLinks);
-                _context.SaveChanges();
+                quote.VehicleProblem =
+                    model.VehicleProblem;
+
+                quote.InvoiceNumber =
+                    model.InvoiceNumber;
+
+                quote.EnvironmentCost =
+                    model.EnvironmentCost;
+
+                quote.Paint =
+                    model.Paint;
+
+                quote.SundryExpenses =
+                    model.SundryExpenses;
+
+                quote.CarHire =
+                    model.CarHire;
+
+                quote.SubTotal =
+                    model.SubTotal;
+
+                quote.Vat =
+                    model.Vat;
+
+                quote.Total =
+                    model.Total;
+
+                quote.Comment =
+                    model.Comment;
+
+                quote.Labour =
+                    model.Labour;
+
+                quote.Tax =
+                    model.Tax;
+
+                quote.UpdatedDate =
+                    DateTime.Now;
+
+                quote.UpdatedBy =
+                    userName;
+
+                // Do NOT remove WorkQuoteWorkItem records here.
+                // SynchroniseWorkQuoteItems handles that.
             }
 
-            SynchroniseWorkQuoteItems(quote.Id, workItemIds, garageBusinessId, userName);
+            // -------------------------------------------------
+            // Synchronise work-item links
+            //
+            // This is now the ONLY place responsible for
+            // adding/removing WorkQuoteWorkItem records.
+            // -------------------------------------------------
+            SynchroniseWorkQuoteItems(
+                quote.Id,
+                workItemIds,
+                garageBusinessId,
+                userName);
 
             _context.SaveChanges();
 
-            var links = workItemIds.Select(workItemId => new WorkQuoteWorkItem
-            {
-                GarageBusinessCustomerId = garageBusinessId,
-                WorkQuoteId = quote.Id,
-                WorkItemId = workItemId,
-                CreatedDate = DateTime.Now,
-                CreatedBy = userName
-            }).ToList();
+            // -------------------------------------------------
+            // Retrieve links after synchronisation.
+            //
+            // We are NOT creating links here.
+            // We only retrieve them so that we can populate
+            // the returned view model.
+            // -------------------------------------------------
+            var links =
+                ((IQueryable<WorkQuoteWorkItem>)
+                    _context.WorkQuoteWorkItem)
+                .Where(x =>
+                    x.WorkQuoteId == quote.Id &&
+                    x.GarageBusinessCustomerId ==
+                        garageBusinessId)
+                .ToList();
 
-            _context.WorkQuoteWorkItem.AddRange(links);
-            _context.SaveChanges();
+            // -------------------------------------------------
+            // Populate result
+            // -------------------------------------------------
+            model.WorkQuoteId =
+                quote.Id;
 
-            model.WorkQuoteId = quote.Id;
-            model.Id = links.FirstOrDefault()?.Id ?? 0;
-            model.GarageBusinessCustomerId = garageBusinessId;
-            model.WorkItemId = workItemIds.FirstOrDefault();
-            model.WorkItemIds = workItemIds;
+            model.Id =
+                links.FirstOrDefault()?.Id ?? 0;
 
-            return ServiceResult<CombinedWorkQuoteWorkitem>.Ok(model);
+            model.GarageBusinessCustomerId =
+                garageBusinessId;
+
+            model.WorkItemId =
+                workItemIds.FirstOrDefault();
+
+            model.WorkItemIds =
+                workItemIds;
+
+            return ServiceResult<CombinedWorkQuoteWorkitem>
+                .Ok(model);
         }
 
         public ServiceResult DeleteWorkQuote(int workQuoteId, int garageBusinessId)

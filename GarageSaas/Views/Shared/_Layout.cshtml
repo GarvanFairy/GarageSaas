@@ -17,11 +17,7 @@
 <body>
     @{
 
-    var garageBusinessId = TempData["GarageBusinessId"];
-    var userId = TempData["userId"];
 
-    TempData.Keep("GarageBusinessId");
-    TempData.Keep("userId");
 
     var isAuthenticated =
         User.Identity?.IsAuthenticated == true;
@@ -63,19 +59,19 @@
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link @IsActive("GarageCustomers","GarageCustomersList")"
-                               asp-controller="GarageCustomers" asp-action="GarageCustomersList"
-                               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
+                            <a class="nav-link @IsActive("GarageCustomers", "GarageCustomersList")"
+                               asp-controller="GarageCustomers"
+                               asp-action="GarageCustomersList">
                                 <i class="bi bi-people me-1"></i> Customers
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link @IsActive("CustomerVehicle","CustomerVehicleList")"
-                               asp-controller="CustomerVehicle" asp-action="CustomerVehicleList"
-                               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
-                                <i class="bi bi-car-front me-1"></i> Vehicles
-                            </a>
+                        <a class="nav-link @IsActive("CustomerVehicle","CustomerVehicleList")"
+                            asp-controller="CustomerVehicle"
+                             asp-action="CustomerVehicleList">
+                            <i class="bi bi-car-front me-1"></i> Vehicles
+                        </a>
                         </li>
 
                         <li class="nav-item">
@@ -97,9 +93,7 @@
                             <li class="nav-item">
                                 <a class="nav-link @IsActive("GarageBusiness", "GarageBusinessDetail")"
                                    asp-controller="GarageBusiness"
-                                   asp-action="GarageBusinessDetail"
-                                   asp-route-garageBusinessId="@garageBusinessId"
-                                   asp-route-userId="@userId">
+                                   asp-action="GarageBusinessDetail">
                                     <i class="bi bi-building-gear me-1"></i> Garage
                                 </a>
                             </li>
@@ -122,29 +116,30 @@
                         <partial name="_LoginPartial" />
                     </div>
 
-@if (User.Identity != null &&
+                    @if (User.Identity != null &&
      User.Identity.IsAuthenticated)
-{
-    <li class="nav-item">
-        <a class="nav-link text-dark"
-           asp-area="MicrosoftIdentity"
-           asp-controller="Account"
-           asp-action="SignOut">
-            Logout
-        </a>
-    </li>
-}
-else
-{
-    <li class="nav-item">
-        <a class="nav-link text-dark"
-           asp-area="MicrosoftIdentity"
-           asp-controller="Account"
-           asp-action="SignIn">
-            Login
-        </a>
-    </li>
-}
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-dark"
+                               asp-area="MicrosoftIdentity"
+                               asp-controller="Account"
+                               asp-action="SignOut">
+                                Logout
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-dark"
+                               asp-area="MicrosoftIdentity"
+                               asp-controller="Account"
+                               asp-action="SignIn">
+                                Login
+                            </a>
+                        </li>
+                    }
+
                 </div>
             </div>
         </nav>
@@ -156,23 +151,23 @@ else
             <a class="sidebar-link @IsActive("Home","Index")" asp-controller="Home" asp-action="Index">
                 <i class="bi bi-speedometer2"></i><span>Dashboard</span>
             </a>
-            <a class="sidebar-link @IsActive("GarageCustomers","GarageCustomersList")"
-               asp-controller="GarageCustomers" asp-action="GarageCustomersList"
-               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
-                <i class="bi bi-people"></i><span>Customers</span>
+            <a class="sidebar-link @IsActive("GarageCustomers", "GarageCustomersList")"
+               asp-controller="GarageCustomers"
+               asp-action="GarageCustomersList">
+                <i class="bi bi-people"></i>
+                <span>Customers</span>
             </a>
-            <a class="sidebar-link @IsActive("CustomerVehicle","CustomerVehicleList")"
-               asp-controller="CustomerVehicle" asp-action="CustomerVehicleList"
-               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
-                <i class="bi bi-car-front"></i><span>Vehicles</span>
+            <a class="sidebar-link @IsActive("CustomerVehicle", "CustomerVehicleList")"
+               asp-controller="CustomerVehicle"
+               asp-action="CustomerVehicleList">
+                <i class="bi bi-car-front"></i>
+                <span>Vehicles</span>
             </a>
             @if (canManageGarage)
             {
                 <a class="sidebar-link @IsActive("GarageBusiness", "GarageBusinessDetail")"
                    asp-controller="GarageBusiness"
-                   asp-action="GarageBusinessDetail"
-                   asp-route-garageBusinessId="@garageBusinessId"
-                   asp-route-userId="@userId">
+                   asp-action="GarageBusinessDetail">
                     <i class="bi bi-building-gear"></i>
                     <span>Garage profile</span>
                 </a>
@@ -198,14 +193,16 @@ else
 
             <div class="sidebar-label mt-4">Create</div>
             <a class="sidebar-link"
-               asp-controller="GarageCustomers" asp-action="DisplayAddGarageCustomersWithVehicle"
-               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
-                <i class="bi bi-person-plus"></i><span>Customer</span>
+               asp-controller="GarageCustomers"
+               asp-action="DisplayAddGarageCustomersWithVehicle">
+                <i class="bi bi-person-plus"></i>
+                <span>Customer</span>
             </a>
             <a class="sidebar-link"
-               asp-controller="CustomerVehicle" asp-action="DisplayAddCustomerVehicle"
-               asp-route-garageBusinessId="@garageBusinessId" asp-route-userId="@userId">
-                <i class="bi bi-plus-circle"></i><span>Vehicle</span>
+               asp-controller="CustomerVehicle"
+               asp-action="DisplayAddCustomerVehicle">
+                <i class="bi bi-plus-circle"></i>
+                <span>Vehicle</span>
             </a>
         </aside>
 

@@ -22,104 +22,188 @@ namespace GarageSaas.Services
             _vehicleLookupService = vehicleLookupService;
         }
 
-        public ServiceResult<GarageCustomerWithListVehiclesVM> GetGarageCustomerForEdit(int garageCustomerId)
+        public ServiceResult<GarageCustomerWithListVehiclesVM>
+            GetGarageCustomerForEdit(
+                int garageCustomerId,
+                int garageBusinessId)
         {
-            var customer = _context.GarageBusinessCustomer.Find(garageCustomerId);
+            var customer =
+                _context.GarageBusinessCustomer
+                    .FirstOrDefault(c =>
+                        c.Id == garageCustomerId &&
+                        c.GarageBusinessId ==
+                            garageBusinessId);
 
             if (customer == null)
             {
-                return ServiceResult<GarageCustomerWithListVehiclesVM>.Fail("Garage customer couldn't be found");
+                return ServiceResult<GarageCustomerWithListVehiclesVM>
+                    .Fail(
+                        "Garage customer couldn't be found.");
             }
 
             var vehicles =
                 (from cov in _context.CustomerOwnedVehicles
-                 join cv in _context.CustomerVehicle on cov.VehicleId equals cv.Id
-                 join m in _context.VehicleMake on cv.VehicleMakeId equals m.Id
-                 join l in _context.VehicleModel on cv.VehicleModelId equals l.Id
-                 where cov.GarageBusinessCustomerId == garageCustomerId
-                       && cv.GarageOwned == false
+                 join cv in _context.CustomerVehicle
+                     on cov.VehicleId equals cv.Id
+                 join m in _context.VehicleMake
+                     on cv.VehicleMakeId equals m.Id
+                 join l in _context.VehicleModel
+                     on cv.VehicleModelId equals l.Id
+                 where
+                     cov.GarageBusinessCustomerId ==
+                         garageCustomerId &&
+                     cv.GarageBusinessId ==
+                         garageBusinessId &&
+                     cv.GarageOwned == false
                  select new VehicleBriefInfo
                  {
                      Id = cv.Id,
                      Make = m.Make,
                      Model = l.Model,
-                     VehicleRegistration = cv.VehicleRegistration
-                 }).ToList();
+                     VehicleRegistration =
+                         cv.VehicleRegistration
+                 })
+                .ToList();
 
-            var vm = new GarageCustomerWithListVehiclesVM
-            {
-                Customer = customer,
-                Vehicles = vehicles
-            };
+            var vm =
+                new GarageCustomerWithListVehiclesVM
+                {
+                    Customer = customer,
+                    Vehicles = vehicles
+                };
 
-            return ServiceResult<GarageCustomerWithListVehiclesVM>.Ok(vm);
+            return ServiceResult<GarageCustomerWithListVehiclesVM>
+                .Ok(vm);
         }
 
-        public ServiceResult<List<CustomerVehicleListVM>> GetGarageCustomersForList(int garageBusinessId)
+        public ServiceResult<List<CustomerVehicleListVM>>
+            GetGarageCustomersForList(
+                int garageBusinessId)
         {
-            var customers =
-                ((IQueryable<GarageBusinessCustomer>)_context.GarageBusinessCustomer)
-                    .Where(c => c.GarageBusinessId == garageBusinessId)
-                    .ToList();
-
-            var customerIds = customers.Select(c => c.Id).ToList();
-
             var customersWithVehicles =
                 (from c in _context.GarageBusinessCustomer
-                 join cov in _context.CustomerOwnedVehicles on c.Id equals cov.GarageBusinessCustomerId
-                 join cv in _context.CustomerVehicle on cov.VehicleId equals cv.Id
-                 join m in _context.VehicleMake on cv.VehicleMakeId equals m.Id
-                 join l in _context.VehicleModel on cv.VehicleModelId equals l.Id
-                 where c.GarageBusinessId == garageBusinessId
-                       && cv.GarageOwned == false
+                 join cov in _context.CustomerOwnedVehicles
+                     on c.Id equals
+                         cov.GarageBusinessCustomerId
+                 join cv in _context.CustomerVehicle
+                     on cov.VehicleId equals cv.Id
+                 join m in _context.VehicleMake
+                     on cv.VehicleMakeId equals m.Id
+                 join l in _context.VehicleModel
+                     on cv.VehicleModelId equals l.Id
+                 where
+                     c.GarageBusinessId ==
+                         garageBusinessId &&
+                     cv.GarageBusinessId ==
+                         garageBusinessId &&
+                     cv.GarageOwned == false
                  select new CustomerVehicleListVM
                  {
                      GarageCustomerId = c.Id,
                      VehicleId = cv.Id,
-                     VehicleRegistration = cv.VehicleRegistration,
+
+                     VehicleRegistration =
+                         cv.VehicleRegistration,
+
                      VehicleMake = m.Make,
                      VehicleModel = l.Model,
-                     OwnerName = c.GarageCustomerForename + " " + c.GarageCustomerSurname,
-                     GarageCustomerForename = c.GarageCustomerForename,
-                     GarageCustomerSurname = c.GarageCustomerSurname,
-                     GarageCustomerAddressline1 = c.GarageCustomerAddressline1,
-                     GarageCustomerAddressline2 = c.GarageCustomerAddressline2,
-                     GarageCustomerAddressline3 = c.GarageCustomerAddressline3,
-                     GarageCustomerAddressline4 = c.GarageCustomerAddressline4,
-                     GarageCustomerMobileNumber = c.GarageCustomerMobileNumber,
-                     GarageCustomerPhoneNumber = c.GarageCustomerPhoneNumber,
-                     GarageCustomerEmailAddress = c.GarageCustomerEmailAddress
-                 }).ToList();
+
+                     OwnerName =
+                         c.GarageCustomerForename +
+                         " " +
+                         c.GarageCustomerSurname,
+
+                     GarageCustomerForename =
+                         c.GarageCustomerForename,
+
+                     GarageCustomerSurname =
+                         c.GarageCustomerSurname,
+
+                     GarageCustomerAddressline1 =
+                         c.GarageCustomerAddressline1,
+
+                     GarageCustomerAddressline2 =
+                         c.GarageCustomerAddressline2,
+
+                     GarageCustomerAddressline3 =
+                         c.GarageCustomerAddressline3,
+
+                     GarageCustomerAddressline4 =
+                         c.GarageCustomerAddressline4,
+
+                     GarageCustomerMobileNumber =
+                         c.GarageCustomerMobileNumber,
+
+                     GarageCustomerPhoneNumber =
+                         c.GarageCustomerPhoneNumber,
+
+                     GarageCustomerEmailAddress =
+                         c.GarageCustomerEmailAddress
+                 })
+                .ToList();
 
             var customersWithNoVehicles =
                 ((IQueryable<GarageBusinessCustomer>)_context.GarageBusinessCustomer)
-                    .Where(c => c.GarageBusinessId == garageBusinessId)
-                    .Where(c => !_context.CustomerOwnedVehicles.Any(cov => cov.GarageBusinessCustomerId == c.Id))
-                    .Select(c => new CustomerVehicleListVM
-                    {
-                        GarageCustomerId = c.Id,
-                        VehicleId = 0,
-                        VehicleRegistration = null,
-                        VehicleMake = null,
-                        VehicleModel = null,
-                        OwnerName = c.GarageCustomerForename + " " + c.GarageCustomerSurname,
-                        GarageCustomerForename = c.GarageCustomerForename,
-                        GarageCustomerSurname = c.GarageCustomerSurname,
-                        GarageCustomerAddressline1 = c.GarageCustomerAddressline1,
-                        GarageCustomerAddressline2 = c.GarageCustomerAddressline2,
-                        GarageCustomerAddressline3 = c.GarageCustomerAddressline3,
-                        GarageCustomerAddressline4 = c.GarageCustomerAddressline4,
-                        GarageCustomerMobileNumber = c.GarageCustomerMobileNumber,
-                        GarageCustomerPhoneNumber = c.GarageCustomerPhoneNumber,
-                        GarageCustomerEmailAddress = c.GarageCustomerEmailAddress
-                    }).ToList();
+                    .Where(c =>
+                        c.GarageBusinessId ==
+                            garageBusinessId)
+                    .Where(c =>
+                        !_context.CustomerOwnedVehicles
+                            .Any(cov =>
+                                cov.GarageBusinessCustomerId ==
+                                    c.Id))
+                    .Select(c =>
+                        new CustomerVehicleListVM
+                        {
+                            GarageCustomerId = c.Id,
 
-            var result = customersWithVehicles
-                .Concat(customersWithNoVehicles)
-                .OrderBy(x => x.OwnerName)
-                .ToList();
+                            VehicleId = 0,
+                            VehicleRegistration = null,
+                            VehicleMake = null,
+                            VehicleModel = null,
 
-            return ServiceResult<List<CustomerVehicleListVM>>.Ok(result);
+                            OwnerName =
+                                c.GarageCustomerForename +
+                                " " +
+                                c.GarageCustomerSurname,
+
+                            GarageCustomerForename =
+                                c.GarageCustomerForename,
+
+                            GarageCustomerSurname =
+                                c.GarageCustomerSurname,
+
+                            GarageCustomerAddressline1 =
+                                c.GarageCustomerAddressline1,
+
+                            GarageCustomerAddressline2 =
+                                c.GarageCustomerAddressline2,
+
+                            GarageCustomerAddressline3 =
+                                c.GarageCustomerAddressline3,
+
+                            GarageCustomerAddressline4 =
+                                c.GarageCustomerAddressline4,
+
+                            GarageCustomerMobileNumber =
+                                c.GarageCustomerMobileNumber,
+
+                            GarageCustomerPhoneNumber =
+                                c.GarageCustomerPhoneNumber,
+
+                            GarageCustomerEmailAddress =
+                                c.GarageCustomerEmailAddress
+                        })
+                    .ToList();
+
+            var result =
+                customersWithVehicles
+                    .Concat(customersWithNoVehicles)
+                    .OrderBy(x => x.OwnerName)
+                    .ToList();
+
+            return ServiceResult<List<CustomerVehicleListVM>>
+                .Ok(result);
         }
 
         public ServiceResult AddOrUpdateGarageCustomer(

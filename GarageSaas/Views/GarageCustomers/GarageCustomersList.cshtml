@@ -4,8 +4,6 @@
 
 @{
     ViewData["Title"] = "Garage Customers";
-    var garageBusinessId = TempData["GarageBusinessId"];
-    var userId = TempData["userId"];
     var customerCount = Model?.Count ?? 0;
     var vehicleCount = Model?.Count(c => c.VehicleId > 0) ?? 0;
     var emailCount = Model?.Count(c => !string.IsNullOrWhiteSpace(c.GarageCustomerEmailAddress)) ?? 0;
@@ -21,15 +19,14 @@
 
     <div class="page-actions">
         <a class="btn btn-primary"
-           asp-action="DisplayAddGarageCustomersWithVehicle"
-           asp-route-garageBusinessId="@garageBusinessId"
-           asp-route-userId="@userId">
+           asp-controller="GarageCustomers"
+           asp-action="DisplayAddGarageCustomersWithVehicle">
             <i class="bi bi-person-plus me-2"></i>Add with vehicle
         </a>
+
         <a class="btn btn-outline-secondary"
-           asp-action="DisplayAddGarageCustomers"
-           asp-route-garageBusinessId="@garageBusinessId"
-           asp-route-userId="@userId">
+           asp-controller="GarageCustomers"
+           asp-action="DisplayAddGarageCustomers">
             <i class="bi bi-plus-lg me-2"></i>Add customer
         </a>
     </div>
@@ -169,8 +166,7 @@
                                     <a class="vehicle-pill"
                                        asp-controller="CustomerVehicle"
                                        asp-action="EditCustomerVehicle"
-                                       asp-route-CustomerVehicleId="@gbc.VehicleId"
-                                       asp-route-userId="@userId">
+                                       asp-route-CustomerVehicleId="@gbc.VehicleId">
                                         <i class="bi bi-car-front"></i>
                                         <span>
                                             <strong>@gbc.VehicleMake @gbc.VehicleModel</strong>
@@ -255,8 +251,7 @@
                     <a class="vehicle-pill mt-3"
                        asp-controller="CustomerVehicle"
                        asp-action="EditCustomerVehicle"
-                       asp-route-CustomerVehicleId="@gbc.VehicleId"
-                       asp-route-userId="@userId">
+                       asp-route-CustomerVehicleId="@gbc.VehicleId">
                         <i class="bi bi-car-front"></i>
                         <span>
                             <strong>@gbc.VehicleMake @gbc.VehicleModel</strong>
