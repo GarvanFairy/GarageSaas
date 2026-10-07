@@ -23,6 +23,7 @@ namespace SignupAPI.Models
         public virtual DbSet<CustomerVehicle> CustomerVehicle { get; set; }
         public virtual DbSet<FuelType> FuelType { get; set; }
         public virtual DbSet<GarageBusiness> GarageBusiness { get; set; }
+        public virtual DbSet<GarageBusinessUser> GarageBusinessUser { get; set; }
         public virtual DbSet<GarageBusinessCustomer> GarageBusinessCustomer { get; set; }
         public virtual DbSet<GarageOwnedVehicles> GarageOwnedVehicles { get; set; }
         public virtual DbSet<GarageVehicleOwner> GarageVehicleOwner { get; set; }
@@ -39,6 +40,8 @@ namespace SignupAPI.Models
         public virtual DbSet<WorkQuote> WorkQuote { get; set; }
         public virtual DbSet<WorkQuoteWorkItem> WorkQuoteWorkItem { get; set; }
         public virtual DbSet<VehiclePart> VehiclePart { get; set; }
+        public virtual DbSet<GarageUserInvitation> GarageUserInvitation { get; set; }
+        public virtual DbSet<GarageRegistrationRequest> GarageRegistrationRequest { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -51,6 +54,168 @@ namespace SignupAPI.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            modelBuilder.Entity<GarageRegistrationRequest>(
+    entity =>
+    {
+        entity.HasIndex(e => e.ContactEmail)
+            .HasName(
+                "IX_GarageRegistrationRequest_ContactEmail");
+
+        entity.HasIndex(e => e.Status)
+            .HasName(
+                "IX_GarageRegistrationRequest_Status");
+
+        entity.Property(e => e.GarageBusinessName)
+            .IsRequired()
+            .HasMaxLength(150);
+
+        entity.Property(e => e.AddressLine1)
+            .IsRequired()
+            .HasMaxLength(150);
+
+        entity.Property(e => e.AddressLine2)
+            .HasMaxLength(150);
+
+        entity.Property(e => e.TownOrCity)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        entity.Property(e => e.County)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        entity.Property(e => e.Eircode)
+            .HasMaxLength(20);
+
+        entity.Property(e => e.BusinessPhone)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        entity.Property(e => e.BusinessEmail)
+            .HasMaxLength(256);
+
+        entity.Property(e => e.Website)
+            .HasMaxLength(500);
+
+        entity.Property(e => e.BusinessType)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        entity.Property(e => e.ContactFirstName)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        entity.Property(e => e.ContactLastName)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        entity.Property(e => e.ContactEmail)
+            .IsRequired()
+            .HasMaxLength(256);
+
+        entity.Property(e => e.ContactMobile)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        entity.Property(e => e.AdditionalInformation)
+            .HasMaxLength(2000);
+
+        entity.Property(e => e.Status)
+            .IsRequired()
+            .HasMaxLength(30);
+
+        entity.Property(e => e.ReviewedBy)
+            .HasMaxLength(256);
+
+        entity.Property(e => e.OnboardingTokenHash).HasMaxLength(64);
+
+        entity.Property(e => e.OnboardingRevoked)
+            .HasDefaultValueSql("((0))");
+    });
+
+            modelBuilder.Entity<GarageUserInvitation>(entity =>
+            {
+                entity.HasIndex(e => e.InvitationTokenHash)
+                    .HasName("UX_GarageUserInvitation_TokenHash")
+                    .IsUnique();
+
+                entity.Property(e => e.EmailAddress)
+                    .IsRequired()
+                    .HasMaxLength(256);
+
+                entity.Property(e => e.FirstName)
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.LastName)
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.Role)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.InvitationTokenHash)
+                    .IsRequired()
+                    .HasMaxLength(64);
+
+                entity.Property(e => e.CreatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.Revoked).HasColumnName("Revoked");
+                entity.Property(e => e.RevokedDate).HasColumnType("datetime");
+
+                entity.HasOne<GarageBusiness>()
+                    .WithMany()
+                    .HasForeignKey(e => e.GarageBusinessId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName(
+                        "FK_GarageUserInvitation_GarageBusiness");
+
+                entity.HasOne<Users>()
+                    .WithMany()
+                    .HasForeignKey(e => e.InvitedByUserId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName(
+                        "FK_GarageUserInvitation_InvitedBy");
+            });
+
+            modelBuilder.Entity<GarageBusinessUser>(entity =>
+            {
+                entity.HasIndex(
+                    e => new
+                    {
+                        e.GarageBusinessId,
+                        e.UserId
+                    })
+                    .HasName(
+                        "UX_GarageBusinessUser_Garage_User")
+                    .IsUnique();
+
+                entity.Property(e => e.Role)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.CreatedBy)
+                    .HasMaxLength(256);
+
+                entity.Property(e => e.UpdatedBy)
+                    .HasMaxLength(256);
+
+                entity.HasOne(d => d.GarageBusiness)
+                    .WithMany()
+                    .HasForeignKey(d => d.GarageBusinessId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName(
+                        "FK_GarageBusinessUser_GarageBusiness");
+
+                entity.HasOne(d => d.User)
+                    .WithMany()
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName(
+                        "FK_GarageBusinessUser_Users");
+            });
+
             modelBuilder.Entity<CustomerOwnedVehicles>(entity =>
             {
                 entity.HasOne(d => d.GarageBusiness)
@@ -103,6 +268,9 @@ namespace SignupAPI.Models
                 entity.Property(e => e.UpdatedBy).HasMaxLength(255);
 
                 entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+                entity.Property(e => e.LogoImage).HasMaxLength(255);
+                entity.Property(e => e.VatNumber).HasMaxLength(255);
+                entity.Property(e => e.BusinessRegistrationNumber).HasMaxLength(255);
             });
 
             modelBuilder.Entity<GarageBusinessCustomer>(entity =>
@@ -155,6 +323,15 @@ namespace SignupAPI.Models
                 entity.Property(e => e.UpdatedBy).HasMaxLength(255);
 
                 entity.Property(e => e.UpdatedDate).HasColumnType("datetime");
+
+                entity.Property(e => e.ExternalUserId).HasMaxLength(100);
+
+                entity.HasIndex(e => e.ExternalUserId).HasName("UX_Users_ExternalUserId")
+                    .IsUnique()
+                    .HasFilter("[ExternalUserId] IS NOT NULL");
+
+                entity.Property(e => e.IsPlatformAdministrator).HasDefaultValueSql("((0))");
+
             });
 
             modelBuilder.Entity<VehicleInvoice>(entity =>

@@ -1,0 +1,268 @@
+﻿@model GarageSaas.Models.GarageRegistrationRequestDetailsViewModel
+
+@{
+    ViewData["Title"] = "Review Garage Registration";
+}
+
+<div class="container py-4">
+
+    <div class="mb-4">
+
+        <a asp-controller="PlatformAdmin"
+           asp-action="RegistrationRequests"
+           class="text-decoration-none">
+            &larr; Back to registration requests
+        </a>
+
+    </div>
+
+    <div class="d-flex justify-content-between
+        align-items-start mb-4">
+
+        <div>
+
+            <h2 class="mb-1">
+                @Model.GarageBusinessName
+            </h2>
+
+            <span class="badge bg-warning text-dark">
+                @Model.Status
+            </span>
+
+        </div>
+
+        <div class="text-muted">
+
+            Submitted
+            @Model.CreatedDate.ToString(
+                "dd/MM/yyyy HH:mm")
+
+        </div>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-lg-7">
+
+            <div class="card shadow-sm border-0 mb-4">
+
+                <div class="card-header bg-white">
+                    <strong>Garage Details</strong>
+                </div>
+
+                <div class="card-body">
+
+                    <dl class="row mb-0">
+
+                        <dt class="col-sm-4">
+                            Trading Name
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.GarageBusinessName
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            Business Type
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.BusinessType
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            Address
+                        </dt>
+
+                        <dd class="col-sm-8">
+
+                            @Model.AddressLine1
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                Model.AddressLine2))
+                            {
+                                <br />
+                                @Model.AddressLine2
+                            }
+
+                            <br />
+                            @Model.TownOrCity
+
+                            <br />
+                            @Model.County
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                Model.Eircode))
+                            {
+                                <br />
+                                @Model.Eircode
+                            }
+
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            Business Phone
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.BusinessPhone
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            Business Email
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.BusinessEmail
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            Website
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.Website
+                        </dd>
+
+                    </dl>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-5">
+
+            <div class="card shadow-sm border-0 mb-4">
+
+                <div class="card-header bg-white">
+                    <strong>Owner / Contact</strong>
+                </div>
+
+                <div class="card-body">
+
+                    <dl class="row mb-0">
+
+                        <dt class="col-sm-4">
+                            Name
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.ContactFirstName
+                            @Model.ContactLastName
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            Email
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.ContactEmail
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            Mobile
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.ContactMobile
+                        </dd>
+
+                    </dl>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(
+        Model.AdditionalInformation))
+    {
+        <div class="card shadow-sm border-0 mb-4">
+
+            <div class="card-header bg-white">
+                <strong>
+                    Additional Information
+                </strong>
+            </div>
+
+            <div class="card-body">
+                @Model.AdditionalInformation
+            </div>
+
+        </div>
+    }
+
+    @if (Model.Status == "Pending")
+    {
+        <div class="card shadow-sm border-0">
+
+            <div class="card-body">
+
+                <h5>
+                    Registration Decision
+                </h5>
+
+                <p class="text-muted">
+                    Confirm that you have reviewed
+                    the garage details before making
+                    a decision.
+                </p>
+
+                <div class="d-flex gap-2">
+
+                    <form asp-controller="PlatformAdmin"
+                          asp-action="ApproveRegistration"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="id"
+                               value="@Model.Id" />
+
+                        <button type="submit"
+                                class="btn btn-success"
+                                onclick="return confirm(
+                            'Approve this garage registration?');">
+
+                            Approve Registration
+
+                        </button>
+
+                    </form>
+
+                    <form asp-controller="PlatformAdmin"
+                          asp-action="RejectRegistration"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="id"
+                               value="@Model.Id" />
+
+                        <button type="submit"
+                                class="btn btn-outline-danger"
+                                onclick="return confirm(
+                            'Reject this garage registration?');">
+
+                            Reject
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>

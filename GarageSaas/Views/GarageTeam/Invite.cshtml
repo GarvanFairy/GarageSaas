@@ -1,0 +1,143 @@
+﻿@model GarageSaas.Models.InviteGarageUserViewModel
+
+@{
+    ViewData["Title"] = "Invite Employee";
+}
+
+<div class="container py-4">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header bg-white">
+                    <h4 class="mb-1">
+                        Invite Employee
+                    </h4>
+
+                    <p class="text-muted mb-0">
+                        Invite someone to join your garage.
+                    </p>
+                </div>
+
+                <div class="card-body">
+
+                    <form asp-controller="GarageTeam"
+                          asp-action="Invite"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger">
+                        </div>
+
+                        <div class="form-row">
+
+                            <div class="form-group col-md-6">
+
+                                <label asp-for="FirstName">
+                                    First Name
+                                </label>
+
+                                <input asp-for="FirstName"
+                                       class="form-control" />
+
+                                <span asp-validation-for="FirstName"
+                                      class="text-danger">
+                                </span>
+
+                            </div>
+
+                            <div class="form-group col-md-6">
+
+                                <label asp-for="LastName">
+                                    Last Name
+                                </label>
+
+                                <input asp-for="LastName"
+                                       class="form-control" />
+
+                                <span asp-validation-for="LastName"
+                                      class="text-danger">
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label asp-for="EmailAddress">
+                                Email Address
+                            </label>
+
+                            <input asp-for="EmailAddress"
+                                   class="form-control"
+                                   type="email" />
+
+                            <span asp-validation-for="EmailAddress"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label asp-for="Role">
+                                Employee Role
+                            </label>
+
+                            <select asp-for="Role"
+                                    class="form-control">
+
+                                <option value="">
+                                    Select a role
+                                </option>
+
+                                <option value="Administrator">
+                                    Administrator
+                                </option>
+
+                                <option value="Staff">
+                                    Staff
+                                </option>
+
+                            </select>
+
+                            <span asp-validation-for="Role"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+
+                            <a asp-action="Index"
+                               class="btn btn-outline-secondary mr-2">
+
+                                Cancel
+                            </a>
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+
+                                Send Invitation
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

@@ -18,7 +18,7 @@ namespace GarageSaas.Services
             _context = context;
         }
 
-        public ServiceResult<VehicleInvoice> GetVehicleInvoice(int invoiceId, int garageBusinessId)
+        public ServiceResult<VehicleInvoiceDetailsModel> GetVehicleInvoice(int invoiceId,int garageBusinessId)
         {
             var invoice = _context.VehicleInvoice
                 .Include(i => i.GarageBusinessCustomer)
@@ -26,15 +26,63 @@ namespace GarageSaas.Services
                     .ThenInclude(v => v.VehicleMake)
                 .Include(i => i.Vehicle)
                     .ThenInclude(v => v.VehicleModel)
-                .FirstOrDefault(i => i.Id == invoiceId && i.GarageBusinessId == garageBusinessId);
+                .FirstOrDefault(i =>
+                    i.Id == invoiceId &&
+                    i.GarageBusinessId == garageBusinessId);
 
             if (invoice == null)
             {
-                return ServiceResult<VehicleInvoice>.Fail("Vehicle invoice not found.");
+                return ServiceResult<VehicleInvoiceDetailsModel>
+                    .Fail("Vehicle invoice not found.");
             }
 
             ApplyInvoiceTotals(invoice);
-            return ServiceResult<VehicleInvoice>.Ok(invoice);
+
+            var workQuoteIds = ((IQueryable<InvoiceWorkQuote>)_context.InvoiceWorkQuote)
+                .Where(link =>
+                    link.InvoiceId == invoiceId &&
+                    link.GarageBusinessCustomerId == garageBusinessId &&
+                    link.WorkQuoteId.HasValue)
+                .Select(link => link.WorkQuoteId.Value)
+                .Distinct()
+                .ToList();
+
+            if (!workQuoteIds.Any() &&
+                invoice.WorkQuoteId.HasValue)
+            {
+                workQuoteIds.Add(invoice.WorkQuoteId.Value);
+            }
+
+            var workItemIds = ((IQueryable<WorkQuoteWorkItem>)_context.WorkQuoteWorkItem)
+                .Where(link =>
+                    link.WorkQuoteId.HasValue &&
+                    workQuoteIds.Contains(link.WorkQuoteId.Value) &&
+                    link.GarageBusinessCustomerId == garageBusinessId &&
+                    link.WorkItemId.HasValue)
+                .Select(link => link.WorkItemId.Value)
+                .Distinct()
+                .ToList();
+
+            var workItems = ((IQueryable<WorkItem>)_context.WorkItem)
+                .Where(item =>
+                    workItemIds.Contains(item.Id) &&
+                    item.GarageBusinessCustomerId == garageBusinessId)
+                .OrderByDescending(item => item.CreatedDate)
+                .ToList();
+
+            var garageBusiness = _context.GarageBusiness
+    .FirstOrDefault(g =>
+        g.Id == garageBusinessId);
+
+            var model = new VehicleInvoiceDetailsModel
+            {
+                Invoice = invoice,
+                WorkItems = workItems,
+                GarageBusiness = garageBusiness
+            };
+
+            return ServiceResult<VehicleInvoiceDetailsModel>
+                .Ok(model);
         }
 
         public ServiceResult<List<VehicleInvoiceListItem>> GetInvoicesByGarageBusinessId(int garageBusinessId)
@@ -56,11 +104,15 @@ namespace GarageSaas.Services
 
                 select new VehicleInvoiceListItem
                 {
+
                     Id = invoice.Id,
                     InvoiceNumber = invoice.InvoiceNumber,
                     InvoiceDate = invoice.InvoiceDate,
                     InvoiceAmount = invoice.InvoiceAmount,
                     Total = invoice.Total,
+
+                    InvoiceStatus = invoice.InvoiceStatus,
+                    DateDue = invoice.DateDue,
 
                     GarageBusinessCustomerId = invoice.GarageBusinessCustomerId,
 
@@ -117,7 +169,7 @@ namespace GarageSaas.Services
                     InvoiceDate = vehicleInvoice.InvoiceDate,
                     InvoiceAmount = vehicleInvoice.InvoiceAmount,
                     Comment = vehicleInvoice.Comment,
-                    InvoiceNumber = vehicleInvoice.InvoiceNumber,
+                    InvoiceNumber = null, //vehicleInvoice.InvoiceNumber,
                     CustomerId = vehicleInvoice.CustomerId,
                     WorkQuoteId = vehicleInvoice.WorkQuoteId,
                     Vat = vehicleInvoice.Vat,
@@ -143,8 +195,17 @@ namespace GarageSaas.Services
                     CreatedDate = DateTime.Now
                 };
 
-                ApplyInvoiceTotals(invoiceToAdd);
                 _context.VehicleInvoice.Add(invoiceToAdd);
+
+                // First save generates the database Id
+                _context.SaveChanges();
+
+                invoiceToAdd.InvoiceNumber =
+                    GenerateInvoiceNumber(
+                        invoiceToAdd.Id,
+                        invoiceToAdd.InvoiceDate ?? DateTime.Now);
+
+                // Save generated invoice number
                 _context.SaveChanges();
 
                 return ServiceResult<VehicleInvoice>.Ok(invoiceToAdd);
@@ -157,6 +218,10 @@ namespace GarageSaas.Services
             {
                 return ServiceResult<VehicleInvoice>.Fail("Vehicle invoice not found.");
             }
+
+            ApplyInvoiceStatus(
+    invoiceToUpdate,
+    vehicleInvoice.InvoiceStatus);
 
             invoiceToUpdate.CarHire = vehicleInvoice.CarHire;
             invoiceToUpdate.InvoiceDate = vehicleInvoice.InvoiceDate;
@@ -290,5 +355,247 @@ namespace GarageSaas.Services
 
             return vehicles;
         }
+
+        public ServiceResult<VehicleInvoice> CreateFromWorkQuote(int workQuoteId, int garageBusinessId, string userName)
+        {
+            if (workQuoteId <= 0)
+            {
+                return ServiceResult<VehicleInvoice>
+                    .Fail("A valid work quote is required.");
+            }
+
+            var workQuote = _context.WorkQuote
+                .FirstOrDefault(q =>
+                    q.Id == workQuoteId &&
+                    q.GarageBusinessCustomerId == garageBusinessId);
+
+            if (workQuote == null)
+            {
+                return ServiceResult<VehicleInvoice>
+                    .Fail("Work quote not found.");
+            }
+
+            //
+            // Don't convert the same quote twice.
+            //
+            var existingInvoiceLink = _context.InvoiceWorkQuote
+                .FirstOrDefault(link =>
+                    link.WorkQuoteId == workQuoteId &&
+                    link.GarageBusinessCustomerId == garageBusinessId);
+
+            if (existingInvoiceLink != null)
+            {
+                return ServiceResult<VehicleInvoice>
+                    .Fail("This work quote has already been converted to an invoice.");
+            }
+
+            using var transaction = _context.Database.BeginTransaction();
+
+            try
+            {
+                var now = DateTime.Now;
+
+                var invoice = new VehicleInvoice
+                {
+                    GarageBusinessId = garageBusinessId,
+
+                    //
+                    // Your VehicleInvoice service currently uses both.
+                    //
+                    CustomerId = workQuote.CustomerId,
+                    GarageBusinessCustomerId = workQuote.CustomerId,
+
+                    VehicleId = workQuote.VehicleId,
+
+                    //
+                    // Keep this populated because it already exists
+                    // on VehicleInvoice.
+                    //
+                    WorkQuoteId = workQuote.Id,
+
+                    EnvironmentCost = workQuote.EnvironmentCost,
+                    Paint = workQuote.Paint,
+                    SundryExpenses = workQuote.SundryExpenses,
+                    CarHire = workQuote.CarHire,
+                    Labour = workQuote.Labour,
+
+                    Comment = workQuote.Comment,
+                    Tax = workQuote.Tax.ToString(),
+
+                    InvoiceDate = now,
+
+                    Paid = false,
+                    InvoiceStatus = "Pending",
+                    InvoiceType = "Work Quote",
+
+                    InvoiceDescription =
+                        !string.IsNullOrWhiteSpace(workQuote.WorkRequest)
+                            ? workQuote.WorkRequest
+                            : workQuote.VehicleProblem,
+
+                    CreatedDate = now,
+                    CreatedBy = userName
+                };
+
+                //
+                // You already have this method in VehicleInvoiceService.
+                //
+                ApplyInvoiceTotals(invoice);
+
+                _context.VehicleInvoice.Add(invoice);
+
+                // Generate database Id
+                _context.SaveChanges();
+
+                invoice.InvoiceNumber =
+                    GenerateInvoiceNumber(
+                        invoice.Id,
+                        invoice.InvoiceDate ?? now);
+
+                _context.SaveChanges();
+
+                //
+                // Use your existing invoice-number generation here.
+                //
+                // For example:
+                //
+                // invoice.InvoiceNumber =
+                //     GenerateInvoiceNumber(invoice.Id, garageBusinessId);
+                //
+                // If you don't currently have an invoice number generator,
+                // we can add that next.
+                //
+
+                var invoiceWorkQuote = new InvoiceWorkQuote
+                {
+                    GarageBusinessCustomerId = garageBusinessId,
+                    InvoiceId = invoice.Id,
+                    WorkQuoteId = workQuote.Id,
+                    CreatedDate = now,
+                    CreatedBy = userName
+                };
+
+                _context.InvoiceWorkQuote.Add(invoiceWorkQuote);
+
+                _context.SaveChanges();
+
+                transaction.Commit();
+
+                return ServiceResult<VehicleInvoice>.Ok(invoice);
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+
+        private static void ApplyInvoiceStatus(
+    VehicleInvoice invoice,
+    string newStatus)
+        {
+            if (string.IsNullOrWhiteSpace(newStatus))
+            {
+                newStatus = InvoiceStatuses.Draft;
+            }
+
+            if (!InvoiceStatuses.All.Contains(newStatus))
+            {
+                throw new ArgumentException(
+                    $"Invalid invoice status: {newStatus}");
+            }
+
+            invoice.InvoiceStatus = newStatus;
+
+            switch (newStatus)
+            {
+                case InvoiceStatuses.Paid:
+
+                    invoice.Paid = true;
+
+                    if (!invoice.PaidDate.HasValue)
+                    {
+                        invoice.PaidDate = DateTime.Now;
+                    }
+
+                    invoice.DatePaid = invoice.PaidDate;
+
+                    break;
+
+                case InvoiceStatuses.Draft:
+                case InvoiceStatuses.Pending:
+
+                    invoice.Paid = false;
+                    invoice.PaidDate = null;
+                    invoice.DatePaid = null;
+
+                    break;
+
+                case InvoiceStatuses.Cancelled:
+
+                    invoice.Paid = false;
+                    invoice.PaidDate = null;
+                    invoice.DatePaid = null;
+
+                    break;
+            }
+        }
+
+        public ServiceResult<VehicleInvoice> MarkInvoiceAsPaid(
+            int invoiceId,
+            int garageBusinessId,
+            string userName)
+        {
+            var invoice = _context.VehicleInvoice
+                .FirstOrDefault(i =>
+                    i.Id == invoiceId &&
+                    i.GarageBusinessId == garageBusinessId);
+
+            if (invoice == null)
+            {
+                return ServiceResult<VehicleInvoice>
+                    .Fail("Vehicle invoice not found.");
+            }
+
+            if (invoice.InvoiceStatus == InvoiceStatuses.Cancelled)
+            {
+                return ServiceResult<VehicleInvoice>
+                    .Fail("A cancelled invoice cannot be marked as paid.");
+            }
+
+            if (invoice.InvoiceStatus == InvoiceStatuses.Paid)
+            {
+                return ServiceResult<VehicleInvoice>
+                    .Fail("This invoice has already been marked as paid.");
+            }
+
+            ApplyInvoiceStatus(
+                invoice,
+                InvoiceStatuses.Paid);
+
+            invoice.UpdatedDate = DateTime.Now;
+            invoice.UpdatedBy = userName;
+
+            _context.SaveChanges();
+
+            return ServiceResult<VehicleInvoice>.Ok(invoice);
+        }
+
+        public static bool IsOverdue(
+    VehicleInvoice invoice)
+        {
+            return invoice.InvoiceStatus == InvoiceStatuses.Pending
+                && invoice.Paid != true
+                && invoice.DateDue.HasValue
+                && invoice.DateDue.Value.Date < DateTime.Today;
+        }
+
+        private static string GenerateInvoiceNumber(
+    int invoiceId,
+    DateTime invoiceDate)
+        {
+            return $"INV-{invoiceDate:yyyy}-{invoiceId:D6}";
+        }
+
     }
 }

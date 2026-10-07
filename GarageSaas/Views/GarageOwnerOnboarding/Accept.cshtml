@@ -1,0 +1,164 @@
+﻿@model SignupAPI.Models.PlatformAdmin.GarageOwnerOnboardingViewModel
+
+@{
+    ViewData["Title"] = "Set Up Your GarageSaas Account";
+}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-7">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-4">
+
+                        <h2>
+                            Welcome to GarageSaas
+                        </h2>
+
+                        <p class="text-muted">
+                            Your garage registration
+                            has been approved.
+                        </p>
+
+                    </div>
+
+                    <div class="alert alert-success">
+                        <strong>
+                            @Model.GarageBusinessName
+                        </strong>
+                        has been approved to join GarageSaas.
+                    </div>
+
+                    <h5 class="mt-4">
+                        Garage Details
+                    </h5>
+
+                    <dl class="row mt-3">
+
+                        <dt class="col-sm-4">
+                            Garage
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.GarageBusinessName
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            Business Type
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.BusinessType
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            Address
+                        </dt>
+
+                        <dd class="col-sm-8">
+
+                            @Model.AddressLine1
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                Model.AddressLine2))
+                            {
+                                <br />
+                                @Model.AddressLine2
+                            }
+
+                            <br />
+                            @Model.TownOrCity
+                            <br />
+                            @Model.County
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                Model.Eircode))
+                            {
+                                <br />
+                                @Model.Eircode
+                            }
+
+                        </dd>
+
+                    </dl>
+
+                    <hr />
+
+                    <h5>
+                        Garage Owner
+                    </h5>
+
+                    <dl class="row mt-3">
+
+                        <dt class="col-sm-4">
+                            Name
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.ContactFirstName
+                            @Model.ContactLastName
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            Email
+                        </dt>
+
+                        <dd class="col-sm-8">
+                            @Model.ContactEmail
+                        </dd>
+
+                    </dl>
+
+                    <hr />
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <form asp-controller="GarageOwnerOnboarding"
+                              asp-action="Complete"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   asp-for="Token" />
+
+                            <button type="submit"
+                                    class="btn btn-primary btn-lg">
+                                Complete Garage Setup
+                            </button>
+
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-controller="GarageOwnerOnboarding"
+                              asp-action="SignIn"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   asp-for="Token" />
+
+                            <button type="submit"
+                                    class="btn btn-primary btn-lg">
+                                Continue to Sign In
+                            </button>
+
+                        </form>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
