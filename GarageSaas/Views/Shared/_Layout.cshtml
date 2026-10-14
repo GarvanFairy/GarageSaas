@@ -1,5 +1,8 @@
 @using GarageSaas.Services.Interfaces
+@using Microsoft.AspNetCore.Authorization
 @inject IGarageAuthorizationService GarageAuthorizationService
+@inject IAuthorizationService AuthorizationService
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,6 +27,7 @@
 
     var canManageTeam = false;
     var canManageGarage = false;
+    var isPlatformAdmin = false;
 
     if (isAuthenticated)
     {
@@ -32,6 +36,13 @@
 
         canManageGarage =
             await GarageAuthorizationService.CanManageGarageAsync();
+
+                    var platformAdminResult =
+            await AuthorizationService.AuthorizeAsync(
+                User,
+                "PlatformAdministrator");
+
+        isPlatformAdmin = platformAdminResult.Succeeded;
     }
 }
 
@@ -110,35 +121,46 @@
                             </li>
                         }
 
+                        @if (isPlatformAdmin)
+{
+    <li class="nav-item">
+        <a class="nav-link @IsActive("PlatformAdmin", "RegistrationRequests")"
+           asp-controller="PlatformAdmin"
+           asp-action="RegistrationRequests">
+            <i class="bi bi-shield-lock me-1"></i>
+            Platform Admin
+        </a>
+    </li>
+}
+
                     </ul>
 
                     <div class="d-flex align-items-center gap-2">
                         <partial name="_LoginPartial" />
                     </div>
 
-                    @if (User.Identity != null &&
-     User.Identity.IsAuthenticated)
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area="MicrosoftIdentity"
-                               asp-controller="Account"
-                               asp-action="SignOut">
-                                Logout
-                            </a>
-                        </li>
-                    }
-                    else
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area="MicrosoftIdentity"
-                               asp-controller="Account"
-                               asp-action="SignIn">
-                                Login
-                            </a>
-                        </li>
-                    }
+<div class="d-flex align-items-center ms-lg-2">
+    @if (isAuthenticated)
+    {
+        <a class="nav-link text-dark"
+           asp-area="MicrosoftIdentity"
+           asp-controller="Account"
+           asp-action="SignOut">
+            <i class="bi bi-box-arrow-right me-1"></i>
+            Logout
+        </a>
+    }
+    else
+    {
+        <a class="nav-link text-dark"
+           asp-area="MicrosoftIdentity"
+           asp-controller="Account"
+           asp-action="SignIn">
+            <i class="bi bi-box-arrow-in-right me-1"></i>
+            Login
+        </a>
+    }
+</div>
 
                 </div>
             </div>
@@ -182,6 +204,21 @@
                     <span>Team members</span>
                 </a>
             }
+
+@if (isPlatformAdmin)
+{
+    <div class="sidebar-label mt-4">
+        Administration
+    </div>
+
+    <a class="sidebar-link @IsActive("PlatformAdmin", "RegistrationRequests")"
+       asp-controller="PlatformAdmin"
+       asp-action="RegistrationRequests">
+        <i class="bi bi-clipboard-check"></i>
+        <span>Registration Requests</span>
+    </a>
+}
+
             <a class="sidebar-link @IsActive("WorkQuote", "Index")"
                asp-controller="WorkQuote" asp-action="Index">
                 <i class="bi bi-receipt"></i><span>WorkQuote</span>
