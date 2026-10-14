@@ -76,7 +76,7 @@ namespace GarageSaas
        CallbackPath = Configuration["AzureAd:AuthCallback"]
   });
              * */
-            services.Configure<AppSettingsModel>(Configuration.GetSection("AppSettings"));
+            //services.Configure<AppSettingsModel>(Configuration.GetSection("AppSettings"));
             services.Configure<EmailSettings>(Configuration.GetSection("EmailSettings"));
 
             services.AddDbContext<SignupContext>(opt =>

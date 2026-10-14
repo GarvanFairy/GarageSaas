@@ -1,10 +1,38 @@
 @using System
 @using System.Security.Principal
+@using GarageSaas.Services
+@using GarageSaas.Exceptions
+@using GarageSaas.Services.Models
+@inject GarageSaas.Services.Interfaces.ICurrentGarageUserService CurrentGarageUserService
 
-@if (User.Identity.IsAuthenticated)
-{
-    var userName = TempData["userName"]?.ToString();
-    TempData.Keep("userName");
+@{
+    CurrentGarageUserModel currentUser = null;
+
+    
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        try
+        {
+            currentUser = CurrentGarageUserService.GetCurrentUser();
+        }
+        catch (GarageAccessException)
+        {
+            // Authenticated B2C user may not yet have garage membership,
+            // for example while completing an invitation.
+                <form method="get" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignIn">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Sign in
+        </button>
+    </form>
+        }
+    
+
+    var userName = currentUser != null
+        ? $"{currentUser.FirstName} {currentUser.LastName}".Trim()
+        : User.Identity?.Name;
+
+
+
 
     if (string.IsNullOrWhiteSpace(userName) || userName.Equals("unknown", StringComparison.OrdinalIgnoreCase))
     {
@@ -34,12 +62,8 @@
             </li>
         </ul>
     </div>
-}
-else
-{
-    <form method="get" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignIn">
-        <button type="submit" class="btn btn-primary">
-            <i class="bi bi-box-arrow-in-right me-1"></i> Sign in
-        </button>
-    </form>
-}
+    }
+    }
+    
+
+
