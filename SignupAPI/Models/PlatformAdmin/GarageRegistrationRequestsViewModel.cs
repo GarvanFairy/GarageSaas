@@ -5,6 +5,8 @@ namespace GarageSaas.Models
 {
     public class GarageRegistrationRequestsViewModel
     {
+        public string SelectedStatus { get; set; } = "Pending";
+
         public List<GarageRegistrationRequestListItemViewModel>
             Requests
         { get; set; }
@@ -32,6 +34,8 @@ namespace GarageSaas.Models
 
     public class GarageRegistrationRequestDetailsViewModel
     {
+        public string SelectedStatus { get; set; } = "Pending";
+
         public int Id { get; set; }
 
         public string GarageBusinessName { get; set; }
@@ -71,5 +75,19 @@ namespace GarageSaas.Models
         public DateTime? ReviewedDate { get; set; }
 
         public string ReviewedBy { get; set; }
+
+        public DateTime? CompletedDate { get; set; }
+
+        public DateTime? OnboardingTokenExpiresDate { get; set; }
+
+        public bool OnboardingRevoked { get; set; }
+
+        public string InvitationStatus =>
+            Status == "Completed" || CompletedDate.HasValue ? "Consumed" :
+            Status != "Approved" ? "Not issued" :
+            OnboardingRevoked ? "Revoked" :
+            !OnboardingTokenExpiresDate.HasValue ? "Unavailable" :
+            OnboardingTokenExpiresDate.Value <= DateTime.UtcNow ? "Expired" :
+            "Awaiting owner completion";
     }
 }

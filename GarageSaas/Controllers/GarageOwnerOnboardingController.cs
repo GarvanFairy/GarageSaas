@@ -1,4 +1,4 @@
-﻿using GarageSaas.Models;
+using GarageSaas.Models;
 using GarageSaas.Services;
 using GarageSaas.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication;
@@ -12,20 +12,26 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 
 namespace GarageSaas.Controllers
 {
     public class GarageOwnerOnboardingController : Controller
     {
         private readonly SignupContext _context;
+        private readonly IRegistrationRequestLock _requestLock;
+        private readonly ILogger<GarageOwnerOnboardingController> _logger;
         private readonly IInvitationIdentityVerificationService
     _identityVerificationService;
 
         public GarageOwnerOnboardingController(
             SignupContext context, IInvitationIdentityVerificationService
-        identityVerificationService)
+        identityVerificationService, IRegistrationRequestLock requestLock, ILogger<GarageOwnerOnboardingController> logger)
         {
             _context = context;
+            _requestLock = requestLock;
+            _logger = logger;
 
             _identityVerificationService =
                 identityVerificationService;
@@ -175,64 +181,30 @@ namespace GarageSaas.Controllers
         public async Task<IActionResult> Complete(string token)
         {
             SetSecurityHeaders();
-
-            if (string.IsNullOrWhiteSpace(token))
+            if (string.IsNullOrWhiteSpace(token)) return View("InvalidInvitation");
+            var tokenHash = GarageInvitationTokenService.HashToken(token);
+            try
             {
-                return View("InvalidInvitation");
-            }
+                // Resolve the row without tracking it. This lookup grants no permission to consume it.
+                var requestId = await _context.GarageRegistrationRequest.AsNoTracking()
+                    .Where(x => x.OnboardingTokenHash == tokenHash)
+                    .Select(x => (int?)x.Id).FirstOrDefaultAsync();
+                if (!requestId.HasValue) return View("InvalidInvitation");
 
-            var tokenHash =
-                GarageInvitationTokenService
-                    .HashToken(token);
-
-            var now = DateTime.UtcNow;
-
-            var registrationRequest =
-                await ((IQueryable<GarageRegistrationRequest>)_context.GarageRegistrationRequest)
-                    .FirstOrDefaultAsync(x =>
-                        x.OnboardingTokenHash == tokenHash &&
-                        x.Status == "Approved" &&
-                        !x.OnboardingRevoked &&
-                        x.OnboardingTokenExpiresDate != null &&
-                        x.OnboardingTokenExpiresDate > now);
-
-            if (registrationRequest == null)
-            {
-                return View("InvalidInvitation");
-            }
-
-            //
-            // Verify that the authenticated B2C account
-            // owns the email address used for registration.
-            //
-            var identityMatches =
-                _identityVerificationService
-                    .IsVerifiedInvitedUser(
-                        User,
-                        registrationRequest.ContactEmail);
-
-            if (!identityMatches)
-            {
-                return View("IdentityMismatch");
-            }
-
-            //
-            // Get the stable B2C user identifier.
-            //
-            var externalUserId =
-                User.FindFirst(
-                    ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrWhiteSpace(externalUserId))
-            {
-                return Forbid();
-            }
-
-            using (var transaction =
-                await _context.Database.BeginTransactionAsync())
-            {
-                try
+                return await _requestLock.ExecuteAsync<IActionResult>(requestId.Value, async registrationRequest =>
                 {
+                    // Revalidate after acquiring the same row lock used by all administrator mutations.
+                    var now = DateTime.UtcNow;
+                    if (registrationRequest == null || registrationRequest.OnboardingTokenHash != tokenHash ||
+                        registrationRequest.Status != "Approved" || registrationRequest.CompletedDate.HasValue ||
+                        registrationRequest.OnboardingRevoked || !registrationRequest.OnboardingTokenExpiresDate.HasValue ||
+                        registrationRequest.OnboardingTokenExpiresDate <= now)
+                        return View("InvalidInvitation");
+                    if (!_identityVerificationService.IsVerifiedInvitedUser(User, registrationRequest.ContactEmail))
+                        return View("IdentityMismatch");
+                    var externalUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    if (string.IsNullOrWhiteSpace(externalUserId)) return Forbid();
+
                     //
                     // Find the GarageSaas user by B2C identity.
                     //
@@ -252,7 +224,7 @@ namespace GarageSaas.Controllers
 
                         if (existingEmailUser != null)
                         {
-                            await transaction.RollbackAsync();
+
 
                             return View(
                                 "ExistingAccountMismatch");
@@ -301,7 +273,7 @@ namespace GarageSaas.Controllers
                     {
                         if (!user.Active || user.Blocked)
                         {
-                            await transaction.RollbackAsync();
+
 
                             return View("AccountUnavailable");
                         }
@@ -429,20 +401,16 @@ namespace GarageSaas.Controllers
 
                     await _context.SaveChangesAsync();
 
-                    await transaction.CommitAsync();
-
-                    return RedirectToAction(
-                        "Index",
-                        "Home");
-                }
-                catch
-                {
-                    await transaction.RollbackAsync();
-                    throw;
-                }
+                    return RedirectToAction("Index", "Home");
+                });
+            }
+            catch (Exception exception) when (exception is RegistrationRequestUnavailableException || exception is SqlException)
+            {
+                _logger.LogWarning("Owner onboarding could not be confirmed ({FailureType}).", exception.GetType().Name);
+                Response.StatusCode = 503;
+                return View("InvitationUnavailable");
             }
         }
-
         private void SetSecurityHeaders()
         {
             Response.Headers[

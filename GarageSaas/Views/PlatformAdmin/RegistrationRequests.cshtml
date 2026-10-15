@@ -22,24 +22,22 @@
 
     </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">
-            @TempData["Success"]
-        </div>
-    }
-
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">
-            @TempData["Error"]
-        </div>
-    }
+    <form asp-controller="PlatformAdmin" asp-action="RegistrationRequests" method="get"
+          class="d-flex align-items-center gap-2 mb-3">
+        <label for="status" class="form-label mb-0">Status</label>
+        <select id="status" name="status" class="form-select w-auto">
+            @foreach (var status in new[] { "Pending", "Approved", "Rejected", "Completed", "All" })
+            {
+                <option value="@status" selected="@(Model.SelectedStatus == status)">@status</option>
+            }
+        </select>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
 
     <div class="card shadow-sm border-0">
 
         <div class="card-header bg-white">
-            <strong>Pending Requests</strong>
+            <strong>@Model.SelectedStatus Requests</strong>
         </div>
 
         <div class="table-responsive">
@@ -53,7 +51,7 @@
                         <th>Contact</th>
                         <th>Email</th>
                         <th>Phone</th>
-                        <th>Submitted</th>
+                        <th>Submitted (UTC)</th>
                         <th>Status</th>
                         <th></th>
                     </tr>
@@ -92,7 +90,7 @@
                                 </td>
 
                                 <td>
-                                    <span class="badge bg-warning text-dark">
+                                    <span class="badge @(request.Status switch { "Pending" => "bg-warning text-dark", "Approved" => "bg-primary", "Rejected" => "bg-danger", "Completed" => "bg-success", _ => "bg-secondary" })">
                                         @request.Status
                                     </span>
                                 </td>
@@ -102,9 +100,10 @@
                                     <a asp-controller="PlatformAdmin"
                                        asp-action="RegistrationRequest"
                                        asp-route-id="@request.Id"
+                                       asp-route-status="@Model.SelectedStatus"
                                        class="btn btn-sm btn-outline-primary">
 
-                                        Review
+                                        @(request.Status == "Pending" ? "Review" : "View details")
 
                                     </a>
 
@@ -120,8 +119,9 @@
                                 class="text-center
                                 text-muted py-4">
 
-                                There are currently no
-                                pending registration requests.
+                                @(Model.SelectedStatus == "All"
+                                    ? "There are currently no registration requests."
+                                    : $"There are currently no {Model.SelectedStatus.ToLowerInvariant()} registration requests.")
 
                             </td>
                         </tr>

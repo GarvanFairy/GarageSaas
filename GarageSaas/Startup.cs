@@ -102,6 +102,8 @@ namespace GarageSaas
             services.AddScoped<IVehicleInvoiceService, VehicleInvoiceService>();
             services.AddScoped<IVehiclePartService, VehiclePartService>();
             services.AddScoped<IEmailService, MailKitEmailService>();
+            services.AddScoped<IRegistrationRequestLock, RegistrationRequestLock>();
+            services.AddScoped<OnboardingInvitationService>();
             services.AddScoped<IInvitationIdentityVerificationService,InvitationIdentityVerificationService>();
             services.AddScoped<IGarageAuthorizationService,GarageAuthorizationService>();
             services.AddScoped<IAuthorizationHandler,PlatformAdministratorHandler>();

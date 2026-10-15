@@ -160,7 +160,7 @@ namespace GarageSaas.UnitTests.Services
 
                 var service = new GarageCustomersService(context, lookupMock.Object);
 
-                var result = service.GetGarageCustomerForEdit(1);
+                var result = service.GetGarageCustomerForEdit(1, 5);
 
                 Assert.IsTrue(result.Success);
                 Assert.IsNotNull(result.Data);

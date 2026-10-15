@@ -1,0 +1,51 @@
+@model GarageSaas.ViewModels.PlatformGarageListViewModel
+@{ ViewData["Title"] = "Garage Management"; }
+
+<div class="container-fluid py-4">
+    <p class="text-muted">Platform Administration</p>
+    <h2>Garage Management</h2>
+    <p>Registered garages, including inactive and blocked businesses. This directory is read-only.</p>
+    <a asp-action="RegistrationRequests" class="btn btn-outline-secondary mb-3">Registration Requests</a>
+    <form asp-action="Garages" method="get" class="row g-2 align-items-end mb-3">
+        <div class="col-12 col-sm-8 col-lg-5">
+            <label for="search" class="form-label">Garage name</label>
+            <input id="search" name="search" value="@Model.Search" class="form-control" type="search" />
+        </div>
+        <div class="col-auto"><button class="btn btn-primary" type="submit">Search</button></div>
+        <div class="col-auto"><a asp-action="Garages" class="btn btn-outline-secondary">Clear</a></div>
+    </form>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">@Model.TotalCount garage(s)</div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th scope="col">Garage</th><th scope="col">Active</th><th scope="col">Blocked</th><th scope="col">Details</th></tr></thead>
+                <tbody>
+                @foreach (var garage in Model.Garages)
+                {
+                    <tr>
+                        <td>@garage.Name <span class="text-muted">#@garage.Id</span></td>
+                        <td>@(garage.Active ? "Active" : "Inactive")</td>
+                        <td>@(garage.Blocked ? "Yes" : "No")</td>
+                        <td><a asp-action="GarageDetails" asp-route-id="@garage.Id" class="btn btn-sm btn-outline-primary" aria-label="View details for @garage.Name">View details</a></td>
+                    </tr>
+                }
+                @if (Model.Garages.Count == 0)
+                {
+                    <tr><td colspan="4" class="text-center text-muted py-4">No garages found.</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <nav aria-label="Garage directory pages" class="d-flex flex-wrap align-items-center gap-3 mt-3">
+        @if (Model.Page > 1)
+        {
+            <a asp-action="Garages" asp-route-search="@Model.Search" asp-route-page="@(Model.Page - 1)" class="btn btn-outline-primary">Previous</a>
+        }
+        <span>Page @Model.Page of @Model.TotalPages</span>
+        @if (Model.Page < Model.TotalPages)
+        {
+            <a asp-action="Garages" asp-route-search="@Model.Search" asp-route-page="@(Model.Page + 1)" class="btn btn-outline-primary">Next</a>
+        }
+    </nav>
+</div>

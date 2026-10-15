@@ -22,7 +22,7 @@ namespace GarageSaas.UnitTests.Services
                 var result = service.GetGarageBusinessDetail(1, 999);
 
                 Assert.IsFalse(result.Success);
-                Assert.AreEqual("User not found.", result.ErrorMessage);
+                Assert.AreEqual("User is not authorised to view this garage business.", result.ErrorMessage);
             }
 
             [TestMethod]

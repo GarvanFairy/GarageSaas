@@ -37,7 +37,7 @@
         canManageGarage =
             await GarageAuthorizationService.CanManageGarageAsync();
 
-                    var platformAdminResult =
+        var platformAdminResult =
             await AuthorizationService.AuthorizeAsync(
                 User,
                 "PlatformAdministrator");
@@ -122,16 +122,18 @@
                         }
 
                         @if (isPlatformAdmin)
-{
-    <li class="nav-item">
-        <a class="nav-link @IsActive("PlatformAdmin", "RegistrationRequests")"
-           asp-controller="PlatformAdmin"
-           asp-action="RegistrationRequests">
-            <i class="bi bi-shield-lock me-1"></i>
-            Platform Admin
-        </a>
-    </li>
-}
+                        {
+                            <li class="nav-item dropdown">
+                                <button class="nav-link dropdown-toggle border-0 bg-transparent" id="platformAdminMenu" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-shield-lock me-1"></i>
+                                    Platform Administration
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="platformAdminMenu">
+                                    <li><a class="dropdown-item @IsActive("PlatformAdmin", "RegistrationRequests")" asp-controller="PlatformAdmin" asp-action="RegistrationRequests">Registration Requests</a></li>
+                                    <li><a class="dropdown-item @IsActive("PlatformAdmin", "Garages")" asp-controller="PlatformAdmin" asp-action="Garages">Garage Management</a></li>
+                                </ul>
+                            </li>
+                        }
 
                     </ul>
 
@@ -205,19 +207,22 @@
                 </a>
             }
 
-@if (isPlatformAdmin)
-{
-    <div class="sidebar-label mt-4">
-        Administration
-    </div>
+            @if (isPlatformAdmin)
+            {
+                <div class="sidebar-label mt-4">
+                    Platform Administration
+                </div>
 
-    <a class="sidebar-link @IsActive("PlatformAdmin", "RegistrationRequests")"
-       asp-controller="PlatformAdmin"
-       asp-action="RegistrationRequests">
-        <i class="bi bi-clipboard-check"></i>
-        <span>Registration Requests</span>
-    </a>
-}
+                <a class="sidebar-link @IsActive("PlatformAdmin", "RegistrationRequests")"
+                   asp-controller="PlatformAdmin"
+                   asp-action="RegistrationRequests">
+                    <i class="bi bi-clipboard-check"></i>
+                    <span>Registration Requests</span>
+                </a>
+                <a class="sidebar-link @IsActive("PlatformAdmin", "Garages")" asp-controller="PlatformAdmin" asp-action="Garages">
+                    <i class="bi bi-buildings"></i><span>Garage Management</span>
+                </a>
+            }
 
             <a class="sidebar-link @IsActive("WorkQuote", "Index")"
                asp-controller="WorkQuote" asp-action="Index">

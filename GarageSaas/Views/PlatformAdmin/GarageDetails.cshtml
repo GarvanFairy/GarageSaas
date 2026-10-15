@@ -1,0 +1,62 @@
+@using System.Linq
+@model GarageSaas.ViewModels.PlatformGarageDetailsViewModel
+@{ ViewData["Title"] = "Garage Details"; }
+
+<div class="container-fluid py-4">
+    <p class="text-muted">Platform Administration / Garage Management</p>
+    <h2>@Model.Name</h2>
+    <p class="text-muted">Garage #@Model.Id · Read-only</p>
+    <a asp-action="Garages" class="btn btn-outline-secondary mb-3">Back to Garage Management</a>
+    <div class="row g-3">
+        <section class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100"><div class="card-body">
+                <h3 class="h5">Business and contact</h3>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Active</dt><dd class="col-sm-8">@(Model.Active ? "Active" : "Inactive")</dd>
+                    <dt class="col-sm-4">Blocked</dt><dd class="col-sm-8">@(Model.Blocked ? "Yes" : "No")</dd>
+                    <dt class="col-sm-4">Address</dt><dd class="col-sm-8">
+                        @foreach (var part in new[] { Model.AddressLine1, Model.AddressLine2, Model.AddressLine3, Model.AddressLine4, Model.Postcode }.Where(x => !string.IsNullOrWhiteSpace(x)))
+                        { <div>@part</div> }
+                    </dd>
+                    <dt class="col-sm-4">Email</dt><dd class="col-sm-8 text-break">@(Model.Email ?? "Not recorded")</dd>
+                    <dt class="col-sm-4">Phone</dt><dd class="col-sm-8">@(Model.Phone ?? "Not recorded")</dd>
+                    <dt class="col-sm-4">Mobile</dt><dd class="col-sm-8">@(Model.Mobile ?? "Not recorded")</dd>
+                    <dt class="col-sm-4">VAT number</dt><dd class="col-sm-8">@(Model.VatNumber ?? "Not recorded")</dd>
+                    <dt class="col-sm-4">Registration number</dt><dd class="col-sm-8">@(Model.BusinessRegistrationNumber ?? "Not recorded")</dd>
+                </dl>
+            </div></div>
+        </section>
+        <section class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100"><div class="card-body">
+                <h3 class="h5">Audit information</h3>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Created</dt><dd class="col-sm-8">@(Model.CreatedDate == default ? "Not recorded" : Model.CreatedDate.ToString("dd/MM/yyyy HH:mm"))</dd>
+                    <dt class="col-sm-4">Created by</dt><dd class="col-sm-8 text-break">@(Model.CreatedBy ?? "Not recorded")</dd>
+                    <dt class="col-sm-4">Updated</dt><dd class="col-sm-8">@(Model.UpdatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "Not recorded")</dd>
+                    <dt class="col-sm-4">Updated by</dt><dd class="col-sm-8 text-break">@(Model.UpdatedBy ?? "Not recorded")</dd>
+                </dl>
+                <p class="text-muted mt-3 mb-0">Dates are shown as recorded; legacy records may use different time conventions.</p>
+            </div></div>
+        </section>
+    </div>
+    <section class="card shadow-sm mt-3">
+        <div class="card-header bg-white">
+            <h3 class="h5 mb-1">Memberships</h3>
+            <span>@Model.OwnerCount owner membership(s), including inactive memberships.</span>
+            @if (Model.OwnerCount == 0) { <p class="text-muted mb-0">No owner is recorded for this garage.</p> }
+            @if (Model.OwnerCount > 1) { <p class="text-muted mb-0">Multiple owners are recorded for this garage.</p> }
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th scope="col">Member</th><th scope="col">Email</th><th scope="col">Owner</th><th scope="col">Role</th><th scope="col">Membership</th><th scope="col">User active</th><th scope="col">User blocked</th></tr></thead>
+                <tbody>
+                @foreach (var member in Model.Memberships)
+                {
+                    <tr><td>@member.FirstName @member.LastName</td><td class="text-break">@member.Email</td><td>@(member.IsOwner ? "Yes" : "No")</td><td>@member.Role</td><td>@(member.IsActive ? "Active" : "Inactive")</td><td>@(member.UserActive ? "Yes" : "No")</td><td>@(member.UserBlocked ? "Yes" : "No")</td></tr>
+                }
+                @if (Model.Memberships.Count == 0) { <tr><td colspan="7" class="text-center text-muted py-4">No memberships recorded.</td></tr> }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

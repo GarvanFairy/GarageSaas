@@ -250,6 +250,7 @@ namespace GarageSaas.Tests.Services
         public void AddOrUpdateWorkQuote_Returns_Fail_When_WorkItemId_Is_Missing()
         {
             using var context = DbContextFactory.Create();
+            SeedQuoteDependencies(context, 100, 10, 1000);
 
             var service = new WorkQuoteService(context);
 
@@ -263,7 +264,7 @@ namespace GarageSaas.Tests.Services
             var result = service.AddOrUpdateWorkQuote(model, 5, "tester");
 
             Assert.IsFalse(result.Success);
-            Assert.AreEqual("WorkItemId is required.", result.ErrorMessage);
+            Assert.AreEqual("At least one WorkItemId is required.", result.ErrorMessage);
         }
 
         [TestMethod]
@@ -290,6 +291,7 @@ namespace GarageSaas.Tests.Services
         public void AddOrUpdateWorkQuote_Adds_New_WorkQuote_And_Link()
         {
             using var context = DbContextFactory.Create();
+            SeedQuoteDependencies(context, 100, 10, 1000);
 
             var service = new WorkQuoteService(context);
 
@@ -328,9 +330,11 @@ namespace GarageSaas.Tests.Services
         }
 
         [TestMethod]
-        public void AddOrUpdateWorkQuote_Updates_Existing_WorkQuote_And_Link()
+        public void AddOrUpdateWorkQuote_Updates_Existing_WorkQuote_And_Replaces_Changed_Link()
         {
             using var context = DbContextFactory.Create();
+            SeedQuoteDependencies(context, 100, 10, 1000);
+            SeedQuoteDependencies(context, 200, 20, 2000);
 
             context.WorkQuote.Add(new WorkQuote
             {
@@ -380,14 +384,19 @@ namespace GarageSaas.Tests.Services
             Assert.IsNotNull(updatedQuote.UpdatedDate);
 
             Assert.AreEqual(2000, updatedLink.WorkItemId);
-            Assert.AreEqual("editor", updatedLink.UpdatedBy);
-            Assert.IsNotNull(updatedLink.UpdatedDate);
+            Assert.AreEqual("editor", updatedLink.CreatedBy);
+            Assert.AreNotEqual(default(DateTime), updatedLink.CreatedDate);
+            Assert.AreEqual(5, updatedLink.GarageBusinessCustomerId);
+            Assert.AreNotEqual(20, updatedLink.Id);
+            Assert.IsFalse(context.WorkQuoteWorkItem.Any(x => x.Id == 20));
+            Assert.AreEqual(updatedLink.Id, result.Data.Id);
         }
 
         [TestMethod]
         public void AddOrUpdateWorkQuote_Returns_Fail_When_Update_Target_Not_Found()
         {
             using var context = DbContextFactory.Create();
+            SeedQuoteDependencies(context, 100, 10, 1000);
 
             var service = new WorkQuoteService(context);
 
@@ -404,6 +413,30 @@ namespace GarageSaas.Tests.Services
 
             Assert.IsFalse(result.Success);
             Assert.AreEqual("WorkQuote not found.", result.ErrorMessage);
+        }
+
+        private static void SeedQuoteDependencies(SignupContext context, int vehicleId, int customerId, int workItemId)
+        {
+            context.GarageBusinessCustomer.Add(new GarageBusinessCustomer
+            {
+                Id = customerId, GarageBusinessId = 5,
+                GarageCustomerForename = "Test", GarageCustomerSurname = "Customer", Active = true
+            });
+            context.CustomerVehicle.Add(new CustomerVehicle
+            {
+                Id = vehicleId, GarageBusinessId = 5,
+                VehicleRegistration = $"TEST-{vehicleId}", GarageOwned = false, Active = true
+            });
+            context.CustomerOwnedVehicles.Add(new CustomerOwnedVehicles
+            {
+                GarageBusinessCustomerId = customerId, VehicleId = vehicleId,
+                GarageBusinessId = 5, Active = true
+            });
+            context.WorkItem.Add(new WorkItem
+            {
+                Id = workItemId, GarageBusinessCustomerId = 5, VehicleId = vehicleId
+            });
+            context.SaveChanges();
         }
 
         [TestMethod]

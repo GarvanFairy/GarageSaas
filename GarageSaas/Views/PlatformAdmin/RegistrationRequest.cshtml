@@ -10,6 +10,7 @@
 
         <a asp-controller="PlatformAdmin"
            asp-action="RegistrationRequests"
+           asp-route-status="@Model.SelectedStatus"
            class="text-decoration-none">
             &larr; Back to registration requests
         </a>
@@ -25,7 +26,7 @@
                 @Model.GarageBusinessName
             </h2>
 
-            <span class="badge bg-warning text-dark">
+            <span class="badge @(Model.Status switch { "Pending" => "bg-warning text-dark", "Approved" => "bg-primary", "Rejected" => "bg-danger", "Completed" => "bg-success", _ => "bg-secondary" })">
                 @Model.Status
             </span>
 
@@ -33,12 +34,30 @@
 
         <div class="text-muted">
 
-            Submitted
+            Submitted (UTC)
             @Model.CreatedDate.ToString(
                 "dd/MM/yyyy HH:mm")
 
         </div>
 
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white"><strong>Review and onboarding</strong></div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Reviewed (UTC)</dt>
+                <dd class="col-sm-8">@(Model.ReviewedDate?.ToString("dd/MM/yyyy HH:mm") ?? "Not reviewed")</dd>
+                <dt class="col-sm-4">Reviewed by</dt>
+                <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.ReviewedBy) ? "Not recorded" : Model.ReviewedBy)</dd>
+                <dt class="col-sm-4">Completed (UTC)</dt>
+                <dd class="col-sm-8">@(Model.CompletedDate?.ToString("dd/MM/yyyy HH:mm") ?? "Not completed")</dd>
+                <dt class="col-sm-4">Onboarding invitation</dt>
+                <dd class="col-sm-8">@Model.InvitationStatus</dd>
+                <dt class="col-sm-4">Invitation expiry (UTC)</dt>
+                <dd class="col-sm-8">@(Model.OnboardingTokenExpiresDate?.ToString("dd/MM/yyyy HH:mm") ?? "Not recorded")</dd>
+            </dl>
+        </div>
     </div>
 
     <div class="row">
@@ -221,6 +240,7 @@
                           method="post">
 
                         @Html.AntiForgeryToken()
+                        <input type="hidden" name="status" value="@Model.SelectedStatus" />
 
                         <input type="hidden"
                                name="id"
@@ -242,6 +262,7 @@
                           method="post">
 
                         @Html.AntiForgeryToken()
+                        <input type="hidden" name="status" value="@Model.SelectedStatus" />
 
                         <input type="hidden"
                                name="id"
@@ -265,4 +286,22 @@
         </div>
     }
 
+    @if (Model.Status == "Approved" && !Model.CompletedDate.HasValue && !Model.OnboardingRevoked)
+    {
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body">
+                <h5>Owner onboarding invitation</h5>
+                <p>Send a new seven-day invitation to @Model.ContactEmail. All previous invitation links will stop working.</p>
+                <p class="text-muted">Allow at least one minute between invitations. A mail-server acknowledgement does not guarantee delivery.</p>
+                <form asp-controller="PlatformAdmin" asp-action="ResendOnboardingInvitation" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="hidden" name="status" value="@Model.SelectedStatus" />
+                    <input type="hidden" name="expectedExpiry" value="@(Model.OnboardingTokenExpiresDate?.ToString("O", System.Globalization.CultureInfo.InvariantCulture) ?? "none")" />
+                    <button type="submit" class="btn btn-outline-primary"
+                            onclick="return confirm('Send a new invitation and invalidate all previous links?');">Resend invitation</button>
+                </form>
+            </div>
+        </div>
+    }
 </div>

@@ -125,7 +125,7 @@ namespace GarageSaas.Tests.Services
 
             var service = new CustomerVehicleService(context, lookupMock.Object);
 
-            var result = await service.BuildAddCustomerVehicleVmAsync(100, 5);
+            var result = await service.BuildAddCustomerVehicleVmAsync(5);
 
             Assert.IsTrue(result.Success);
             Assert.IsNotNull(result.Data);
@@ -505,7 +505,7 @@ namespace GarageSaas.Tests.Services
 
             var service = new CustomerVehicleService(context, lookupMock.Object);
 
-            var result = await service.GetCustomerVehicleForEditAsync(100, 100, 5);
+            var result = await service.GetCustomerVehicleForEditAsync(100, 5);
 
             Assert.IsTrue(result.Success);
             Assert.IsNotNull(result.Data);
