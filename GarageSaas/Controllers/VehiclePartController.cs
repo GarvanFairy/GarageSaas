@@ -1,89 +1,51 @@
-﻿using GarageSaas.Services.Interfaces;
+using System;
+using GarageSaas.Exceptions;
+using GarageSaas.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using SignupAPI.Models;
 
 namespace GarageSaas.Controllers
 {
+    [Authorize]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public class VehiclePartController : Controller
     {
-        private readonly ILogger<VehiclePartController> _logger;
-        private readonly IVehiclePartService _vehiclePartService;
+        private readonly ICurrentGarageUserService _currentGarageUserService;
 
-        public VehiclePartController(
-            IVehiclePartService vehiclePartService,
-            ILogger<VehiclePartController> logger)
+        public VehiclePartController(ICurrentGarageUserService currentGarageUserService)
         {
-            _vehiclePartService = vehiclePartService;
-            _logger = logger;
+            _currentGarageUserService = currentGarageUserService;
         }
+
+        // Retired pending redesign. Do not bind payloads or invoke the parts service.
+        [HttpGet]
+        public IActionResult Get() => Retired();
 
         [HttpGet]
-        public IActionResult Get(int vehiclePartId)
-        {
-            var result = _vehiclePartService.GetVehiclePart(vehiclePartId);
-
-            if (!result.Success)
-            {
-                return Json(new { status = "Error", message = result.ErrorMessage });
-            }
-
-            return Json(result.Data);
-        }
-
-        [HttpGet]
-        public IActionResult GetAll()
-        {
-            var result = _vehiclePartService.GetVehicleParts();
-
-            if (!result.Success)
-            {
-                return Json(new { status = "Error", message = result.ErrorMessage });
-            }
-
-            return Json(new
-            {
-                status = "Success",
-                message = "Vehicle parts found",
-                data = result.Data
-            });
-        }
+        public IActionResult GetAll() => Retired();
 
         [HttpPost]
-        public IActionResult AddVehiclePart([FromBody] VehiclePart vehiclePart)
-        {
-            var result = _vehiclePartService.AddOrUpdateVehiclePart(
-                vehiclePart,
-                User.Identity?.Name);
-
-            if (!result.Success)
-            {
-                return Json(new { status = "Error", message = result.ErrorMessage });
-            }
-
-            return Json(new
-            {
-                status = "Success",
-                message = vehiclePart.Id == 0 ? "Vehicle part added successfully" : "Vehicle part updated successfully",
-                data = result.Data
-            });
-        }
+        public IActionResult AddVehiclePart() => Retired();
 
         [HttpDelete]
-        public IActionResult Delete(int vehiclePartId)
-        {
-            var result = _vehiclePartService.DeleteVehiclePart(vehiclePartId);
+        public IActionResult Delete() => Retired();
 
-            if (!result.Success)
+        private IActionResult Retired()
+        {
+            try
             {
-                return Json(new { status = "Error", message = result.ErrorMessage });
+                _currentGarageUserService.GetCurrentUser();
+            }
+            catch (GarageAccessException)
+            {
+                return Forbid();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
             }
 
-            return Json(new
-            {
-                status = "Success",
-                message = "Vehicle part deleted successfully"
-            });
+            return StatusCode(410, new { message = "This functionality is temporarily unavailable." });
         }
     }
 }

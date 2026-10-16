@@ -2,9 +2,12 @@
 {
     public class GarageAccessException : System.Exception
     {
-        public GarageAccessException(string message)
+        public bool SelectionRequired { get; }
+
+        public GarageAccessException(string message, bool selectionRequired = false)
             : base(message)
         {
+            SelectionRequired = selectionRequired;
         }
     }
 }

@@ -3,6 +3,7 @@ using GarageSaas.Services.Models;
 using SignupAPI.Models;
 using System;
 using System.Linq;
+using GarageSaas.Exceptions;
 
 
 namespace GarageSaas.Services
@@ -10,23 +11,31 @@ namespace GarageSaas.Services
     public class GarageBusinessService : IGarageBusinessService
     {
         private readonly SignupContext _context;
+        private readonly ICurrentGarageUserService _currentGarageUserService;
 
-        public GarageBusinessService(SignupContext context)
+        public GarageBusinessService(SignupContext context, ICurrentGarageUserService currentGarageUserService)
         {
             _context = context;
+            _currentGarageUserService = currentGarageUserService;
+        }
+
+        private bool HasCurrentMembership(int garageBusinessId, int userId, bool requireOwner)
+        {
+            try
+            {
+                var current = _currentGarageUserService.GetCurrentUser();
+                return current.UserId == userId && current.GarageBusinessId == garageBusinessId &&
+                    (!requireOwner || current.IsOwner);
+            }
+            catch (GarageAccessException) { return false; }
+            catch (UnauthorizedAccessException) { return false; }
         }
 
         public ServiceResult<GarageBusiness> GetGarageBusinessDetail(
             int garageBusinessId,
             int userId)
         {
-            var currentUser =
-                _context.Users
-                    .FirstOrDefault(x =>
-                        x.Id == userId &&
-                        x.GarageBusinessId == garageBusinessId);
-
-            if (currentUser == null)
+            if (!HasCurrentMembership(garageBusinessId, userId, false))
             {
                 return ServiceResult<GarageBusiness>
                     .Fail(
@@ -53,24 +62,7 @@ namespace GarageSaas.Services
                 int garageBusinessId,
                 int userId)
         {
-            var currentUser =
-                _context.Users.Find(userId);
-
-            if (currentUser == null)
-            {
-                return ServiceResult<GarageBusiness>
-                    .Fail("User not found.");
-            }
-
-            var membership =
-                _context.GarageBusinessUser
-                    .FirstOrDefault(x =>
-                        x.UserId == userId &&
-                        x.GarageBusinessId ==
-                            garageBusinessId &&
-                        x.IsActive);
-
-            if (membership == null)
+            if (!HasCurrentMembership(garageBusinessId, userId, true))
             {
                 return ServiceResult<GarageBusiness>
                     .Fail(
@@ -110,13 +102,7 @@ namespace GarageSaas.Services
             // Verify that the current GarageSaas user belongs
             // to the authenticated garage.
             //
-            var currentUser =
-                _context.Users
-                    .FirstOrDefault(x =>
-                        x.Id == userId &&
-                        x.GarageBusinessId == garageBusinessId);
-
-            if (currentUser == null)
+            if (!HasCurrentMembership(garageBusinessId, userId, true))
             {
                 return ServiceResult<GarageBusiness>
                     .Fail(

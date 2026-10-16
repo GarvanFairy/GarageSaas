@@ -22,9 +22,16 @@
                     </h2>
 
                     <p class="text-muted mb-4">
-                        You are signed in successfully, but your
+                        @if (ViewData["SelectionRequired"] is bool selectionRequired && selectionRequired)
+                        {
+                            <text>Multiple garage memberships are recorded. Explicit garage selection is required and is not yet available. Please contact your administrator.</text>
+                        }
+                        else
+                        {
+                        <text>You are signed in successfully, but your
                         account does not currently have access to
-                        an active garage.
+                        an active garage.</text>
+                        }
                     </p>
 
                     <p class="text-muted">

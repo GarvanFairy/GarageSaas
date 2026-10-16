@@ -1,4 +1,4 @@
-﻿using GarageSaas.Exceptions;
+using GarageSaas.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
@@ -38,9 +38,27 @@ namespace GarageSaas.Middleware
                 }
 
                 context.Response.Clear();
-
-                context.Response.Redirect(
-                    "/Home/NoGarageAccess");
+                context.Response.Headers["Cache-Control"] = "no-store";
+                // Redirect only explicit HTML navigations. Fetch defaults to */*;
+                // returning HTML for those calls would break existing JSON callers.
+                var request = context.Request;
+                var htmlNavigation = HttpMethods.IsGet(request.Method) &&
+                    request.Headers["Accept"].ToString().Contains("text/html") &&
+                    !request.Headers["Accept"].ToString().Contains("application/json") &&
+                    request.Headers["X-Requested-With"] != "XMLHttpRequest";
+                if (htmlNavigation && request.Path != "/Home/NoGarageAccess")
+                {
+                    context.Response.Redirect("/Home/NoGarageAccess" +
+                        (ex.SelectionRequired ? "?selectionRequired=true" : ""));
+                    return;
+                }
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    status = "Error",
+                    code = ex.SelectionRequired ? "GarageSelectionRequired" : "GarageAccessUnavailable",
+                    message = ex.SelectionRequired ? "Garage selection is required." : "Garage access is unavailable."
+                });
             }
         }
     }

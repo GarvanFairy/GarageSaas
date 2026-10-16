@@ -4,7 +4,6 @@ using GarageSaas.Services.Models;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading.Tasks;
-using GarageSaas.Exceptions;
 
 namespace GarageSaas.Services
 {
@@ -99,6 +98,10 @@ namespace GarageSaas.Services
                 return _currentGarageUserService.GetCurrentUser();
             }
             catch (GarageAccessException)
+            {
+                return null;
+            }
+            catch (UnauthorizedAccessException)
             {
                 return null;
             }

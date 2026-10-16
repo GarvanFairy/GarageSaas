@@ -109,8 +109,9 @@ namespace GarageSaas.Controllers
         }
 
         [Authorize]
-        public IActionResult NoGarageAccess()
+        public IActionResult NoGarageAccess(bool selectionRequired = false)
         {
+            ViewData["SelectionRequired"] = selectionRequired;
             return View();
         }
     }
