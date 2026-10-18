@@ -1,4 +1,17 @@
+@using GarageSaas.Services
 @using GarageSaas.Services.Interfaces
+@using GarageSaas.Exceptions
+@inject ICurrentGarageUserService CurrentGarageUserService
+@{
+    GarageSaas.Services.Models.CurrentGarageUserModel selectedGarage = null;
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        try { selectedGarage = CurrentGarageUserService.GetCurrentUser(); }
+        catch (GarageAccessException) { }
+    }
+    var garagePreference = Context.RequestServices.GetService(typeof(GarageSelectionService)) as GarageSelectionService;
+}
+
 @using Microsoft.AspNetCore.Authorization
 @inject IGarageAuthorizationService GarageAuthorizationService
 @inject IAuthorizationService AuthorizationService
@@ -8,6 +21,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    @if (selectedGarage != null && garagePreference != null)
+    { <meta name="garage-context" content="@garagePreference.ContextToken(selectedGarage.UserId, selectedGarage.GarageBusinessId)" /> }
     <title>@ViewData["Title"] - GarageMate</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -60,6 +75,13 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="d-flex flex-wrap align-items-center gap-2 me-3">
+                        <span class="small fw-semibold">@(selectedGarage == null ? "No garage selected" : (selectedGarage.GarageName ?? "Garage #" + selectedGarage.GarageBusinessId))</span>
+                        <a asp-controller="GarageSelection" asp-action="Index" class="btn btn-sm btn-outline-primary">Switch garage</a>
+                    </div>
+                }
                 <div class="collapse navbar-collapse" id="mainNav">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">

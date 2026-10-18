@@ -1,8 +1,9 @@
-﻿namespace GarageSaas.Services.Models
+namespace GarageSaas.Services.Models
 {
     public class CurrentGarageUserModel
     {
         public int UserId { get; set; }
+        public string GarageName { get; set; }
 
         public int GarageBusinessId { get; set; }
 

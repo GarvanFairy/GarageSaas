@@ -1,4 +1,4 @@
-﻿@model SignupAPI.Models.GarageBusiness
+@model SignupAPI.Models.GarageBusiness
 
 @{
     ViewBag.Title = "Edit Garage Business";
@@ -14,6 +14,7 @@
     new { enctype = "multipart/form-data" }))
 {
     @Html.AntiForgeryToken()
+    @await Html.PartialAsync("_GarageContext")
 
     <div class="form-horizontal">
         <h4>Garage Business</h4>

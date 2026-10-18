@@ -1,0 +1,21 @@
+@model GarageSaas.ViewModels.GarageSelectionViewModel
+@{ ViewData["Title"] = "Choose a garage"; }
+<div class="container py-4">
+    <h2>Choose a garage</h2>
+    <p>Choose the garage you want to work in. Your choice is remembered on this browser for 30 days and checked each time you return.</p>
+    @if (Model.Garages.Count == 0)
+    { <div class="alert alert-info">No eligible garages are currently available. Contact your garage administrator.</div> }
+    <div class="row g-3">
+    @foreach (var garage in Model.Garages)
+    {
+        <div class="col-12 col-md-6 col-lg-4"><div class="card h-100"><div class="card-body">
+            <h3 class="h5">@garage.Name</h3>
+            <p>@(garage.IsOwner ? "Owner" : garage.Role)</p>
+            <form asp-action="Select" method="post">
+                <input type="hidden" name="garageId" value="@garage.Id" />
+                <button type="submit" class="btn btn-primary">Use this garage</button>
+            </form>
+        </div></div></div>
+    }
+    </div>
+</div>

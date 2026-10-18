@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "No Garage Access";
 }
 
@@ -24,7 +24,7 @@
                     <p class="text-muted mb-4">
                         @if (ViewData["SelectionRequired"] is bool selectionRequired && selectionRequired)
                         {
-                            <text>Multiple garage memberships are recorded. Explicit garage selection is required and is not yet available. Please contact your administrator.</text>
+                            <text>Explicit garage selection is required. Please choose an eligible garage to continue. Your previous garage may no longer be available.</text>
                         }
                         else
                         {
@@ -39,6 +39,7 @@
                         please contact your garage administrator.
                     </p>
 
+                    <a class="btn btn-primary mb-3" asp-controller="GarageSelection" asp-action="Index">Choose a garage</a>
                     <a class="btn btn-outline-secondary"
                        asp-area="MicrosoftIdentity"
                        asp-controller="Account"

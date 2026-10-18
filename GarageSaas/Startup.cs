@@ -1,4 +1,4 @@
-﻿using GarageSaas.Authorization;
+using GarageSaas.Authorization;
 using GarageSaas.Configuration;
 using GarageSaas.Middleware;
 using GarageSaas.Models;
@@ -45,7 +45,10 @@ namespace GarageSaas
             // Configuration to sign-in users with Azure AD B2C
             services.AddMicrosoftIdentityWebAppAuthentication(Configuration, Microsoft.Identity.Web.Constants.AzureAdB2C);
 
-            services.AddControllersWithViews()
+            services.AddDataProtection();
+            services.AddScoped<GarageSelectionService>();
+            services.AddScoped<GarageSaas.Filters.GarageContextFilter>();
+            services.AddControllersWithViews(options => options.Filters.AddService<GarageSaas.Filters.GarageContextFilter>())
                 .AddMicrosoftIdentityUI();
 
             services.AddRazorPages();

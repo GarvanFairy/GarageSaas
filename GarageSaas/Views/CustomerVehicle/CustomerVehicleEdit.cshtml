@@ -52,6 +52,7 @@
 @using (Html.BeginForm("AddUpdateCustomerVehicle", "CustomerVehicle", FormMethod.Post, new { id = "vehicleForm", autocomplete = "off", onsubmit = "return false;" }))
 {
     @Html.AntiForgeryToken()
+    @await Html.PartialAsync("_GarageContext")
     @Html.HiddenFor(m => m.Vehicle.Id)
 
     <section class="edit-vehicle-grid">

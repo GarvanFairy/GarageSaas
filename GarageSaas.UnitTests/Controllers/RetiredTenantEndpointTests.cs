@@ -91,6 +91,7 @@ public class RetiredTenantEndpointTests
             {
                 services.AddLogging();
                 services.AddHttpContextAccessor();
+                services.AddScoped<GarageSelectionService>();
                 services.AddScoped<SignupContext>(_ => new GuardedContext(options));
                 services.AddScoped<ICurrentGarageUserService, CurrentGarageUserService>();
                 services.AddScoped<IGarageAuthorizationService, GarageAuthorizationService>();
@@ -208,23 +209,22 @@ public class RetiredTenantEndpointTests
     [DataRow("one-eligible")]
     [DataRow("inactive-garage")]
     [DataRow("missing-identifier")]
-    public async Task HtmlNavigationDenialReachesNoAccessWithoutLoop(string state)
+    public async Task HtmlNavigationDenialReachesRecoveryPageWithoutLoop(string state)
     {
         using var request = Request("/Home/Index", "GET", state);
         request.Headers.Accept.ParseAdd("text/html");
         using var response = await _client.SendAsync(request);
         Assert.AreEqual(HttpStatusCode.Redirect, response.StatusCode);
         var location = response.Headers.Location!.ToString();
-        Assert.IsTrue(location.StartsWith("/Home/NoGarageAccess"));
-        if (state == "multiple" || state == "one-eligible") Assert.IsTrue(location.Contains("selectionRequired=true"));
-        using var next = new HttpRequestMessage(HttpMethod.Get, location);
+        var selectionRequired = state == "multiple" || state == "one-eligible";
+        Assert.AreEqual(selectionRequired ? "/GarageSelection" : "/Home/NoGarageAccess", location);        using var next = new HttpRequestMessage(HttpMethod.Get, location);
         next.Headers.Add("X-Test-Identity", state);
         next.Headers.Accept.ParseAdd("text/html");
         using var page = await _client.SendAsync(next);
         Assert.AreEqual(HttpStatusCode.OK, page.StatusCode);
         Assert.IsNull(page.Headers.Location);
         if (state == "multiple" || state == "one-eligible")
-            StringAssert.Contains(await page.Content.ReadAsStringAsync(), "Explicit garage selection is required");
+            StringAssert.Contains(await page.Content.ReadAsStringAsync(), "Choose a garage");
     }
 
     [DataTestMethod]
@@ -319,6 +319,3 @@ public class RetiredTenantEndpointTests
         }
     }
 }
-
-
-

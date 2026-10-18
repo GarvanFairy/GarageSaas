@@ -1,0 +1,10 @@
+@using GarageSaas.Services
+@inject GarageSaas.Services.Interfaces.ICurrentGarageUserService CurrentGarageUserService
+@{
+    var preference = Context.RequestServices.GetService(typeof(GarageSelectionService)) as GarageSelectionService;
+    if (preference != null)
+    {
+        var user = CurrentGarageUserService.GetCurrentUser();
+        <input type="hidden" name="__GarageContext" value="@preference.ContextToken(user.UserId, user.GarageBusinessId)" />
+    }
+}

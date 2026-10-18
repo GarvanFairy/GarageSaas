@@ -12,6 +12,9 @@ namespace GarageSaas.Services
             => Eligible(context.GarageBusiness.AsNoTracking(), garageId);
 
         internal static IQueryable<GarageBusiness> Eligible(IQueryable<GarageBusiness> garages, int garageId)
-            => garages.Where(x => x.Id == garageId && x.Active && !x.Blocked);
+            => Eligible(garages).Where(x => x.Id == garageId);
+
+        internal static IQueryable<GarageBusiness> Eligible(IQueryable<GarageBusiness> garages)
+            => garages.Where(x => x.Active && !x.Blocked);
     }
 }

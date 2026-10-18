@@ -46,10 +46,10 @@ namespace GarageSaas.Middleware
                     request.Headers["Accept"].ToString().Contains("text/html") &&
                     !request.Headers["Accept"].ToString().Contains("application/json") &&
                     request.Headers["X-Requested-With"] != "XMLHttpRequest";
-                if (htmlNavigation && request.Path != "/Home/NoGarageAccess")
+                if (htmlNavigation && request.Path != "/Home/NoGarageAccess" &&
+                    !request.Path.StartsWithSegments("/GarageSelection"))
                 {
-                    context.Response.Redirect("/Home/NoGarageAccess" +
-                        (ex.SelectionRequired ? "?selectionRequired=true" : ""));
+                    context.Response.Redirect(ex.SelectionRequired ? "/GarageSelection" : "/Home/NoGarageAccess");
                     return;
                 }
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;

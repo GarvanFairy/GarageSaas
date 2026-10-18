@@ -14,13 +14,15 @@ namespace GarageSaas.Services
         : ICurrentGarageUserService
     {
         private readonly SignupContext _context;
+        private readonly GarageSelectionService _selection;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public CurrentGarageUserService(
             SignupContext context,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor, GarageSelectionService selection = null)
         {
             _context = context;
+            _selection = selection;
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -69,7 +71,7 @@ namespace GarageSaas.Services
                     UserId = user.UserId, GarageBusinessId = user.GarageBusinessId,
                     ExternalUserId = user.ExternalUserId, EmailAddress = user.EmailAddress,
                     FirstName = user.FirstName, LastName = user.LastName,
-                    Role = user.Role, IsOwner = user.IsOwner
+                    Role = user.Role, IsOwner = user.IsOwner, GarageName = user.GarageName
                 };
             }
         }
@@ -89,27 +91,33 @@ namespace GarageSaas.Services
             if (user == null || !user.Active || user.Blocked)
                 throw new GarageAccessException("Garage access is unavailable.");
 
-            // Count ALL membership records before evaluating eligibility. Filtering
-            // first would silently select another garage when availability changes.
-            var memberships = _context.GarageBusinessUser.AsNoTracking()
-                .Where(x => x.UserId == user.Id).Take(2).ToList();
+            var preference = _selection?.Read(user.Id) ?? (Present: false, GarageId: (int?)null);
+            var query = _context.GarageBusinessUser.AsNoTracking().Where(x => x.UserId == user.Id);
+            if (preference.Present)
+            {
+                if (!preference.GarageId.HasValue)
+                    throw new GarageAccessException("Garage selection must be confirmed again.", true);
+                query = query.Where(x => x.GarageBusinessId == preference.GarageId.Value);
+            }
+            // Without a valid explicit preference, retain B2.1's conservative rule:
+            // count all memberships, not just eligible ones, and never pick a fallback.
+            var memberships = query.Take(2).ToList();
             if (memberships.Count > 1)
-                throw new GarageAccessException(
-                    "Garage selection is required. Multiple garage memberships are recorded.", true);
+                throw new GarageAccessException("Garage selection is required.", true);
             if (memberships.Count == 0 || !memberships[0].IsActive)
-                throw new GarageAccessException("Garage access is unavailable.");
-
+                throw new GarageAccessException("Garage access is unavailable.", preference.Present);
             var membership = memberships[0];
-            var garageAvailable = GarageAvailability.Eligible(_context, membership.GarageBusinessId).Any();
-            if (!garageAvailable)
-                throw new GarageAccessException("Garage access is unavailable.");
-
+            var garage = GarageAvailability.Eligible(_context, membership.GarageBusinessId).SingleOrDefault();
+            if (garage == null)
+                throw new GarageAccessException("Garage access is unavailable.", preference.Present);
+            if (!preference.Present && _selection != null && HttpMethods.IsGet(httpContext.Request.Method))
+                _selection.Remember(user.Id, garage.Id);
             return new CurrentGarageUserModel
             {
                 UserId = user.Id, GarageBusinessId = membership.GarageBusinessId,
                 ExternalUserId = user.ExternalUserId, EmailAddress = user.EmailAddress,
                 FirstName = user.FirstName, LastName = user.LastName,
-                Role = membership.Role, IsOwner = membership.IsOwner
+                Role = membership.Role, IsOwner = membership.IsOwner, GarageName = garage.GarageBusinessName
             };
         }
         private GarageBusinessUser TryMigrateExistingUser(
