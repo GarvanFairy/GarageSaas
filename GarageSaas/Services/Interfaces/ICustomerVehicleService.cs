@@ -12,6 +12,6 @@ namespace GarageSaas.Services.Interfaces
         Task<ServiceResult<VehicleAndCustomers>> GetCustomerVehicleForEditAsync(int customerVehicleId, int garageBusinessId);
         ServiceResult AddOrUpdateCustomerVehicle(VehicleAndCustomers model, int garageBusinessId, string userName);
         ServiceResult<List<CustomerVehicleListVM>> GetCustomerVehiclesForList(int garageBusinessId);
-        Task<ServiceResult<List<VehicleBriefInfo>>> GetVehicleBriefsForCustomerAsync(int garageCustomerId);
+        Task<ServiceResult<List<VehicleBriefInfo>>> GetVehicleBriefsForCustomerAsync(int garageCustomerId, int garageBusinessId);
     }
 }

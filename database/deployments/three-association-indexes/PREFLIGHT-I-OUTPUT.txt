@@ -1,0 +1,27 @@
+DatabaseName|OperatorLogin|ResolvedServer|Transport|ProductVersion|Edition|BuildPolicy
+------------|-------------|--------------|---------|--------------|-------|-----------
+Garagesaas|MicrosoftAccount\ggallagher116@hotmail.com|Garvan_Asus|Shared memory|17.0.1145.4|Standard Developer Edition (64-bit)|OFFLINE only; MAXDOP=1; no database/isolation/lock-protocol changes
+TableName|ColumnName|SqlType|max_length|is_nullable|is_identity
+---------|----------|-------|----------|-----------|-----------
+InvoiceWorkQuote|Id|int|4|0|1
+InvoiceWorkQuote|GarageBusinessCustomerId|int|4|1|0
+InvoiceWorkQuote|InvoiceId|int|4|1|0
+InvoiceWorkQuote|WorkQuoteId|int|4|1|0
+VehicleInvoice|Id|int|4|0|1
+VehicleInvoice|GarageBusinessId|int|4|1|0
+VehicleInvoice|WorkQuoteId|int|4|1|0
+TableName|CanAlterTargetTable
+---------|-------------------
+InvoiceWorkQuote|1
+VehicleInvoice|1
+TableName|Ord|IndexId|IndexName|Equivalent|ExactShape|FirstKey|OwnerPackage|OwnerDeployment|DefinitionSignature
+---------|---|-------|---------|----------|----------|--------|------------|---------------|-------------------
+VehicleInvoice|1|1|PK_VehicleInvoice|0|0|Id|NULL|NULL|0x48D5A6E2F8BE6DF29703EF54E5EF4AC5AB43470D890407ADF69663DC613635B9
+InvoiceWorkQuote|2|1|PK_InvoiceWorkQuote|0|0|Id|NULL|NULL|0x48D5A6E2F8BE6DF29703EF54E5EF4AC5AB43470D890407ADF69663DC613635B9
+InvoiceWorkQuote|3|1|PK_InvoiceWorkQuote|0|0|Id|NULL|NULL|0x48D5A6E2F8BE6DF29703EF54E5EF4AC5AB43470D890407ADF69663DC613635B9
+Ord|TableName|IndexName|PlannedAction
+---|---------|---------|-------------
+1|VehicleInvoice|IX_VehicleInvoice_WorkQuoteId|CREATE_AND_MARK
+2|InvoiceWorkQuote|IX_InvoiceWorkQuote_WorkQuoteId_InvoiceId|CREATE_AND_MARK
+3|InvoiceWorkQuote|IX_InvoiceWorkQuote_InvoiceId_WorkQuoteId|CREATE_AND_MARK
+PREFLIGHT ONLY. No deployment or rollback statements are present in this script.

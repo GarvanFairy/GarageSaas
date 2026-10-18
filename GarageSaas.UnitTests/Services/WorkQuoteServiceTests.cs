@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Linq;
 using GarageSaas.Services;
 using GarageSaas.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.EntityFrameworkCore;
 using SignupAPI.Models;
 
 namespace GarageSaas.Tests.Services
@@ -13,7 +14,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void GetWorkQuote_Returns_Fail_When_Not_Found()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
 
             var service = new WorkQuoteService(context);
 
@@ -26,7 +27,8 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void GetWorkQuote_Returns_Combined_Model_When_Found()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
+            SeedParents(context, 100, 10);
 
             context.WorkQuote.Add(new WorkQuote
             {
@@ -81,7 +83,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void GetWorkQuote_Returns_Fail_When_GarageBusiness_Does_Not_Match()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
 
             context.WorkQuote.Add(new WorkQuote
             {
@@ -107,7 +109,9 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void GetWorkQuotesForVehicle_Returns_Only_Quotes_For_Vehicle_And_Garage()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
+            SeedQuoteDependencies(context, 100, 10, 1000);
+            SeedQuoteDependencies(context, 200, 10, 2000);
 
             context.WorkQuote.Add(new WorkQuote
             {
@@ -181,7 +185,9 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void GetWorkQuotesForWorkItem_Returns_Only_Quotes_For_WorkItem_And_Garage()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
+            SeedQuoteDependencies(context, 100, 10, 1000);
+            SeedQuoteDependencies(context, 100, 10, 2000);
 
             context.WorkQuote.Add(new WorkQuote
             {
@@ -236,7 +242,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void AddOrUpdateWorkQuote_Returns_Fail_When_Model_Is_Null()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
 
             var service = new WorkQuoteService(context);
 
@@ -249,7 +255,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void AddOrUpdateWorkQuote_Returns_Fail_When_WorkItemId_Is_Missing()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
             SeedQuoteDependencies(context, 100, 10, 1000);
 
             var service = new WorkQuoteService(context);
@@ -270,7 +276,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void AddOrUpdateWorkQuote_Returns_Fail_When_VehicleId_Is_Missing()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
 
             var service = new WorkQuoteService(context);
 
@@ -290,7 +296,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void AddOrUpdateWorkQuote_Adds_New_WorkQuote_And_Link()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
             SeedQuoteDependencies(context, 100, 10, 1000);
 
             var service = new WorkQuoteService(context);
@@ -332,7 +338,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void AddOrUpdateWorkQuote_Updates_Existing_WorkQuote_And_Replaces_Changed_Link()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
             SeedQuoteDependencies(context, 100, 10, 1000);
             SeedQuoteDependencies(context, 200, 20, 2000);
 
@@ -395,7 +401,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void AddOrUpdateWorkQuote_Returns_Fail_When_Update_Target_Not_Found()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
             SeedQuoteDependencies(context, 100, 10, 1000);
 
             var service = new WorkQuoteService(context);
@@ -415,23 +421,34 @@ namespace GarageSaas.Tests.Services
             Assert.AreEqual("WorkQuote not found.", result.ErrorMessage);
         }
 
+        private static SignupContext CreateContext()
+        {
+            // Functional coverage only: InMemory has no transaction rollback.
+            var db = new SignupContext(new DbContextOptionsBuilder<SignupContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .ConfigureWarnings(x => x.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning)).Options);
+            db.GarageBusiness.AddRange(new GarageBusiness { Id = 5, GarageBusinessName = "Local", Active = true },
+                new GarageBusiness { Id = 99, GarageBusinessName = "Other", Active = true });
+            db.SaveChanges(); return db;
+        }
+
+        private static void SeedParents(SignupContext context, int vehicleId, int customerId)
+        {
+            if (!context.GarageBusinessCustomer.Any(x => x.Id == customerId))
+                context.GarageBusinessCustomer.Add(new GarageBusinessCustomer { Id = customerId, GarageBusinessId = 5,
+                    GarageCustomerForename = "Test", GarageCustomerSurname = "Customer", Active = true });
+            if (!context.CustomerVehicle.Any(x => x.Id == vehicleId))
+                context.CustomerVehicle.Add(new CustomerVehicle { Id = vehicleId, GarageBusinessId = 5,
+                    VehicleRegistration = "TEST-" + vehicleId, GarageOwned = false, Active = true });
+            if (!context.CustomerOwnedVehicles.Any(x => x.VehicleId == vehicleId && x.GarageBusinessCustomerId == customerId))
+                context.CustomerOwnedVehicles.Add(new CustomerOwnedVehicles { GarageBusinessCustomerId = customerId,
+                    VehicleId = vehicleId, GarageBusinessId = 5, Active = true });
+            context.SaveChanges();
+        }
+
         private static void SeedQuoteDependencies(SignupContext context, int vehicleId, int customerId, int workItemId)
         {
-            context.GarageBusinessCustomer.Add(new GarageBusinessCustomer
-            {
-                Id = customerId, GarageBusinessId = 5,
-                GarageCustomerForename = "Test", GarageCustomerSurname = "Customer", Active = true
-            });
-            context.CustomerVehicle.Add(new CustomerVehicle
-            {
-                Id = vehicleId, GarageBusinessId = 5,
-                VehicleRegistration = $"TEST-{vehicleId}", GarageOwned = false, Active = true
-            });
-            context.CustomerOwnedVehicles.Add(new CustomerOwnedVehicles
-            {
-                GarageBusinessCustomerId = customerId, VehicleId = vehicleId,
-                GarageBusinessId = 5, Active = true
-            });
+            SeedParents(context, vehicleId, customerId);
             context.WorkItem.Add(new WorkItem
             {
                 Id = workItemId, GarageBusinessCustomerId = 5, VehicleId = vehicleId
@@ -442,7 +459,8 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void DeleteWorkQuote_Removes_Quote_And_Links()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
+            SeedQuoteDependencies(context, 100, 10, 1000);
 
             context.WorkQuote.Add(new WorkQuote
             {
@@ -479,7 +497,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void DeleteWorkQuote_Returns_Fail_When_Not_Found()
         {
-            using var context = DbContextFactory.Create();
+            using var context = CreateContext();
 
             var service = new WorkQuoteService(context);
 

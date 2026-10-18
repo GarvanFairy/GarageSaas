@@ -10,6 +10,8 @@ namespace GarageSaas.UnitTests.TestHelpers
         {
             var options = new DbContextOptionsBuilder<SignupContext>()
                 .UseInMemoryDatabase(databaseName ?? Guid.NewGuid().ToString())
+                // Functional transactions only; SQL fixtures establish real rollback.
+                .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
                 .Options;
 
             return new SignupContext(options);

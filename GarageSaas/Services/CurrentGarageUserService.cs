@@ -100,8 +100,7 @@ namespace GarageSaas.Services
                 throw new GarageAccessException("Garage access is unavailable.");
 
             var membership = memberships[0];
-            var garageAvailable = _context.GarageBusiness.AsNoTracking().Any(x =>
-                x.Id == membership.GarageBusinessId && x.Active && !x.Blocked);
+            var garageAvailable = GarageAvailability.Eligible(_context, membership.GarageBusinessId).Any();
             if (!garageAvailable)
                 throw new GarageAccessException("Garage access is unavailable.");
 

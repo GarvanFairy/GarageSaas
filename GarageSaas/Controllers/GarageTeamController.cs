@@ -1,4 +1,4 @@
-﻿using GarageSaas.Models;
+using GarageSaas.Models;
 using GarageSaas.Services;
 using GarageSaas.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -25,17 +25,20 @@ namespace GarageSaas.Controllers
 
         private readonly IEmailService _emailService;
         private readonly IGarageAuthorizationService _authorizationService;
+        private readonly OnboardingInvitationService _trustedInvitationUrls;
 
         public GarageTeamController(
             SignupContext context,
             ICurrentGarageUserService currentGarageUserService, ILogger<GarageTeamController> logger,
-            IEmailService emailService, IGarageAuthorizationService authorizationService)
+            IEmailService emailService, IGarageAuthorizationService authorizationService,
+            OnboardingInvitationService trustedInvitationUrls)
         {
             _context = context;
             _currentGarageUserService = currentGarageUserService;
             _emailService = emailService;
             _logger = logger;
             _authorizationService = authorizationService;
+            _trustedInvitationUrls = trustedInvitationUrls;
         }
 
         [HttpGet]
@@ -326,8 +329,7 @@ namespace GarageSaas.Controllers
             var currentUser =
                 _currentGarageUserService.GetCurrentUser();
 
-            if (!currentUser.IsOwner &&
-                currentUser.Role != "Administrator")
+            if (!GarageAvailability.Eligible(_context, currentUser.GarageBusinessId).Any())
             {
                 return Forbid();
             }
@@ -347,12 +349,7 @@ namespace GarageSaas.Controllers
             var currentUser =
                 _currentGarageUserService.GetCurrentUser();
 
-            // Only owners and administrators can invite employees.
-            if (!currentUser.IsOwner &&
-                currentUser.Role != "Administrator")
-            {
-                return Forbid();
-            }
+            // CanManageTeamAsync already applies the authoritative owner/Administrator semantics.
 
             // Only permit supported invitation roles.
             if (model.Role != "Administrator" &&
@@ -369,98 +366,64 @@ namespace GarageSaas.Controllers
             }
 
             var email = model.EmailAddress.Trim();
-
-            // Check whether the employee already belongs to this garage.
-            var alreadyMember =
-                _context.GarageBusinessUser
-                    .Any(x =>
-                        x.GarageBusinessId == currentUser.GarageBusinessId &&
-                        x.User.EmailAddress == email);
-
-            if (alreadyMember)
+            var normalizedEmail = StaffInvitationMutation.NormalizeRecipient(email);
+            var token = GarageInvitationTokenService.GenerateToken();
+            if (!TryStaffInvitationUrl(token, out var invitationUrl))
             {
-                ModelState.AddModelError(
-                    nameof(model.EmailAddress),
-                    "This employee already belongs to your garage.");
-
+                ModelState.AddModelError(string.Empty, "The trusted HTTPS invitation origin is not configured. No invitation was created.");
                 return View(model);
             }
 
-            // Check for an existing, unexpired invitation.
-            var existingInvitation =
-                await ((IQueryable<GarageUserInvitation>)_context.GarageUserInvitation)
-                    .AnyAsync(x =>
-                        x.GarageBusinessId ==
-                            currentUser.GarageBusinessId &&
-                        x.EmailAddress ==
-                            model.EmailAddress &&
-                        !x.Accepted &&
-                        !x.Revoked);
-
-            if (existingInvitation)
+            GarageUserInvitation invitation;
+            string garageBusinessName;
+            try
             {
-                ModelState.AddModelError(
-                    nameof(model.EmailAddress),
-                    "An active invitation already exists for this employee.");
+                using var mutation = new StaffInvitationMutation(_context);
+                if (!mutation.ForCreation(currentUser.GarageBusinessId, email)) return Forbid();
 
+                // Expired but unrevoked invitations still require resend. Normalize in
+                // one place so historical casing/whitespace and SQL collation cannot
+                // disagree with the per-recipient coordination key.
+                var pendingEmails = await _context.GarageUserInvitation.AsNoTracking()
+                    .Where(x => x.GarageBusinessId == currentUser.GarageBusinessId && !x.Accepted && !x.Revoked)
+                    .Select(x => x.EmailAddress).ToListAsync();
+                var existingInvitation = pendingEmails.Any(x => StaffInvitationMutation.NormalizeRecipient(x) == normalizedEmail);
+                // Read memberships after pending state, so a completed acceptance is
+                // not mistaken for an available recipient during this check.
+                var memberEmails = await _context.GarageBusinessUser.AsNoTracking()
+                    .Where(x => x.GarageBusinessId == currentUser.GarageBusinessId)
+                    .Select(x => x.User.EmailAddress).ToListAsync();
+                if (memberEmails.Any(x => StaffInvitationMutation.NormalizeRecipient(x) == normalizedEmail))
+                {
+                    ModelState.AddModelError(nameof(model.EmailAddress), "This employee already belongs to your garage.");
+                    return View(model);
+                }
+                if (existingInvitation)
+                {
+                    ModelState.AddModelError(nameof(model.EmailAddress), "An active invitation already exists for this employee.");
+                    return View(model);
+                }
+
+                invitation = new GarageUserInvitation
+                {
+                    GarageBusinessId = currentUser.GarageBusinessId,
+                    EmailAddress = email,
+                    FirstName = model.FirstName.Trim(), LastName = model.LastName.Trim(), Role = model.Role,
+                    InvitationTokenHash = GarageInvitationTokenService.HashToken(token),
+                    ExpiresDate = DateTime.UtcNow.AddDays(7), Accepted = false,
+                    InvitedByUserId = currentUser.UserId, CreatedDate = DateTime.UtcNow
+                };
+                mutation.Add(invitation);
+                await _context.SaveChangesAsync();
+                garageBusinessName = mutation.Garage.GarageBusinessName;
+                if (string.IsNullOrWhiteSpace(garageBusinessName)) garageBusinessName = "your garage";
+                mutation.Commit();
+            }
+            catch (Exception error) when (error is Microsoft.Data.SqlClient.SqlException || error is DbUpdateException || error is InvalidOperationException)
+            {
+                ModelState.AddModelError(string.Empty, "The invitation creation could not be confirmed. Refresh before trying again.");
                 return View(model);
             }
-
-            // Generate the invitation token and its hash.
-            var token =
-                GarageInvitationTokenService.GenerateToken();
-
-            var tokenHash =
-                GarageInvitationTokenService.HashToken(token);
-
-            // Create the invitation database record.
-            var invitation = new GarageUserInvitation
-            {
-                GarageBusinessId =
-                    currentUser.GarageBusinessId,
-
-                EmailAddress = email,
-
-                FirstName = model.FirstName.Trim(),
-
-                LastName = model.LastName.Trim(),
-
-                Role = model.Role,
-
-                InvitationTokenHash = tokenHash,
-
-                ExpiresDate = DateTime.UtcNow.AddDays(7),
-
-                Accepted = false,
-
-                InvitedByUserId = currentUser.UserId,
-
-                CreatedDate = DateTime.UtcNow
-            };
-
-            // Save the invitation.
-            _context.GarageUserInvitation.Add(invitation);
-
-            await _context.SaveChangesAsync();
-
-            // Generate the invitation URL.
-            var invitationUrl = Url.Action(
-                "Accept",
-                "GarageInvitation",
-                new { token },
-                Request.Scheme);
-
-            // Retrieve the garage's name.
-            var garageBusinessName = await ((IQueryable<GarageBusiness>) _context.GarageBusiness)
-                .Where(x => x.Id == currentUser.GarageBusinessId)
-                .Select(x => x.GarageBusinessName)
-                .FirstOrDefaultAsync();
-
-            if (string.IsNullOrWhiteSpace(garageBusinessName))
-            {
-                garageBusinessName = "your garage";
-            }
-
             // Send the invitation email.
             try
             {
@@ -501,65 +464,32 @@ namespace GarageSaas.Controllers
             var currentUser =
                 _currentGarageUserService.GetCurrentUser();
 
-            var invitation =
-                await ((IQueryable<GarageUserInvitation>)_context.GarageUserInvitation)
-                    .FirstOrDefaultAsync(x =>
-            x.Id == invitationId &&
-            x.GarageBusinessId ==
-                currentUser.GarageBusinessId &&
-            !x.Accepted &&
-            !x.Revoked);
-
-            if (invitation == null)
+            var token = GarageInvitationTokenService.GenerateToken();
+            if (!TryStaffInvitationUrl(token, out var invitationUrl))
             {
-                return NotFound();
+                TempData["Error"] = "The trusted HTTPS invitation origin is not configured. The invitation was not changed.";
+                return RedirectToAction(nameof(Index));
             }
-
-            /*
-             * Generate a completely new token.
-             *
-             * The old invitation URL will stop working because
-             * its token hash is being replaced.
-             */
-            var token =
-                GarageInvitationTokenService.GenerateToken();
-
-            invitation.InvitationTokenHash =
-                GarageInvitationTokenService.HashToken(token);
-
-            /*
-             * Give the resent invitation another seven days.
-             */
-            invitation.ExpiresDate =
-                DateTime.UtcNow.AddDays(7);
-
-            var invitationUrl = Url.Action(
-                "Accept",
-                "GarageInvitation",
-                new { token },
-                Request.Scheme);
-
-            var garageBusinessName =
-                await ((IQueryable<GarageBusiness>)_context.GarageBusiness)
-                    .Where(x =>
-                        x.Id ==
-                            currentUser.GarageBusinessId)
-                    .Select(x =>
-                        x.GarageBusinessName)
-                    .FirstOrDefaultAsync();
-
-            if (string.IsNullOrWhiteSpace(
-                garageBusinessName))
+            GarageUserInvitation invitation;
+            string garageBusinessName;
+            try
             {
-                garageBusinessName =
-                    "your garage";
+                using var mutation = new StaffInvitationMutation(_context);
+                invitation = mutation.Load(currentUser.GarageBusinessId, invitationId);
+                if (mutation.Garage == null) return Forbid();
+                if (invitation == null || invitation.Accepted || invitation.Revoked) return NotFound();
+                invitation.InvitationTokenHash = GarageInvitationTokenService.HashToken(token);
+                invitation.ExpiresDate = DateTime.UtcNow.AddDays(7);
+                garageBusinessName = mutation.Garage.GarageBusinessName;
+                if (string.IsNullOrWhiteSpace(garageBusinessName)) garageBusinessName = "your garage";
+                await _context.SaveChangesAsync();
+                mutation.Commit();
             }
-
-            /*
-             * Save the new token before sending the email.
-             */
-            await _context.SaveChangesAsync();
-
+            catch (Exception error) when (error is Microsoft.Data.SqlClient.SqlException || error is DbUpdateException || error is InvalidOperationException)
+            {
+                TempData["Error"] = "The invitation update could not be confirmed. Refresh before trying again.";
+                return RedirectToAction(nameof(Index));
+            }
             try
             {
                 await _emailService
@@ -601,31 +531,44 @@ namespace GarageSaas.Controllers
             var currentUser =
                 _currentGarageUserService.GetCurrentUser();
 
-            var invitation =
-                await ((IQueryable<GarageUserInvitation>)_context.GarageUserInvitation)
-                    .FirstOrDefaultAsync(x =>
-                        x.Id == invitationId &&
-                        x.GarageBusinessId ==
-                            currentUser.GarageBusinessId &&
-                        !x.Accepted &&
-                        !x.Revoked);
-
-            if (invitation == null)
+            try
             {
-                return NotFound();
+                using var mutation = new StaffInvitationMutation(_context);
+                var invitation = mutation.Load(currentUser.GarageBusinessId, invitationId);
+                if (mutation.Garage == null) return Forbid();
+                if (invitation == null || invitation.Accepted || invitation.Revoked) return NotFound();
+                invitation.Revoked = true;
+                invitation.RevokedDate = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                mutation.Commit();
             }
-
-            invitation.Revoked = true;
-
-            invitation.RevokedDate =
-                DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
+            catch (Exception error) when (error is Microsoft.Data.SqlClient.SqlException || error is DbUpdateException || error is InvalidOperationException)
+            {
+                TempData["Error"] = "The invitation update could not be confirmed. Refresh before trying again.";
+                return RedirectToAction(nameof(Index));
+            }
             TempData["Success"] =
                 "Invitation revoked.";
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool TryStaffInvitationUrl(string token, out string url)
+        {
+            try
+            {
+                // Reuse the unchanged owner-onboarding HTTPS origin validator.
+                // Only the staff route differs; never use Request.Host/Scheme.
+                var approved = new Uri(_trustedInvitationUrls.CreateUrl(token));
+                url = approved.GetLeftPart(UriPartial.Authority) +
+                    "/GarageInvitation/Accept?token=" + Uri.EscapeDataString(token);
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                url = null;
+                return false;
+            }
         }
 
         private string GetInvitationExpiryText(

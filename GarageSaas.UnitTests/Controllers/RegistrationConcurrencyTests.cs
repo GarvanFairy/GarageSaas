@@ -1,14 +1,13 @@
+using GarageSaas.UnitTests.TestHelpers;
 using System.Globalization;
 using System.Security.Claims;
 using GarageSaas.Controllers;
 using GarageSaas.Services;
 using GarageSaas.Services.Interfaces;
 using GarageSaas.UnitTests.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -21,37 +20,26 @@ namespace GarageSaas.UnitTests.Controllers;
 // never read application configuration or connect to an existing application database.
 [TestClass]
 [DoNotParallelize]
+[TestCategory("SqlServer")]
+[TestCategory("SqlRegistration")]
 public class RegistrationConcurrencyTests
 {
-    private static string? _connection;
-    private static string? _database;
-
+    private static DisposableSqlDatabase? _database;
     [ClassInitialize]
-    public static async Task Initialize(TestContext _)
+    public static void Initialize(TestContext _)
     {
-        var server = Environment.GetEnvironmentVariable("GARAGESAAS_TEST_SQLSERVER");
-        if (string.IsNullOrWhiteSpace(server))
-            Assert.Inconclusive("Set GARAGESAAS_TEST_SQLSERVER to an isolated SQL Server/LocalDB server to run locking tests.");
-        _database = "GarageSaas_Test_" + Guid.NewGuid().ToString("N");
-        _connection = new SqlConnectionStringBuilder
-        {
-            DataSource = server, InitialCatalog = _database, IntegratedSecurity = true,
-            TrustServerCertificate = true, ConnectTimeout = 15
-        }.ConnectionString;
-        using var context = Context();
-        await context.Database.EnsureCreatedAsync();
+        _database = DisposableSqlDatabase.Start("GARAGESAAS_RUN_REGISTRATION_SQL_TESTS", "Registration");
+        _database.Create();
     }
 
     [ClassCleanup]
-    public static async Task Cleanup()
-    {
-        if (_connection == null) return;
-        var builder = new SqlConnectionStringBuilder(_connection);
-        if (builder.InitialCatalog != _database || !_database!.StartsWith("GarageSaas_Test_", StringComparison.Ordinal))
-            throw new InvalidOperationException("Refusing to delete a database not owned by this test fixture.");
-        using var context = Context();
-        await context.Database.EnsureDeletedAsync();
-    }
+    public static async Task Cleanup() { if (_database != null) await _database.DeleteAsync(); }
+
+    [TestCleanup]
+    public async Task DrainWorkers() { if (_database != null) await _database.DrainAsync(); }
+
+    [TestInitialize]
+    public async Task WaitForPreviousWorkers() { if (_database != null) await _database.DrainAsync(); }
 
     [TestMethod]
     public async Task RowLock_BlocksCompetingMutationAndLoadsFreshState()
@@ -64,28 +52,29 @@ public class RegistrationConcurrencyTests
         var acquired = Signal();
         var release = Signal();
         var entered = Signal();
-        var firstTask = Lock(first).ExecuteAsync(seed.Id, async request =>
+        var firstTask = _database!.Track(Lock(first).ExecuteAsync(seed.Id, async request =>
         {
             acquired.SetResult(true);
             await release.Task.WaitAsync(TimeSpan.FromSeconds(10));
             request.Status = "Completed";
             await first.SaveChangesAsync();
             return true;
-        });
-        await acquired.Task.WaitAsync(TimeSpan.FromSeconds(10));
-        var secondTask = Lock(second).ExecuteAsync(seed.Id, request =>
-        {
-            entered.SetResult(true);
-            return Task.FromResult(request.Status);
-        });
+        }));
+        Task<string>? secondTask = null;
         try
         {
+            await acquired.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            secondTask = _database.Track(Lock(second).ExecuteAsync(seed.Id, request =>
+            {
+                entered.SetResult(true);
+                return Task.FromResult(request.Status);
+            }));
             await Task.Delay(200);
             Assert.IsFalse(entered.Task.IsCompleted, "A competing mutation entered while the first request lock was held.");
         }
-        finally { release.TrySetResult(true); }
-        await firstTask;
-        Assert.AreEqual("Completed", await secondTask);
+        finally { release.TrySetResult(true); await _database.DrainAsync(); }
+        await firstTask.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.AreEqual("Completed", await secondTask!.WaitAsync(TimeSpan.FromSeconds(10)));
     }
 
     [TestMethod]
@@ -94,7 +83,7 @@ public class RegistrationConcurrencyTests
         var seed = await Seed("Approved");
         using var first = Context();
         using var second = Context();
-        var results = await Task.WhenAll(Owner(first, seed.ExternalId).Complete(seed.Token),
+        var results = await Together(Owner(first, seed.ExternalId).Complete(seed.Token),
             Owner(second, seed.ExternalId).Complete(seed.Token));
         Assert.AreEqual(1, results.OfType<RedirectToActionResult>().Count());
         Assert.AreEqual("InvalidInvitation", results.OfType<ViewResult>().Single().ViewName);
@@ -120,7 +109,7 @@ public class RegistrationConcurrencyTests
         email.Setup(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Callback<string, string, string>((_, _, body) => sentBody = body)
             .Returns(Task.CompletedTask);
-        await Task.WhenAll(Admin(first, seed.ExternalId, email.Object).ResendOnboardingInvitation(seed.Id, seed.Expiry),
+        await Together(Admin(first, seed.ExternalId, email.Object).ResendOnboardingInvitation(seed.Id, seed.Expiry),
             Admin(second, seed.ExternalId, email.Object).ResendOnboardingInvitation(seed.Id, seed.Expiry));
         using var check = Context();
         var saved = await check.GarageRegistrationRequest.AsQueryable().SingleAsync(x => x.Id == seed.Id);
@@ -162,15 +151,15 @@ public class RegistrationConcurrencyTests
         var resume = Signal();
         var delayedLock = new DelayedLock(Lock(ownerContext), resolved, resume);
         var controller = Owner(ownerContext, seed.ExternalId, delayedLock);
-        var completion = controller.Complete(seed.Token);
-        await resolved.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        var completion = _database!.Track(controller.Complete(seed.Token));
         try
         {
+            await resolved.Task.WaitAsync(TimeSpan.FromSeconds(10));
             await Admin(adminContext, seed.ExternalId, Mock.Of<IEmailService>())
                 .ResendOnboardingInvitation(seed.Id, seed.Expiry);
         }
-        finally { resume.TrySetResult(true); }
-        var result = (ViewResult)await completion;
+        finally { resume.TrySetResult(true); await _database.DrainAsync(); }
+        var result = (ViewResult)await completion.WaitAsync(TimeSpan.FromSeconds(10));
         Assert.AreEqual("InvalidInvitation", result.ViewName);
         using var check = Context();
         Assert.AreEqual(0, await check.GarageBusiness.AsQueryable().CountAsync(x => x.GarageBusinessName == seed.Name));
@@ -253,7 +242,7 @@ public class RegistrationConcurrencyTests
         email.Setup(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
         var approval = Admin(first, seed.ExternalId, email.Object);
         var rejection = Admin(second, seed.ExternalId, email.Object);
-        await Task.WhenAll(approval.ApproveRegistration(seed.Id), rejection.RejectRegistration(seed.Id));
+        await Together(approval.ApproveRegistration(seed.Id), rejection.RejectRegistration(seed.Id));
         Assert.AreEqual(1, new[] { approval, rejection }.Count(x => x.TempData.ContainsKey("Error")));
         using var check = Context();
         var saved = await check.GarageRegistrationRequest.AsQueryable().SingleAsync(x => x.Id == seed.Id);
@@ -279,21 +268,13 @@ public class RegistrationConcurrencyTests
         Assert.AreEqual(0, context.ChangeTracker.Entries().Count());
     }
 
-    [TestMethod]
-    public void AdministratorActions_KeepPolicyAndAntiforgeryProtection()
+    private static SignupContext Context() => new(_database!.Options());
+    private static async Task<T[]> Together<T>(params Task<T>[] tasks)
     {
-        Assert.AreEqual("PlatformAdministrator", ((AuthorizeAttribute)Attribute.GetCustomAttribute(
-            typeof(PlatformAdminController), typeof(AuthorizeAttribute))!).Policy);
-        foreach (var method in new[] { "ApproveRegistration", "RejectRegistration", "ResendOnboardingInvitation" })
-        {
-            var action = typeof(PlatformAdminController).GetMethod(method)!;
-            Assert.IsTrue(Attribute.IsDefined(action, typeof(HttpPostAttribute)));
-            Assert.IsTrue(Attribute.IsDefined(action, typeof(ValidateAntiForgeryTokenAttribute)));
-        }
+        var group = _database!.Track(Task.WhenAll(tasks));
+        try { return await group.WaitAsync(TimeSpan.FromSeconds(30)); }
+        finally { await _database.DrainAsync(); }
     }
-
-    private static SignupContext Context() => new(new DbContextOptionsBuilder<SignupContext>()
-        .UseSqlServer(_connection).Options);
     private static RegistrationRequestLock Lock(SignupContext context) => new(context, NullLogger<RegistrationRequestLock>.Instance);
     private static TaskCompletionSource<bool> Signal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
 

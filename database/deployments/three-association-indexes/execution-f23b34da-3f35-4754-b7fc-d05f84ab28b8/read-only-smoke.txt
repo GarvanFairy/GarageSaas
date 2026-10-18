@@ -1,0 +1,7 @@
+Id|WorkQuoteId|GarageBusinessId|Paid|InvoiceId|LinkedQuoteId|QuoteId
+--|-----------|----------------|----|---------|-------------|-------
+Id|WorkItemId|WorkItemId
+--|----------|----------
+ReadOnlySmokeFinishedUtc
+------------------------
+2026-10-18 16:45:30.4066686

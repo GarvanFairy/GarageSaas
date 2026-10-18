@@ -1,0 +1,10 @@
+{
+  "DeploymentId": "f23b34da-3f35-4754-b7fc-d05f84ab28b8",
+  "Target": "lpc:GARVAN_ASUS/Garagesaas",
+  "Operator": "GARVAN_ASUS\\ggall assisted by Codex",
+  "Prepared": "2026-10-18T17:43:30.2287319+01:00",
+  "CanonicalHash": "96E37BA76D58DD13B7BAE6CCAE53AC7D20800E29F1509084D8C249D46426AB7B",
+  "OperatorHash": "0B497F41799B19EE5C073D49EDA64A8AF3410D72347DFF3614755A1CEF8F8685",
+  "Changes": "Only documented Execute, MaintenanceWindowConfirmed, DeploymentId declarations",
+  "RetryPolicy": "No automatic retry or rollback"
+}

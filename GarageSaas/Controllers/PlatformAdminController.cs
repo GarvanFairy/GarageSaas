@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using GarageSaas.Models;
 using GarageSaas.Services;
 using GarageSaas.Services.Interfaces;
@@ -19,14 +21,17 @@ namespace GarageSaas.Controllers
     public class PlatformAdminController : Controller
     {
         private readonly SignupContext _context;
+        private readonly ILogger<PlatformAdminController> _logger;
         private readonly IRegistrationRequestLock _requestLock;
         private readonly OnboardingInvitationService _invitations;
 
         public PlatformAdminController(
             SignupContext context,
-            IRegistrationRequestLock requestLock, OnboardingInvitationService invitations)
+            IRegistrationRequestLock requestLock, OnboardingInvitationService invitations,
+            ILogger<PlatformAdminController> logger = null)
         {
             _context = context;
+            _logger = logger ?? NullLogger<PlatformAdminController>.Instance;
             _requestLock = requestLock;
             _invitations = invitations;
         }
@@ -89,6 +94,119 @@ namespace GarageSaas.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public Task<IActionResult> Activate(int id) => ConfirmGarageStatus(id, true);
+
+        [HttpGet]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public Task<IActionResult> Deactivate(int id) => ConfirmGarageStatus(id, false);
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public Task<IActionResult> Activate(PlatformGarageStatusViewModel model) => ChangeGarageStatus(model, true);
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public Task<IActionResult> Deactivate(PlatformGarageStatusViewModel model) => ChangeGarageStatus(model, false);
+
+        private async Task<IActionResult> ConfirmGarageStatus(int id, bool activate)
+        {
+            var garage = await _context.GarageBusiness.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id);
+            if (garage == null) return NotFound();
+            return View("GarageStatusConfirmation", new PlatformGarageStatusViewModel
+            {
+                Id = garage.Id, Name = garage.GarageBusinessName, Activate = activate,
+                ExpectedActive = garage.Active, ExpectedBlocked = garage.Blocked,
+                ExpectedUpdatedDate = garage.UpdatedDate?.ToString("O", CultureInfo.InvariantCulture) ?? "none"
+            });
+        }
+
+        private async Task<IActionResult> ChangeGarageStatus(PlatformGarageStatusViewModel model, bool activate)
+        {
+            Response.Headers["Cache-Control"] = "no-store";
+            var administrator = User.Identity?.IsAuthenticated == true ? await GetAdministratorAsync() : null;
+            if (administrator == null) return Forbid();
+            var action = activate ? "Activate" : "Deactivate";
+            model.Activate = activate;
+            if (!ModelState.IsValid || model.Id <= 0 || !model.ExpectedActive.HasValue ||
+                !model.ExpectedBlocked.HasValue || string.IsNullOrWhiteSpace(model.ExpectedUpdatedDate))
+            {
+                LogGarageStatus(administrator.Id, model.Id, action, "InvalidConfirmation");
+                return BadRequest("Invalid status confirmation. Reload the garage details.");
+            }
+            GarageBusiness changed = null;
+            bool originalActive = false;
+            DateTime? originalDate = null;
+            string originalBy = null;
+            try
+            {
+                if (_context.ChangeTracker.HasChanges()) throw new InvalidOperationException("Pending changes.");
+                if (!_context.Database.IsSqlServer() && _context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
+                    throw new InvalidOperationException("SQL Server status coordination is required.");
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                // The update key conflicts with B2.3B's shared garage key. Validate
+                // a fresh confirmation snapshot only after acquiring this key.
+                var garage = _context.Database.IsSqlServer()
+                    ? await _context.GarageBusiness.FromSqlInterpolated($@"SELECT * FROM [GarageBusiness] WITH (UPDLOCK, HOLDLOCK, ROWLOCK) WHERE [Id] = {model.Id}")
+                        .AsNoTracking().SingleOrDefaultAsync()
+                    : await _context.GarageBusiness.AsNoTracking().SingleOrDefaultAsync(x => x.Id == model.Id);
+                if (garage == null)
+                {
+                    LogGarageStatus(administrator.Id, model.Id, action, "NotFound");
+                    return NotFound();
+                }
+                model.Name = garage.GarageBusinessName;
+                if (garage.Active != model.ExpectedActive.Value || garage.Blocked != model.ExpectedBlocked.Value ||
+                    !MatchesExpiry(model.ExpectedUpdatedDate, garage.UpdatedDate))
+                {
+                    LogGarageStatus(administrator.Id, model.Id, action, "Conflict");
+                    return GarageStatusError(model, 409, "This garage changed after confirmation was opened. Reload the details before trying again.");
+                }
+                if (garage.Active == activate)
+                {
+                    LogGarageStatus(administrator.Id, model.Id, action, "AlreadyInRequestedState");
+                    return RedirectToAction(nameof(GarageDetails), new { id = model.Id });
+                }
+                var tracked = _context.ChangeTracker.Entries<GarageBusiness>().SingleOrDefault(x => x.Entity.Id == garage.Id);
+                if (tracked != null) tracked.State = EntityState.Detached; // Pending changes were rejected above.
+                _context.Attach(garage);
+                changed = garage; originalActive = garage.Active; originalDate = garage.UpdatedDate; originalBy = garage.UpdatedBy;
+                garage.Active = activate;
+                // Advance beyond SQL datetime's coarse precision, including fast status cycles.
+                var now = DateTime.UtcNow;
+                garage.UpdatedDate = garage.UpdatedDate.HasValue && garage.UpdatedDate.Value.AddMilliseconds(10) > now
+                    ? garage.UpdatedDate.Value.AddMilliseconds(10) : now;
+                garage.UpdatedBy = administrator.EmailAddress ?? ("Platform administrator #" + administrator.Id);
+                await _context.SaveChangesAsync();
+                try { await transaction.CommitAsync(); }
+                catch (Exception error) { throw new InvalidOperationException("Garage status commit could not be confirmed.", error); }
+                LogGarageStatus(administrator.Id, model.Id, action, "Committed");
+                return RedirectToAction(nameof(GarageDetails), new { id = model.Id });
+            }
+            catch (Exception error) when (error is Microsoft.Data.SqlClient.SqlException || error is DbUpdateException || error is InvalidOperationException)
+            {
+                if (changed != null)
+                {
+                    _context.Entry(changed).State = EntityState.Detached;
+                    changed.Active = originalActive; changed.UpdatedDate = originalDate; changed.UpdatedBy = originalBy;
+                }
+                // Failed commit acknowledgement is uncertain. Never retry automatically.
+                LogGarageStatus(administrator.Id, model.Id, action, "Unconfirmed:" + error.GetType().Name);
+                return GarageStatusError(model, 503, "The status change could not be confirmed. Reload the garage details before trying again.");
+            }
+        }
+
+        private IActionResult GarageStatusError(PlatformGarageStatusViewModel model, int status, string message)
+        {
+            Response.StatusCode = status;
+            model.Error = message;
+            return View("GarageStatusConfirmation", model);
+        }
+
+        private void LogGarageStatus(int administratorId, int garageId, string action, string outcome) =>
+            _logger.LogInformation("Platform administrator {AdministratorId} garage {GarageId} action {Action} outcome {Outcome}.",
+                administratorId, garageId, action, outcome);
         [HttpGet]
         public async Task<IActionResult>
             RegistrationRequests(string status = "Pending")

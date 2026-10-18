@@ -106,6 +106,7 @@ namespace GarageSaas.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult AddUpdateCustomerVehicle(
             [FromBody] VehicleAndCustomers vehicleCustomerVm)
         {

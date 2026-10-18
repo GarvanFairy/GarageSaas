@@ -5,8 +5,14 @@
 <div class="container-fluid py-4">
     <p class="text-muted">Platform Administration / Garage Management</p>
     <h2>@Model.Name</h2>
-    <p class="text-muted">Garage #@Model.Id · Read-only</p>
+    <p class="text-muted">Garage #@Model.Id</p>
     <a asp-action="Garages" class="btn btn-outline-secondary mb-3">Back to Garage Management</a>
+    <p>
+        @if (Model.Active)
+        { <a asp-action="Deactivate" asp-route-id="@Model.Id" class="btn btn-warning">Deactivate garage</a> }
+        else
+        { <a asp-action="Activate" asp-route-id="@Model.Id" class="btn btn-primary">Activate garage</a> }
+    </p>
     <div class="row g-3">
         <section class="col-12 col-lg-6">
             <div class="card shadow-sm h-100"><div class="card-body">

@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using GarageSaas.Services.Interfaces;
 using GarageSaas.Services.Models;
 using SignupAPI.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GarageSaas.Services
@@ -18,297 +19,141 @@ namespace GarageSaas.Services
             _context = context;
         }
 
-        public ServiceResult<CombinedWorkQuoteWorkitem> GetWorkQuote(
-            int workQuoteId,
-            int garageBusinessId)
+        private const string InvalidGarage = "Garage context is invalid.";
+        private const string InvalidRelationships = "Work quote relationships are invalid for this garage.";
+        private const string LinkedQuoteRelationships = "Invoice-linked work quote relationships cannot be changed.";
+        private const string LinkedQuoteDeletion = "Invoice-linked work quotes cannot be deleted.";
+        private bool ValidGarage(int garageId) => garageId > 0 && _context.GarageBusiness.AsNoTracking().Any(x => x.Id == garageId);
+        private bool ValidCustomer(int? id, int garageId) => !id.HasValue || id > 0 &&
+            _context.GarageBusinessCustomer.AsNoTracking().Any(x => x.Id == id && x.GarageBusinessId == garageId);
+        private bool ValidVehicle(int? id, int garageId) => !id.HasValue || id > 0 &&
+            _context.CustomerVehicle.AsNoTracking().Any(x => x.Id == id && x.GarageBusinessId == garageId);
+
+        private IQueryable<WorkItem> ReadableItems(int garageId) => _context.WorkItem.AsNoTracking().Where(w =>
+            w.Id > 0 && w.GarageBusinessCustomerId == garageId &&
+            (!w.CustomerId.HasValue || w.CustomerId > 0 && _context.GarageBusinessCustomer.Any(c => c.Id == w.CustomerId && c.GarageBusinessId == garageId)) &&
+            (!w.VehicleId.HasValue || w.VehicleId > 0 && _context.CustomerVehicle.Any(v => v.Id == w.VehicleId && v.GarageBusinessId == garageId)));
+
+        // Null historical endpoints are permitted. Non-null dangling/foreign ids
+        // are not. Inspect bad link labels with existence queries, never by loading
+        // foreign related payloads. The legacy discriminator means GARAGE id here.
+        private bool TryQuoteCore(WorkQuote quote, int garageId, out List<WorkQuoteWorkItem> links, out List<WorkItem> items)
         {
-            var workQuote = _context.WorkQuote
-                .FirstOrDefault(w =>
-                    w.Id == workQuoteId &&
-                    w.GarageBusinessCustomerId == garageBusinessId);
+            links = new List<WorkQuoteWorkItem>(); items = new List<WorkItem>();
+            if (quote == null || quote.Id <= 0 || quote.GarageBusinessCustomerId != garageId ||
+                !ValidCustomer(quote.CustomerId, garageId) || !ValidVehicle(quote.VehicleId, garageId)) return false;
+            if (_context.WorkQuoteWorkItem.AsNoTracking().Any(x => x.WorkQuoteId == quote.Id &&
+                (x.GarageBusinessCustomerId == null || x.GarageBusinessCustomerId != garageId))) return false;
+            links = _context.WorkQuoteWorkItem.AsNoTracking().Where(x => x.WorkQuoteId == quote.Id &&
+                x.GarageBusinessCustomerId == garageId).OrderBy(x => x.Id).ToList();
+            var ids = links.Where(x => x.WorkItemId.HasValue).Select(x => x.WorkItemId.Value).Distinct().ToList();
+            items = ReadableItems(garageId).Where(x => ids.Contains(x.Id)).OrderByDescending(x => x.CreatedDate).ThenBy(x => x.Id).ToList();
+            return ids.Count == items.Count;
+        }
 
-            if (workQuote == null)
+        private bool ValidInvoice(VehicleInvoice invoice, int garageId)
+        {
+            if (invoice == null || invoice.Id <= 0 || invoice.GarageBusinessId != garageId ||
+                (invoice.CustomerId.HasValue && invoice.GarageBusinessCustomerId.HasValue && invoice.CustomerId != invoice.GarageBusinessCustomerId) ||
+                !ValidCustomer(invoice.CustomerId, garageId) || !ValidCustomer(invoice.GarageBusinessCustomerId, garageId) ||
+                !ValidVehicle(invoice.VehicleId, garageId)) return false;
+            if (_context.InvoiceWorkQuote.AsNoTracking().Any(x => x.InvoiceId == invoice.Id &&
+                (x.GarageBusinessCustomerId == null || x.GarageBusinessCustomerId != garageId))) return false;
+            var quoteIds = _context.InvoiceWorkQuote.AsNoTracking().Where(x => x.InvoiceId == invoice.Id &&
+                x.GarageBusinessCustomerId == garageId && x.WorkQuoteId.HasValue).Select(x => x.WorkQuoteId.Value).Distinct().ToList();
+            if (invoice.WorkQuoteId.HasValue)
             {
-                return ServiceResult<CombinedWorkQuoteWorkitem>
-                    .Fail("WorkQuote not found.");
+                if (quoteIds.Any() && !quoteIds.Contains(invoice.WorkQuoteId.Value)) return false;
+                if (!quoteIds.Any()) quoteIds.Add(invoice.WorkQuoteId.Value);
             }
-
-            var customer = _context.GarageBusinessCustomer
-                .FirstOrDefault(c =>
-                    c.Id == workQuote.CustomerId &&
-                    c.GarageBusinessId == garageBusinessId);
-
-            var customerVehicle = _context.CustomerVehicle
-                .FirstOrDefault(v =>
-                    v.Id == workQuote.VehicleId &&
-                    v.GarageBusinessId == garageBusinessId);
-
-            VehicleMake vehicleMake = null;
-            VehicleModel vehicleModel = null;
-
-            if (customerVehicle != null)
+            foreach (var id in quoteIds)
             {
-                if (customerVehicle.VehicleMakeId.HasValue)
-                {
-                    vehicleMake = _context.VehicleMake
-                        .FirstOrDefault(m =>
-                            m.Id == customerVehicle.VehicleMakeId.Value);
-                }
-
-                if (customerVehicle.VehicleModelId.HasValue)
-                {
-                    vehicleModel = _context.VehicleModel
-                        .FirstOrDefault(m =>
-                            m.Id == customerVehicle.VehicleModelId.Value);
-                }
+                var quote = _context.WorkQuote.AsNoTracking().FirstOrDefault(x => x.Id == id && x.GarageBusinessCustomerId == garageId);
+                if (!TryQuoteCore(quote, garageId, out _, out _)) return false;
             }
+            return true;
+        }
 
-            var workItemLinks =
-                ((IQueryable<WorkQuoteWorkItem>)_context.WorkQuoteWorkItem)
-                .Where(link =>
-                    link.WorkQuoteId == workQuoteId &&
-                    link.GarageBusinessCustomerId == garageBusinessId)
-                .ToList();
+        private bool TryInvoiceAssociation(int quoteId, int garageId, out int? invoiceId)
+        {
+            invoiceId = null;
+            if (_context.InvoiceWorkQuote.AsNoTracking().Any(x => x.WorkQuoteId == quoteId &&
+                (x.GarageBusinessCustomerId == null || x.GarageBusinessCustomerId != garageId))) return false;
+            var links = _context.InvoiceWorkQuote.AsNoTracking().Where(x => x.WorkQuoteId == quoteId && x.GarageBusinessCustomerId == garageId).ToList();
+            // An association to this quote without an invoice cannot establish a
+            // conversion. Reject it, matching B2.2B2b; do not repair the orphan.
+            if (links.Any(x => !x.InvoiceId.HasValue)) return false;
+            if (_context.VehicleInvoice.AsNoTracking().Any(x => x.WorkQuoteId == quoteId &&
+                (x.GarageBusinessId == null || x.GarageBusinessId != garageId))) return false;
+            var ids = links.Select(x => x.InvoiceId.Value).Concat(_context.VehicleInvoice.AsNoTracking()
+                .Where(x => x.WorkQuoteId == quoteId && x.GarageBusinessId == garageId).Select(x => x.Id)).Distinct().ToList();
+            if (ids.Count > 1) return false;
+            if (ids.Count == 0) return true;
+            var invoice = _context.VehicleInvoice.AsNoTracking().FirstOrDefault(x => x.Id == ids[0] && x.GarageBusinessId == garageId);
+            if (!ValidInvoice(invoice, garageId)) return false;
+            invoiceId = invoice.Id; return true;
+        }
 
-            var workItemIds = workItemLinks
-                .Where(link => link.WorkItemId.HasValue)
-                .Select(link => link.WorkItemId.Value)
-                .Distinct()
-                .ToList();
-
-            var workItems = ((IQueryable<WorkItem>)_context.WorkItem)
-                .Where(workItem =>
-                    workItemIds.Contains(workItem.Id) &&
-                    workItem.GarageBusinessCustomerId == garageBusinessId)
-                .OrderByDescending(workItem => workItem.CreatedDate)
-                .ToList();
-
-            var customerName = customer == null
-                ? string.Empty
-                : string.Join(
-                    " ",
-                    new[]
-                    {
-                customer.GarageCustomerForename,
-                customer.GarageCustomerSurname
-                    }
-                    .Where(value => !string.IsNullOrWhiteSpace(value)));
-
-            var vehicleRegistration =
-                customerVehicle?.VehicleRegistration ?? string.Empty;
-
-            var vehicleDescription = string.Join(
-                " ",
-                new[]
-                {
-            vehicleRegistration,
-            vehicleMake?.Make,
-            vehicleModel?.Model
-                }
-                .Where(value => !string.IsNullOrWhiteSpace(value)));
-
-            var invoiceLink = _context.InvoiceWorkQuote
-    .FirstOrDefault(link =>
-        link.WorkQuoteId == workQuote.Id &&
-        link.GarageBusinessCustomerId == garageBusinessId);
-
-            var viewModel = new CombinedWorkQuoteWorkitem
+        private bool TryReadQuote(WorkQuote quote, int garageId, out CombinedWorkQuoteWorkitem result)
+        {
+            result = null;
+            if (!TryQuoteCore(quote, garageId, out var links, out var items) ||
+                !TryInvoiceAssociation(quote.Id, garageId, out var invoiceId)) return false;
+            var customer = _context.GarageBusinessCustomer.AsNoTracking().FirstOrDefault(x => x.Id == quote.CustomerId && x.GarageBusinessId == garageId);
+            var vehicle = _context.CustomerVehicle.AsNoTracking().FirstOrDefault(x => x.Id == quote.VehicleId && x.GarageBusinessId == garageId);
+            var make = vehicle?.VehicleMakeId == null ? null : _context.VehicleMake.AsNoTracking().FirstOrDefault(x => x.Id == vehicle.VehicleMakeId);
+            var model = vehicle?.VehicleModelId == null ? null : _context.VehicleModel.AsNoTracking().FirstOrDefault(x => x.Id == vehicle.VehicleModelId);
+            var ids = links.Where(x => x.WorkItemId.HasValue).Select(x => x.WorkItemId.Value).Distinct().ToList();
+            result = new CombinedWorkQuoteWorkitem
             {
-                Id = workItemLinks.FirstOrDefault()?.Id ?? 0,
-                GarageBusinessCustomerId = garageBusinessId,
-
-                HasInvoice = invoiceLink != null,
-                InvoiceId = invoiceLink?.InvoiceId,
-
-                WorkQuoteId = workQuote.Id,
-
-                WorkItemId = workItemIds.FirstOrDefault(),
-                WorkItemIds = workItemIds,
-                WorkItems = workItems,
-
-                CustomerId = workQuote.CustomerId ?? 0,
-                CustomerName = customerName,
-
-                VehicleId = workQuote.VehicleId ?? 0,
-                VehicleRegistration = vehicleRegistration,
-                VehicleDescription = vehicleDescription,
-
-                WorkQuoteDate =
-                    workQuote.WorkQuoteDate ??
-                    workQuote.QuoteDate ??
-                    DateTime.MinValue,
-
-                WorkRequest = workQuote.WorkRequest,
-                VehicleProblem = workQuote.VehicleProblem,
-                InvoiceNumber = workQuote.InvoiceNumber,
-
-                EnvironmentCost = workQuote.EnvironmentCost,
-                Paint = workQuote.Paint,
-                SundryExpenses = workQuote.SundryExpenses,
-                CarHire = workQuote.CarHire,
-
-                SubTotal = workQuote.SubTotal,
-                Vat = workQuote.Vat,
-                Total = workQuote.Total,
-
-                Comment = workQuote.Comment,
-                Labour = workQuote.Labour,
-                Tax = workQuote.Tax
+                Id = links.FirstOrDefault()?.Id ?? 0, GarageBusinessCustomerId = garageId,
+                WorkQuoteId = quote.Id, WorkItemId = ids.FirstOrDefault(), WorkItemIds = ids, WorkItems = items,
+                CustomerId = quote.CustomerId ?? 0, CustomerName = customer == null ? string.Empty :
+                    string.Join(" ", new[] { customer.GarageCustomerForename, customer.GarageCustomerSurname }.Where(x => !string.IsNullOrWhiteSpace(x))),
+                VehicleId = quote.VehicleId ?? 0, VehicleRegistration = vehicle?.VehicleRegistration ?? string.Empty,
+                VehicleDescription = string.Join(" ", new[] { vehicle?.VehicleRegistration, make?.Make, model?.Model }.Where(x => !string.IsNullOrWhiteSpace(x))),
+                WorkQuoteDate = quote.WorkQuoteDate ?? quote.QuoteDate ?? DateTime.MinValue,
+                HasInvoice = invoiceId.HasValue, InvoiceId = invoiceId,
+                WorkRequest = quote.WorkRequest, VehicleProblem = quote.VehicleProblem, InvoiceNumber = quote.InvoiceNumber,
+                EnvironmentCost = quote.EnvironmentCost, Paint = quote.Paint, SundryExpenses = quote.SundryExpenses,
+                CarHire = quote.CarHire, SubTotal = quote.SubTotal, Vat = quote.Vat, Total = quote.Total,
+                Comment = quote.Comment, Labour = quote.Labour, Tax = quote.Tax
             };
+            return true;
+        }
 
-            return ServiceResult<CombinedWorkQuoteWorkitem>.Ok(viewModel);
+        private List<CombinedWorkQuoteWorkitem> ReadQuotes(IQueryable<WorkQuote> query, int garageId)
+        {
+            var result = new List<CombinedWorkQuoteWorkitem>();
+            foreach (var quote in query.OrderByDescending(x => x.WorkQuoteDate ?? x.QuoteDate).ThenBy(x => x.Id).ToList())
+                if (TryReadQuote(quote, garageId, out var value)) result.Add(value);
+            return result;
+        }
+
+        public ServiceResult<CombinedWorkQuoteWorkitem> GetWorkQuote(int workQuoteId, int garageBusinessId)
+        {
+            if (!ValidGarage(garageBusinessId)) return ServiceResult<CombinedWorkQuoteWorkitem>.Fail(InvalidGarage);
+            var quote = _context.WorkQuote.AsNoTracking().FirstOrDefault(x => x.Id == workQuoteId && x.GarageBusinessCustomerId == garageBusinessId);
+            return TryReadQuote(quote, garageBusinessId, out var result) ? ServiceResult<CombinedWorkQuoteWorkitem>.Ok(result)
+                : ServiceResult<CombinedWorkQuoteWorkitem>.Fail("WorkQuote not found.");
         }
 
         public ServiceResult<List<CombinedWorkQuoteWorkitem>> GetWorkQuotesForVehicle(int vehicleId, int garageBusinessId)
         {
-            var quotes = ((IQueryable<WorkQuote>)_context.WorkQuote)
-                .Where(wq => wq.VehicleId == vehicleId &&
-                             wq.GarageBusinessCustomerId == garageBusinessId)
-                .OrderByDescending(wq => wq.WorkQuoteDate ?? wq.QuoteDate)
-                .ToList();
-
-            var quoteIds = quotes.Select(q => q.Id).ToList();
-
-            var links = ((IQueryable<WorkQuoteWorkItem>)_context.WorkQuoteWorkItem)
-                .Where(link => link.WorkQuoteId.HasValue &&
-                               quoteIds.Contains(link.WorkQuoteId.Value) &&
-                               link.GarageBusinessCustomerId == garageBusinessId)
-                .ToList();
-
-            var allWorkItemIds = links
-                .Where(x => x.WorkItemId.HasValue)
-                .Select(x => x.WorkItemId.Value)
-                .Distinct()
-                .ToList();
-
-            var allWorkItems = ((IQueryable<WorkItem>)_context.WorkItem)
-                .Where(w => allWorkItemIds.Contains(w.Id))
-                .ToList();
-
-            var results = quotes.Select(wq =>
-            {
-                var quoteLinks = links
-                    .Where(l => l.WorkQuoteId == wq.Id)
-                    .ToList();
-
-                var workItemIds = quoteLinks
-                    .Where(l => l.WorkItemId.HasValue)
-                    .Select(l => l.WorkItemId.Value)
-                    .Distinct()
-                    .ToList();
-
-                return new CombinedWorkQuoteWorkitem
-                {
-                    Id = quoteLinks.FirstOrDefault()?.Id ?? 0,
-                    GarageBusinessCustomerId = garageBusinessId,
-                    WorkQuoteId = wq.Id,
-                    WorkItemId = workItemIds.FirstOrDefault(),
-                    WorkItemIds = workItemIds,
-
-                    VehicleId = wq.VehicleId ?? 0,
-                    CustomerId = wq.CustomerId ?? 0,
-                    WorkQuoteDate = wq.WorkQuoteDate ?? wq.QuoteDate ?? DateTime.MinValue,
-
-                    WorkRequest = wq.WorkRequest,
-                    VehicleProblem = wq.VehicleProblem,
-                    InvoiceNumber = wq.InvoiceNumber,
-                    EnvironmentCost = wq.EnvironmentCost,
-                    Paint = wq.Paint,
-                    SundryExpenses = wq.SundryExpenses,
-                    CarHire = wq.CarHire,
-                    SubTotal = wq.SubTotal,
-                    Vat = wq.Vat,
-                    Total = wq.Total,
-                    Comment = wq.Comment,
-                    Labour = wq.Labour,
-                    Tax = wq.Tax,
-
-                    WorkItems = allWorkItems
-                        .Where(w => workItemIds.Contains(w.Id))
-                        .ToList()
-                };
-            }).ToList();
-
-            return ServiceResult<List<CombinedWorkQuoteWorkitem>>.Ok(results);
+            if (!ValidGarage(garageBusinessId)) return ServiceResult<List<CombinedWorkQuoteWorkitem>>.Fail(InvalidGarage);
+            if (vehicleId <= 0 || !ValidVehicle(vehicleId, garageBusinessId)) return ServiceResult<List<CombinedWorkQuoteWorkitem>>.Fail(InvalidRelationships);
+            return ServiceResult<List<CombinedWorkQuoteWorkitem>>.Ok(ReadQuotes(_context.WorkQuote.AsNoTracking()
+                .Where(x => x.VehicleId == vehicleId && x.GarageBusinessCustomerId == garageBusinessId), garageBusinessId));
         }
 
         public ServiceResult<List<CombinedWorkQuoteWorkitem>> GetWorkQuotesForWorkItem(int workItemId, int garageBusinessId)
         {
-            var quoteIds = ((IQueryable<WorkQuoteWorkItem>)_context.WorkQuoteWorkItem)
-                .Where(link => link.WorkItemId == workItemId &&
-                               link.GarageBusinessCustomerId == garageBusinessId &&
-                               link.WorkQuoteId.HasValue)
-                .Select(link => link.WorkQuoteId.Value)
-                .Distinct()
-                .ToList();
-
-            var quotes = ((IQueryable<WorkQuote>)_context.WorkQuote)
-                .Where(wq => quoteIds.Contains(wq.Id) &&
-                             wq.GarageBusinessCustomerId == garageBusinessId)
-                .OrderByDescending(wq => wq.WorkQuoteDate ?? wq.QuoteDate)
-                .ToList();
-
-            var links = ((IQueryable<WorkQuoteWorkItem>)_context.WorkQuoteWorkItem)
-                .Where(link => link.WorkQuoteId.HasValue &&
-                               quoteIds.Contains(link.WorkQuoteId.Value) &&
-                               link.GarageBusinessCustomerId == garageBusinessId)
-                .ToList();
-
-            var allWorkItemIds = links
-                .Where(x => x.WorkItemId.HasValue)
-                .Select(x => x.WorkItemId.Value)
-                .Distinct()
-                .ToList();
-
-            var allWorkItems = ((IQueryable<WorkItem>)_context.WorkItem)
-                .Where(w => allWorkItemIds.Contains(w.Id))
-                .ToList();
-
-            var results = quotes.Select(wq =>
-            {
-                var quoteLinks = links
-                    .Where(l => l.WorkQuoteId == wq.Id)
-                    .ToList();
-
-                var workItemIds = quoteLinks
-                    .Where(l => l.WorkItemId.HasValue)
-                    .Select(l => l.WorkItemId.Value)
-                    .Distinct()
-                    .ToList();
-
-                return new CombinedWorkQuoteWorkitem
-                {
-                    Id = quoteLinks.FirstOrDefault()?.Id ?? 0,
-                    GarageBusinessCustomerId = garageBusinessId,
-                    WorkQuoteId = wq.Id,
-                    WorkItemId = workItemIds.FirstOrDefault(),
-                    WorkItemIds = workItemIds,
-
-                    VehicleId = wq.VehicleId ?? 0,
-                    CustomerId = wq.CustomerId ?? 0,
-                    WorkQuoteDate = wq.WorkQuoteDate ?? wq.QuoteDate ?? DateTime.MinValue,
-
-                    WorkRequest = wq.WorkRequest,
-                    VehicleProblem = wq.VehicleProblem,
-                    InvoiceNumber = wq.InvoiceNumber,
-                    EnvironmentCost = wq.EnvironmentCost,
-                    Paint = wq.Paint,
-                    SundryExpenses = wq.SundryExpenses,
-                    CarHire = wq.CarHire,
-                    SubTotal = wq.SubTotal,
-                    Vat = wq.Vat,
-                    Total = wq.Total,
-                    Comment = wq.Comment,
-                    Labour = wq.Labour,
-                    Tax = wq.Tax,
-
-                    WorkItems = allWorkItems
-                        .Where(w => workItemIds.Contains(w.Id))
-                        .ToList()
-                };
-            }).ToList();
-
-            return ServiceResult<List<CombinedWorkQuoteWorkitem>>.Ok(results);
+            if (!ValidGarage(garageBusinessId)) return ServiceResult<List<CombinedWorkQuoteWorkitem>>.Fail(InvalidGarage);
+            if (!ReadableItems(garageBusinessId).Any(x => x.Id == workItemId)) return ServiceResult<List<CombinedWorkQuoteWorkitem>>.Fail(InvalidRelationships);
+            var ids = _context.WorkQuoteWorkItem.AsNoTracking().Where(x => x.WorkItemId == workItemId && x.GarageBusinessCustomerId == garageBusinessId && x.WorkQuoteId.HasValue)
+                .Select(x => x.WorkQuoteId.Value).Distinct().ToList();
+            return ServiceResult<List<CombinedWorkQuoteWorkitem>>.Ok(ReadQuotes(_context.WorkQuote.AsNoTracking()
+                .Where(x => ids.Contains(x.Id) && x.GarageBusinessCustomerId == garageBusinessId), garageBusinessId));
         }
 
         public ServiceResult<CombinedWorkQuoteWorkitem> AddOrUpdateWorkQuote(
@@ -316,10 +161,194 @@ namespace GarageSaas.Services
             int garageBusinessId,
             string userName)
         {
+            if (model != null && model.WorkQuoteId == 0)
+                return CreateWorkQuoteAtomically(model, garageBusinessId, userName);
+            if (model == null) return AddOrUpdateWorkQuoteCore(model, garageBusinessId, userName);
+            return WithLockedQuote(model.WorkQuoteId, garageBusinessId,
+                () => AddOrUpdateWorkQuoteCore(model, garageBusinessId, userName),
+                ServiceResult<CombinedWorkQuoteWorkitem>.Fail, model.CustomerId);
+        }
+
+        // Customer keys for UPDATE precede the same quote lock used by conversion,
+        // then its graph/associations. Other quotes in a multi-quote invoice are
+        // validated with ordinary reads, never additional update locks.
+        private T WithLockedQuote<T>(int quoteId, int garageId, Func<T> operation, Func<string, T> fail, int? customerId = null)
+            where T : ServiceResult
+        {
+            // SaveChanges flushes the entire context. Do not discard caller edits
+            // while refreshing stale entities, or accidentally include them here.
+            if (_context.ChangeTracker.Entries().Any(x => x.State == EntityState.Added ||
+                x.State == EntityState.Modified || x.State == EntityState.Deleted))
+                return fail("Pending changes must be saved or discarded before modifying a work quote.");
+
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction = null;
+            var commitAttempted = false;
+            var startedOperation = false;
+            HashSet<int> originalLinkIds = null;
+            int? previousCommandTimeout = null;
+            var restoreCommandTimeout = false;
+            try
+            {
+                if (_context.Database.IsSqlServer())
+                {
+                    previousCommandTimeout = _context.Database.GetCommandTimeout();
+                    // Bound lock/command waits even if the caller configured an
+                    // infinite timeout. Preserve a shorter existing limit.
+                    if (!previousCommandTimeout.HasValue || previousCommandTimeout == 0 || previousCommandTimeout > 30)
+                    {
+                        _context.Database.SetCommandTimeout(30);
+                        restoreCommandTimeout = true;
+                    }
+                }
+                transaction = _context.Database.BeginTransaction();
+                if (!ValidGarage(garageId)) { transaction.Rollback(); return fail(InvalidGarage); }
+                if (!CustomerReferenceLock.Acquire(_context, garageId, new[] { customerId }))
+                { transaction.Rollback(); return fail(InvalidRelationships); }
+                WorkQuote locked;
+                if (_context.Database.IsSqlServer())
+                    locked = _context.WorkQuote.FromSqlInterpolated($@"
+                        SELECT * FROM [WorkQuote] WITH (UPDLOCK, HOLDLOCK)
+                        WHERE [Id] = {quoteId} AND [GarageBusinessCustomerId] = {garageId}")
+                        .AsNoTracking().SingleOrDefault();
+                else if (_context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
+                    // Functional tests only; InMemory cannot prove locking/rollback.
+                    locked = _context.WorkQuote.AsNoTracking().SingleOrDefault(x =>
+                        x.Id == quoteId && x.GarageBusinessCustomerId == garageId);
+                else throw new NotSupportedException("Work quote modification requires SQL Server row locking.");
+                if (locked == null) { transaction.Rollback(); return fail("WorkQuote not found."); }
+
+                // The lock read bypasses identity resolution. Refresh only unchanged
+                // target rows before the existing core starts tracking them again.
+                DetachQuoteGraph(quoteId);
+                originalLinkIds = new HashSet<int>(_context.WorkQuoteWorkItem.AsNoTracking()
+                    .Where(x => x.WorkQuoteId == quoteId).Select(x => x.Id));
+                startedOperation = true;
+                var result = operation();
+                if (!result.Success)
+                {
+                    transaction.Rollback(); DetachQuoteGraph(quoteId, originalLinkIds); return result;
+                }
+                commitAttempted = true;
+                transaction.Commit();
+                return result;
+            }
+            catch (Exception error)
+            {
+                try { transaction?.Rollback(); } catch (Exception) { /* Commit may already have succeeded. */ }
+                if (startedOperation) DetachQuoteGraph(quoteId, originalLinkIds);
+                if (commitAttempted)
+                    throw new InvalidOperationException("Work quote modification could not be confirmed. Check the quote list before resubmitting; do not automatically retry.", error);
+                throw;
+            }
+            finally
+            {
+                try { transaction?.Dispose(); } catch (Exception) { /* Preserve the known or uncertain outcome. */ }
+                if (restoreCommandTimeout) _context.Database.SetCommandTimeout(previousCommandTimeout);
+            }
+        }
+
+        private void DetachQuoteGraph(int quoteId, HashSet<int> originalLinkIds = null)
+        {
+            foreach (var entry in _context.ChangeTracker.Entries().Where(x =>
+                x.Entity is WorkQuote quote && quote.Id == quoteId ||
+                x.Entity is WorkQuoteWorkItem link && link.WorkQuoteId == quoteId).ToList())
+            {
+                // A successfully saved new link can be Unchanged after rollback.
+                // Detach all target participants so later saves cannot resurrect it.
+                entry.State = EntityState.Detached;
+                if (originalLinkIds != null && entry.Entity is WorkQuoteWorkItem generated && !originalLinkIds.Contains(generated.Id))
+                { generated.Id = 0; generated.WorkQuoteId = null; }
+            }
+        }
+
+        private ServiceResult<CombinedWorkQuoteWorkitem> CreateWorkQuoteAtomically(
+            CombinedWorkQuoteWorkitem model, int garageBusinessId, string userName)
+        {
+            if (_context.ChangeTracker.HasChanges())
+                return ServiceResult<CombinedWorkQuoteWorkitem>.Fail("Pending changes must be saved or discarded before creating a work quote.");
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction = null;
+            var commitAttempted = false;
+            var trackedBefore = new HashSet<object>(_context.ChangeTracker.Entries().Select(x => x.Entity));
+            try
+            {
+                transaction = _context.Database.BeginTransaction();
+                if (!ValidGarage(garageBusinessId))
+                { transaction.Rollback(); return ServiceResult<CombinedWorkQuoteWorkitem>.Fail(InvalidGarage); }
+                if (model.VehicleId > 0 && model.CustomerId > 0 &&
+                    !CustomerReferenceLock.Acquire(_context, garageBusinessId, new int?[] { model.CustomerId }))
+                { transaction.Rollback(); return ServiceResult<CombinedWorkQuoteWorkitem>.Fail("Customer could not be found for this garage."); }
+                // Work on a separate DTO: do not publish generated quote/link ids
+                // to the request until both saves AND response preparation commit.
+                var snapshot = new CombinedWorkQuoteWorkitem
+                {
+                    Id = model.Id, GarageBusinessCustomerId = model.GarageBusinessCustomerId,
+                    WorkQuoteId = 0, WorkItemId = model.WorkItemId,
+                    WorkItemIds = model.WorkItemIds == null ? null : model.WorkItemIds.ToList(),
+                    CustomerId = model.CustomerId, VehicleId = model.VehicleId, WorkQuoteDate = model.WorkQuoteDate,
+                    WorkRequest = model.WorkRequest, VehicleProblem = model.VehicleProblem, InvoiceNumber = model.InvoiceNumber,
+                    EnvironmentCost = model.EnvironmentCost, Paint = model.Paint, SundryExpenses = model.SundryExpenses,
+                    CarHire = model.CarHire, SubTotal = model.SubTotal, Vat = model.Vat, Total = model.Total,
+                    Comment = model.Comment, Labour = model.Labour, Tax = model.Tax,
+                    QuoteTotal = model.QuoteTotal, Accepted = model.Accepted, ConvertedToInvoice = model.ConvertedToInvoice
+                };
+                // The unchanged core performs authoritative validation, both saves,
+                // saved-link retrieval and preparation of the existing response.
+                var result = AddOrUpdateWorkQuoteCore(snapshot, garageBusinessId, userName);
+                if (!result.Success) { transaction.Rollback(); return result; }
+                commitAttempted = true;
+                transaction.Commit();
+
+                // Preserve successful caller-model mutation and response identity.
+                model.WorkQuoteId = snapshot.WorkQuoteId; model.Id = snapshot.Id;
+                model.GarageBusinessCustomerId = snapshot.GarageBusinessCustomerId;
+                model.WorkItemId = snapshot.WorkItemId; model.WorkItemIds = snapshot.WorkItemIds;
+                model.InvoiceId = snapshot.InvoiceId; model.HasInvoice = snapshot.HasInvoice;
+                model.CustomerName = snapshot.CustomerName; model.VehicleRegistration = snapshot.VehicleRegistration;
+                model.VehicleDescription = snapshot.VehicleDescription; model.WorkItems = snapshot.WorkItems;
+                return ServiceResult<CombinedWorkQuoteWorkitem>.Ok(model);
+            }
+            catch (Exception error)
+            {
+                try { transaction?.Rollback(); } catch (Exception) { /* Does not establish a failed commit. */ }
+                var entries = _context.ChangeTracker.Entries().ToList();
+                foreach (var entry in entries) entry.State = EntityState.Detached;
+                // SaveChanges can mark entities Unchanged before rollback. Detach
+                // all participants, but reset identities only on newly created rows.
+                foreach (var entry in entries.Where(x => !trackedBefore.Contains(x.Entity)))
+                {
+                    if (entry.Entity is WorkQuote quote) quote.Id = 0;
+                    if (entry.Entity is WorkQuoteWorkItem link) { link.Id = 0; link.WorkQuoteId = null; }
+                }
+                if (commitAttempted)
+                    throw new InvalidOperationException("Work quote creation could not be confirmed. Check the quote list before resubmitting; do not automatically retry.", error);
+                throw; // Preserve existing exception-based handling of unexpected failures.
+            }
+            finally
+            {
+                try { transaction?.Dispose(); }
+                catch (Exception) { /* Do not mask the known or uncertain transaction outcome. */ }
+            }
+        }
+
+        private ServiceResult<CombinedWorkQuoteWorkitem> AddOrUpdateWorkQuoteCore(
+            CombinedWorkQuoteWorkitem model, int garageBusinessId, string userName)
+        {
+            if (!ValidGarage(garageBusinessId)) return ServiceResult<CombinedWorkQuoteWorkitem>.Fail(InvalidGarage);
             if (model == null)
             {
                 return ServiceResult<CombinedWorkQuoteWorkitem>
                     .Fail("WorkQuote model is null.");
+            }
+
+            int? associatedInvoiceId = null;
+            CombinedWorkQuoteWorkitem storedQuote = null;
+            if (model.WorkQuoteId != 0)
+            {
+                var stored = _context.WorkQuote.AsNoTracking().FirstOrDefault(x => x.Id == model.WorkQuoteId && x.GarageBusinessCustomerId == garageBusinessId);
+                if (stored == null) return ServiceResult<CombinedWorkQuoteWorkitem>.Fail("WorkQuote not found.");
+                if (!TryReadQuote(stored, garageBusinessId, out var storedModel)) return ServiceResult<CombinedWorkQuoteWorkitem>.Fail(InvalidRelationships);
+                associatedInvoiceId = storedModel.InvoiceId;
+                storedQuote = storedModel;
             }
 
             if (model.VehicleId <= 0)
@@ -337,13 +366,13 @@ namespace GarageSaas.Services
             // -------------------------------------------------
             // Validate customer belongs to the current garage
             // -------------------------------------------------
-            var customerExists =
-                _context.GarageBusinessCustomer
-                    .Any(c =>
+            var customer =
+                _context.GarageBusinessCustomer.AsNoTracking()
+                    .FirstOrDefault(c =>
                         c.Id == model.CustomerId &&
                         c.GarageBusinessId == garageBusinessId);
 
-            if (!customerExists)
+            if (customer == null)
             {
                 return ServiceResult<CombinedWorkQuoteWorkitem>
                     .Fail(
@@ -354,7 +383,7 @@ namespace GarageSaas.Services
             // Validate vehicle belongs to the current garage
             // -------------------------------------------------
             var vehicle =
-                _context.CustomerVehicle
+                _context.CustomerVehicle.AsNoTracking()
                     .FirstOrDefault(v =>
                         v.Id == model.VehicleId &&
                         v.GarageBusinessId == garageBusinessId);
@@ -394,6 +423,8 @@ namespace GarageSaas.Services
             // -------------------------------------------------
             // Determine selected work items
             // -------------------------------------------------
+            if (model.WorkItemIds?.Any(id => id <= 0) == true)
+                return ServiceResult<CombinedWorkQuoteWorkitem>.Fail(InvalidRelationships);
             var workItemIds =
                 model.WorkItemIds?.Any() == true
                     ? model.WorkItemIds
@@ -418,7 +449,7 @@ namespace GarageSaas.Services
             // Validate all work items belong to this garage
             // -------------------------------------------------
             var validWorkItemIds =
-                ((IQueryable<WorkItem>)_context.WorkItem)
+                ReadableItems(garageBusinessId)
                     .Where(w =>
                         workItemIds.Contains(w.Id) &&
                         w.GarageBusinessCustomerId ==
@@ -433,6 +464,15 @@ namespace GarageSaas.Services
                         "One or more work items are invalid " +
                         "for this garage or vehicle.");
             }
+
+            // C3a: the C2b target quote lock is held through this check and save.
+            // Stored graph validation above recognizes join and direct-only invoice
+            // associations. Compare normalized membership, not link row identities
+            // or input order; supported null historical link endpoints stay intact.
+            if (associatedInvoiceId.HasValue &&
+                (storedQuote.CustomerId != model.CustomerId || storedQuote.VehicleId != model.VehicleId ||
+                 !new HashSet<int>(storedQuote.WorkItemIds).SetEquals(workItemIds)))
+                return ServiceResult<CombinedWorkQuoteWorkitem>.Fail(LinkedQuoteRelationships);
 
             WorkQuote quote;
 
@@ -646,12 +686,31 @@ namespace GarageSaas.Services
             model.WorkItemIds =
                 workItemIds;
 
+            // Derived response fields are never authoritative client input. Keep
+            // the existing DTO/envelope, returning only validated tenant data.
+            model.InvoiceId = associatedInvoiceId;
+            model.HasInvoice = associatedInvoiceId.HasValue;
+            model.CustomerName = string.Join(" ", new[] { customer.GarageCustomerForename, customer.GarageCustomerSurname }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+            model.VehicleRegistration = vehicle.VehicleRegistration;
+            model.VehicleDescription = null;
+            model.WorkItems = new List<WorkItem>();
+
             return ServiceResult<CombinedWorkQuoteWorkitem>
                 .Ok(model);
         }
 
         public ServiceResult DeleteWorkQuote(int workQuoteId, int garageBusinessId)
+            => WithLockedQuote(workQuoteId, garageBusinessId,
+                () => DeleteWorkQuoteCore(workQuoteId, garageBusinessId), ServiceResult.Fail);
+
+        private ServiceResult DeleteWorkQuoteCore(int workQuoteId, int garageBusinessId)
         {
+            if (!ValidGarage(garageBusinessId)) return ServiceResult.Fail(InvalidGarage);
+            var stored = _context.WorkQuote.AsNoTracking().FirstOrDefault(x => x.Id == workQuoteId && x.GarageBusinessCustomerId == garageBusinessId);
+            if (stored == null) return ServiceResult.Fail("WorkQuote not found.");
+            if (!TryReadQuote(stored, garageBusinessId, out var storedModel)) return ServiceResult.Fail(InvalidRelationships);
+            if (storedModel.HasInvoice) return ServiceResult.Fail(LinkedQuoteDeletion);
             var workQuote = _context.WorkQuote
                 .FirstOrDefault(w => w.Id == workQuoteId &&
                                      w.GarageBusinessCustomerId == garageBusinessId);
@@ -679,7 +738,8 @@ namespace GarageSaas.Services
 
         public List<SelectListItem> GetCustomerDropdownItems(int garageBusinessId)
         {
-            return ((IQueryable<GarageBusinessCustomer>)_context.GarageBusinessCustomer)
+            if (!ValidGarage(garageBusinessId)) return new List<SelectListItem>();
+            return _context.GarageBusinessCustomer.AsNoTracking()
                 .Where(c => c.GarageBusinessId == garageBusinessId)
                 .OrderBy(c => c.GarageCustomerForename)
                 .ThenBy(c => c.GarageCustomerSurname)
@@ -693,8 +753,8 @@ namespace GarageSaas.Services
 
         public List<SelectListItem> GetVehicleDropdownItems(int garageBusinessId)
         {
-
-            return  ((IQueryable<CustomerVehicle>)_context.CustomerVehicle)
+            if (!ValidGarage(garageBusinessId)) return new List<SelectListItem>();
+            return _context.CustomerVehicle.AsNoTracking()
                 .Where(v => v.GarageBusinessId == garageBusinessId)
                 .OrderBy(v => v.VehicleRegistration)
                 .Select(v => new SelectListItem
@@ -707,90 +767,14 @@ namespace GarageSaas.Services
 
         public ServiceResult<List<CombinedWorkQuoteWorkitem>> GetWorkQuotes(int garageBusinessId)
         {
-            var quotes = ((IQueryable<WorkQuote>)_context.WorkQuote)
-                .Where(q => q.GarageBusinessCustomerId == garageBusinessId)
-                .OrderByDescending(q => q.WorkQuoteDate ?? q.QuoteDate)
-                .ToList();
-
-            var quoteIds = quotes.Select(q => q.Id).ToList();
-
-            var links = ((IQueryable<WorkQuoteWorkItem>)_context.WorkQuoteWorkItem)
-                .Where(l => l.WorkQuoteId.HasValue &&
-                            quoteIds.Contains(l.WorkQuoteId.Value))
-                .ToList();
-
-            var workItemIds = links
-                .Where(l => l.WorkItemId.HasValue)
-                .Select(l => l.WorkItemId.Value)
-                .Distinct()
-                .ToList();
-
-            var workItems = ((IQueryable<WorkItem>)_context.WorkItem)
-                .Where(w => workItemIds.Contains(w.Id))
-                .ToList();
-
-            var customers = _context.GarageBusinessCustomer.ToDictionary(c => c.Id);
-
-            var vehicles = _context.CustomerVehicle.ToDictionary(v => v.Id);
-
-            var result = new List<CombinedWorkQuoteWorkitem>();
-
-            foreach (var quote in quotes)
-            {
-                var quoteLinks = links
-                    .Where(l => l.WorkQuoteId == quote.Id)
-                    .ToList();
-
-                var quoteWorkItemIds = quoteLinks
-                    .Where(l => l.WorkItemId.HasValue)
-                    .Select(l => l.WorkItemId.Value)
-                    .ToList();
-
-                 var vm = new CombinedWorkQuoteWorkitem
-                {
-                    WorkQuoteId = quote.Id,
-                    GarageBusinessCustomerId = garageBusinessId,
-                    VehicleId = quote.VehicleId ?? 0,
-                    CustomerId = quote.CustomerId ?? 0,
-
-                    WorkQuoteDate = quote.WorkQuoteDate ?? quote.QuoteDate ?? DateTime.MinValue,
-
-                    WorkRequest = quote.WorkRequest,
-                    VehicleProblem = quote.VehicleProblem,
-
-                    Labour = quote.Labour,
-                    SubTotal = quote.SubTotal,
-                    Vat = quote.Vat,
-                    Total = quote.Total,
-
-                    Comment = quote.Comment,
-
-                    WorkItemIds = quoteWorkItemIds,
-
-                    WorkItems = workItems
-                        .Where(w => quoteWorkItemIds.Contains(w.Id))
-                        .ToList()
-                };
-
-                if (customers.TryGetValue(vm.CustomerId, out var customer))
-                {
-                    vm.CustomerName =
-                        $"{customer.GarageCustomerForename} {customer.GarageCustomerSurname}";
-                }
-
-                if (vehicles.TryGetValue(vm.VehicleId, out var vehicle))
-                {
-                    vm.VehicleRegistration = vehicle.VehicleRegistration;
-                }
-
-                result.Add(vm);
-            }
-
-            return ServiceResult<List<CombinedWorkQuoteWorkitem>>.Ok(result);
+            if (!ValidGarage(garageBusinessId)) return ServiceResult<List<CombinedWorkQuoteWorkitem>>.Fail(InvalidGarage);
+            return ServiceResult<List<CombinedWorkQuoteWorkitem>>.Ok(ReadQuotes(_context.WorkQuote.AsNoTracking()
+                .Where(x => x.GarageBusinessCustomerId == garageBusinessId), garageBusinessId));
         }
 
         public ServiceResult<List<VehicleBriefInfo>> GetVehiclesForGarageCustomer(int garageCustomerId, int garageBusinessId)
         {
+            if (!ValidGarage(garageBusinessId)) return ServiceResult<List<VehicleBriefInfo>>.Fail(InvalidGarage);
             var customerExists = _context.GarageBusinessCustomer
                 .Any(customer =>
                     customer.Id == garageCustomerId &&
@@ -803,14 +787,15 @@ namespace GarageSaas.Services
             }
 
             var vehicles =
-                (from customerOwnedVehicle in _context.CustomerOwnedVehicles
-                 join customerVehicle in _context.CustomerVehicle
+                (from customerOwnedVehicle in _context.CustomerOwnedVehicles.AsNoTracking()
+                 join customerVehicle in _context.CustomerVehicle.AsNoTracking()
                      on customerOwnedVehicle.VehicleId equals customerVehicle.Id
                  join vehicleMake in _context.VehicleMake
                      on customerVehicle.VehicleMakeId equals vehicleMake.Id
                  join vehicleModel in _context.VehicleModel
                      on customerVehicle.VehicleModelId equals vehicleModel.Id
                  where customerOwnedVehicle.GarageBusinessCustomerId == garageCustomerId
+                       && customerOwnedVehicle.GarageBusinessId == garageBusinessId
                        && customerVehicle.GarageBusinessId == garageBusinessId
                        && customerVehicle.GarageOwned == false
                  orderby vehicleMake.Make,
@@ -830,11 +815,15 @@ namespace GarageSaas.Services
 
         public ServiceResult<WorkItem> CreateWorkItemForQuote(CreateWorkItemRequest request, int garageBusinessId)
         {
+            if (!ValidGarage(garageBusinessId)) return ServiceResult<WorkItem>.Fail(InvalidGarage);
+            if (request == null) return ServiceResult<WorkItem>.Fail("Work item request is required.");
             if (request.VehicleId <= 0)
             {
                 return ServiceResult<WorkItem>.Fail(
                     "A vehicle must be selected.");
             }
+
+            if (!ValidVehicle(request.VehicleId, garageBusinessId)) return ServiceResult<WorkItem>.Fail(InvalidRelationships);
 
             if (string.IsNullOrWhiteSpace(request.RepairInstructions))
             {

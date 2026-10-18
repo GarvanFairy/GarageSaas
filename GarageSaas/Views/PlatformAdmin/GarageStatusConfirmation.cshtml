@@ -1,0 +1,30 @@
+@model GarageSaas.ViewModels.PlatformGarageStatusViewModel
+@{ ViewData["Title"] = Model.Activate ? "Activate garage" : "Deactivate garage"; }
+<div class="container py-4">
+    <p class="text-muted">Platform Administration / Garage Management</p>
+    <h2>@ViewData["Title"]</h2>
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <div class="alert alert-warning" role="alert">@Model.Error</div>
+        <a asp-action="GarageDetails" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Reload garage details</a>
+    }
+    else
+    {
+        <div class="card shadow-sm"><div class="card-body">
+            <p>Confirm @(Model.Activate ? "activation" : "deactivation") of <strong>@Model.Name</strong> (garage #@Model.Id).</p>
+            <p>Current state: @(Model.ExpectedActive == true ? "Active" : "Inactive"). Blocked: @(Model.ExpectedBlocked == true ? "Yes" : "No").</p>
+            @if (Model.Activate)
+            { <p>Activation changes only the garage's active state. A blocked garage stays blocked. Disabled users and memberships stay disabled.</p> }
+            else
+            { <p>Deactivation prevents subsequent garage access. Existing users and memberships are retained.</p> }
+            <form asp-action="@(Model.Activate ? "Activate" : "Deactivate")" method="post">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ExpectedActive" />
+                <input type="hidden" asp-for="ExpectedBlocked" />
+                <input type="hidden" asp-for="ExpectedUpdatedDate" />
+                <button type="submit" class="btn @(Model.Activate ? "btn-primary" : "btn-warning")">Confirm @(Model.Activate ? "activation" : "deactivation")</button>
+                <a asp-action="GarageDetails" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div></div>
+    }
+</div>

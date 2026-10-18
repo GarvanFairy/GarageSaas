@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +7,7 @@ using GarageSaas.Services.Interfaces;
 using GarageSaas.Services.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SignupAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace GarageSaas.Services
 {
@@ -58,6 +59,7 @@ namespace GarageSaas.Services
 
         public async Task<ServiceResult<VehicleAndCustomers>> BuildAddCustomerVehicleVmAsync(int garageBusinessId)
         {
+            if (garageBusinessId <= 0) return ServiceResult<VehicleAndCustomers>.Fail("Garage context is invalid.");
             var owners = GetListOfGarageCustomerOwners(garageBusinessId);
 
             var vm = new VehicleAndCustomers
@@ -82,8 +84,9 @@ namespace GarageSaas.Services
 
         public async Task<ServiceResult<VehicleAndCustomers>> GetCustomerVehicleForEditAsync(int customerVehicleId, int garageBusinessId)
         {
+            if (garageBusinessId <= 0) return ServiceResult<VehicleAndCustomers>.Fail("Garage context is invalid.");
             var vehicle =
-                _context.CustomerVehicle
+                _context.CustomerVehicle.AsNoTracking()
                     .FirstOrDefault(v =>
                         v.Id == customerVehicleId &&
                         v.GarageBusinessId == garageBusinessId);
@@ -99,7 +102,7 @@ namespace GarageSaas.Services
 
             MarkSelectedOwner(
                 owners,
-                vehicle.Id);
+                vehicle, garageBusinessId);
 
             var makes =
                 await _vehicleLookupService
@@ -193,7 +196,11 @@ namespace GarageSaas.Services
         }
 
         public ServiceResult AddOrUpdateCustomerVehicle(VehicleAndCustomers model, int garageBusinessId, string userName)
+            => CustomerVehicleMutation.Run(_context, state => AddOrUpdateCustomerVehicleCore(model, garageBusinessId, userName, state));
+
+        private ServiceResult AddOrUpdateCustomerVehicleCore(VehicleAndCustomers model, int garageBusinessId, string userName, CustomerVehicleMutation state)
         {
+            if (garageBusinessId <= 0) return ServiceResult.Fail("Garage context is invalid.");
             if (model == null || model.Vehicle == null)
             {
                 return ServiceResult.Fail("Customer vehicle is null");
@@ -204,6 +211,18 @@ namespace GarageSaas.Services
                 return ServiceResult.Fail("Vehicle registration is required.");
             }
 
+            // Existing target validation must precede inline customer creation.
+            CustomerVehicle vehicleToUpdate = null;
+            if (model.Vehicle.Id != 0)
+            {
+                vehicleToUpdate = _context.CustomerVehicle.AsNoTracking().FirstOrDefault(v =>
+                    v.Id == model.Vehicle.Id && v.GarageBusinessId == garageBusinessId);
+                if (vehicleToUpdate == null) return ServiceResult.Fail("Customer vehicle couldn't be found.");
+
+            }
+
+            GarageBusinessCustomer inlineCustomer = null;
+            List<CustomerOwnedVehicles> storedOwnership = null;
             int? ownerCustomerId = null;
             bool garageOwned = false;
 
@@ -227,7 +246,7 @@ namespace GarageSaas.Services
                     return ServiceResult.Fail("New customer first name or surname is required.");
                 }
 
-                var customerToAdd = new GarageBusinessCustomer
+                inlineCustomer = new GarageBusinessCustomer
                 {
                     GarageCustomerForename = model.NewCustomer.Forename?.Trim(),
                     GarageCustomerSurname = model.NewCustomer.Surname?.Trim(),
@@ -239,10 +258,7 @@ namespace GarageSaas.Services
                     Active = true
                 };
 
-                _context.GarageBusinessCustomer.Add(customerToAdd);
-                _context.SaveChanges();
 
-                ownerCustomerId = customerToAdd.Id;
                 garageOwned = false;
             }
             else
@@ -261,13 +277,12 @@ namespace GarageSaas.Services
                 }
                 else
                 {
-                    if (!int.TryParse(selectedOwnerValue, out var parsedOwnerId))
+                    if (!int.TryParse(selectedOwnerValue, out var parsedOwnerId) || parsedOwnerId <= 0)
                     {
                         return ServiceResult.Fail("Selected vehicle owner is invalid.");
                     }
 
-                    var existingCustomer = _context.GarageBusinessCustomer
-                        .FirstOrDefault(c => c.Id == parsedOwnerId && c.GarageBusinessId == garageBusinessId);
+                    var existingCustomer = _context.GarageBusinessCustomer.AsNoTracking().FirstOrDefault(c => c.Id == parsedOwnerId && c.GarageBusinessId == garageBusinessId);
 
                     if (existingCustomer == null)
                     {
@@ -279,6 +294,34 @@ namespace GarageSaas.Services
                 }
             }
 
+            // Classification only: lock all observed owner keys before the vehicle key.
+            // A changed graph requiring an unheld owner key fails closed below; never lock backwards.
+            var ownerKeys = vehicleToUpdate == null ? new List<int>() : _context.CustomerOwnedVehicles.AsNoTracking()
+                .Where(x => x.VehicleId == vehicleToUpdate.Id).Select(x => x.GarageBusinessCustomerId).Distinct().ToList();
+            if (ownerCustomerId.HasValue) ownerKeys.Add(ownerCustomerId.Value);
+            foreach (var ownerKey in ownerKeys.Distinct().OrderBy(x => x))
+            {
+                var owner = ownerCustomerId == ownerKey
+                    ? OwnershipIntegrity.Customer(_context, ownerKey, garageBusinessId)
+                    : CustomerReferenceLock.Read(_context, ownerKey, garageBusinessId);
+                if (owner == null) return ServiceResult.Fail(OwnershipIntegrity.Invalid);
+            }
+            if (vehicleToUpdate != null)
+            {
+                var locked = OwnershipIntegrity.Vehicle(_context, vehicleToUpdate.Id, garageBusinessId);
+                if (locked == null) return ServiceResult.Fail("Customer vehicle couldn't be found.");
+                if (_context.CustomerOwnedVehicles.AsNoTracking().Any(x => x.VehicleId == locked.Id && !ownerKeys.Contains(x.GarageBusinessCustomerId)))
+                    return ServiceResult.Fail(OwnershipIntegrity.Invalid);
+                if (!OwnershipIntegrity.Valid(_context, locked, garageBusinessId, out storedOwnership))
+                    return ServiceResult.Fail(OwnershipIntegrity.Invalid);
+                vehicleToUpdate = state.Fresh(locked);
+            }
+            if (inlineCustomer != null)
+            {
+                _context.GarageBusinessCustomer.Add(inlineCustomer);
+                _context.SaveChanges();
+                ownerCustomerId = inlineCustomer.Id;
+            }
             // -----------------------------
             // Add
             // -----------------------------
@@ -329,19 +372,6 @@ namespace GarageSaas.Services
             // -----------------------------
             // Update
             // -----------------------------
-            var vehicleToUpdate =
-    _context.CustomerVehicle
-        .FirstOrDefault(v =>
-            v.Id == model.Vehicle.Id &&
-            v.GarageBusinessId ==
-                garageBusinessId);
-
-
-            if (vehicleToUpdate == null)
-            {
-                return ServiceResult.Fail("Customer vehicle couldn't be found.");
-            }
-
             vehicleToUpdate.VehicleRegistration = model.Vehicle.VehicleRegistration?.Trim();
             vehicleToUpdate.VehicleMakeId = ParseNullableInt(model.VehicleMakeListItem?.Value);
             vehicleToUpdate.VehicleModelId = ParseNullableInt(model.VehicleModelListItem?.Value);
@@ -356,13 +386,7 @@ namespace GarageSaas.Services
             vehicleToUpdate.UpdatedDate = DateTime.Now;
             vehicleToUpdate.UpdatedBy = userName;
 
-            var existingOwnership =
-                _context.CustomerOwnedVehicles
-                    .FirstOrDefault(x =>
-                        x.VehicleId ==
-                            vehicleToUpdate.Id &&
-                        x.GarageBusinessId ==
-                            garageBusinessId);
+            var existingOwnership = storedOwnership.Count == 0 ? null : state.Fresh(storedOwnership[0]);
 
             if (garageOwned)
             {
@@ -403,15 +427,18 @@ namespace GarageSaas.Services
 
         public ServiceResult<List<CustomerVehicleListVM>> GetCustomerVehiclesForList(int garageBusinessId)
         {
+            if (garageBusinessId <= 0) return ServiceResult<List<CustomerVehicleListVM>>.Fail("Garage context is invalid.");
             var vehicles =
-                (from v in _context.CustomerVehicle
-                 join cov in _context.CustomerOwnedVehicles on v.Id equals cov.VehicleId
-                 join c in _context.GarageBusinessCustomer on cov.GarageBusinessCustomerId equals c.Id
+                (from cov in _context.CustomerOwnedVehicles.AsNoTracking()
+                    .Where(x => x.GarageBusinessId == garageBusinessId)
+                    .Select(x => new { x.VehicleId, x.GarageBusinessCustomerId }).Distinct()
+                 join v in _context.CustomerVehicle.AsNoTracking() on cov.VehicleId equals v.Id
+                 join c in _context.GarageBusinessCustomer.AsNoTracking() on cov.GarageBusinessCustomerId equals c.Id
                  join make in _context.VehicleMake on v.VehicleMakeId equals make.Id into makeJoin
                  from make in makeJoin.DefaultIfEmpty()
                  join model in _context.VehicleModel on v.VehicleModelId equals model.Id into modelJoin
                  from model in modelJoin.DefaultIfEmpty()
-                 where c.GarageBusinessId == garageBusinessId && v.GarageOwned == false
+                 where c.GarageBusinessId == garageBusinessId && v.GarageBusinessId == garageBusinessId && v.GarageOwned == false
                  select new CustomerVehicleListVM
                  {
                      GarageCustomerId = c.Id,
@@ -435,23 +462,30 @@ namespace GarageSaas.Services
             return ServiceResult<List<CustomerVehicleListVM>>.Ok(vehicles);
         }
 
-        public async Task<ServiceResult<List<VehicleBriefInfo>>> GetVehicleBriefsForCustomerAsync(int garageCustomerId)
+        public async Task<ServiceResult<List<VehicleBriefInfo>>> GetVehicleBriefsForCustomerAsync(int garageCustomerId, int garageBusinessId)
         {
-            var vehicles =
-                (from cov in _context.CustomerOwnedVehicles
-                 join cv in _context.CustomerVehicle on cov.VehicleId equals cv.Id
-                 join m in _context.VehicleMake on cv.VehicleMakeId equals m.Id
-                 join l in _context.VehicleModel on cv.VehicleModelId equals l.Id
-                 where cov.GarageBusinessCustomerId == garageCustomerId && cv.GarageOwned == false
+            if (garageBusinessId <= 0) return ServiceResult<List<VehicleBriefInfo>>.Fail("Garage context is invalid.");
+            if (!await _context.GarageBusinessCustomer.AsNoTracking().AnyAsync(c =>
+                c.Id == garageCustomerId && c.GarageBusinessId == garageBusinessId))
+                return ServiceResult<List<VehicleBriefInfo>>.Fail("Garage customer couldn't be found.");
+            var vehicles = await
+                (from cv in _context.CustomerVehicle.AsNoTracking()
+                 join m in _context.VehicleMake on cv.VehicleMakeId equals m.Id into makes
+                 from m in makes.DefaultIfEmpty()
+                 join l in _context.VehicleModel on cv.VehicleModelId equals l.Id into models
+                 from l in models.DefaultIfEmpty()
+                 where cv.GarageBusinessId == garageBusinessId && cv.GarageOwned == false &&
+                    _context.CustomerOwnedVehicles.Any(cov => cov.VehicleId == cv.Id &&
+                        cov.GarageBusinessCustomerId == garageCustomerId && cov.GarageBusinessId == garageBusinessId)
                  select new VehicleBriefInfo
                  {
                      Id = cv.Id,
-                     Make = m.Make,
-                     Model = l.Model,
+                     Make = m == null ? null : m.Make,
+                     Model = l == null ? null : l.Model,
                      VehicleRegistration = cv.VehicleRegistration
-                 }).ToList();
+                 }).ToListAsync();
 
-            return await Task.FromResult(ServiceResult<List<VehicleBriefInfo>>.Ok(vehicles));
+            return ServiceResult<List<VehicleBriefInfo>>.Ok(vehicles);
         }
 
         private List<SelectListItem> GetListOfGarageCustomerOwners(int garageBusinessId)
@@ -459,7 +493,7 @@ namespace GarageSaas.Services
             var owners = new List<SelectListItem>();
 
 
-            var garageVehicleOwner = _context.GarageVehicleOwner
+            var garageVehicleOwner = _context.GarageVehicleOwner.AsNoTracking()
                 .FirstOrDefault(g => g.GarageBusinessId == garageBusinessId);
 
             if (garageVehicleOwner != null)
@@ -472,7 +506,7 @@ namespace GarageSaas.Services
                 });
             }
 
-            var garageCustomers = ((IQueryable<GarageBusinessCustomer>)_context.GarageBusinessCustomer)
+            var garageCustomers = _context.GarageBusinessCustomer.AsNoTracking()
                 .Where(c => c.GarageBusinessId == garageBusinessId)
                 .OrderBy(c => c.GarageCustomerForename)
                 .ThenBy(c => c.GarageCustomerSurname)
@@ -501,15 +535,14 @@ namespace GarageSaas.Services
             }
         }
 
-        private void MarkSelectedOwner(List<SelectListItem> items, int vehicleId)
+        private void MarkSelectedOwner(List<SelectListItem> items, CustomerVehicle vehicle, int garageBusinessId)
         {
             if (items == null || !items.Any())
             {
                 return;
             }
 
-            var vehicle = _context.CustomerVehicle.Find(vehicleId);
-            if (vehicle == null)
+            if (vehicle == null || vehicle.GarageBusinessId != garageBusinessId)
             {
                 return;
             }
@@ -522,13 +555,15 @@ namespace GarageSaas.Services
             }
             else
             {
-                var ownership = _context.CustomerOwnedVehicles
-                    .FirstOrDefault(x => x.VehicleId == vehicleId);
-
-                if (ownership != null)
-                {
-                    selectedOwnerValue = ownership.GarageBusinessCustomerId.ToString();
-                }
+                var ownerIds = (from link in _context.CustomerOwnedVehicles.AsNoTracking()
+                                join customer in _context.GarageBusinessCustomer.AsNoTracking()
+                                    on link.GarageBusinessCustomerId equals customer.Id
+                                where link.VehicleId == vehicle.Id && link.GarageBusinessId == garageBusinessId &&
+                                    customer.GarageBusinessId == garageBusinessId
+                                select customer.Id).Distinct().Take(2).ToList();
+                // Identical duplicate links are harmless for display. Conflicting
+                // valid owners must not be resolved through arbitrary row order.
+                if (ownerIds.Count == 1) selectedOwnerValue = ownerIds[0].ToString();
             }
 
             if (string.IsNullOrWhiteSpace(selectedOwnerValue))

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using GarageSaas.Services;
 using GarageSaas.UnitTests.TestHelpers;
@@ -10,10 +10,29 @@ namespace GarageSaas.Tests.Services
     [TestClass]
     public class WorkItemServiceTests
     {
+        internal static void SeedRelationships(SignupContext context)
+        {
+            context.GarageBusiness.AddRange(
+                new GarageBusiness { Id = 5, GarageBusinessName = "Garage A", Active = true },
+                new GarageBusiness { Id = 99, GarageBusinessName = "Garage B", Active = true });
+            context.CustomerVehicle.AddRange(
+                new CustomerVehicle { Id = 100, GarageBusinessId = 5, VehicleRegistration = "A100", GarageOwned = false },
+                new CustomerVehicle { Id = 200, GarageBusinessId = 5, VehicleRegistration = "A200", GarageOwned = true },
+                new CustomerVehicle { Id = 900, GarageBusinessId = 99, VehicleRegistration = "B900" });
+            context.GarageBusinessCustomer.AddRange(
+                new GarageBusinessCustomer { Id = 10, GarageBusinessId = 5 },
+                new GarageBusinessCustomer { Id = 20, GarageBusinessId = 5 },
+                new GarageBusinessCustomer { Id = 90, GarageBusinessId = 99 });
+            context.CustomerOwnedVehicles.Add(new CustomerOwnedVehicles
+            {
+                GarageBusinessId = 5, VehicleId = 100, GarageBusinessCustomerId = 10, Active = true
+            });
+            context.SaveChanges();
+        }
         [TestMethod]
         public void GetWorkItem_Returns_Fail_When_Not_Found()
         {
-            using var context = DbContextFactory.Create();
+            using var context = DbContextFactory.Create(); SeedRelationships(context);
 
             var service = new WorkItemService(context);
 
@@ -26,7 +45,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void GetWorkItem_Returns_WorkItem_When_Found()
         {
-            using var context = DbContextFactory.Create();
+            using var context = DbContextFactory.Create(); SeedRelationships(context);
 
             context.WorkItem.Add(new WorkItem
             {
@@ -54,7 +73,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void GetWorkItem_Returns_Fail_When_GarageBusiness_Does_Not_Match()
         {
-            using var context = DbContextFactory.Create();
+            using var context = DbContextFactory.Create(); SeedRelationships(context);
 
             context.WorkItem.Add(new WorkItem
             {
@@ -80,7 +99,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void GetWorkItemsForVehicle_Returns_Only_WorkItems_For_Vehicle_And_Garage()
         {
-            using var context = DbContextFactory.Create();
+            using var context = DbContextFactory.Create(); SeedRelationships(context);
 
             context.WorkItem.Add(new WorkItem
             {
@@ -129,7 +148,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void AddOrUpdateWorkItem_Returns_Fail_When_Model_Is_Null()
         {
-            using var context = DbContextFactory.Create();
+            using var context = DbContextFactory.Create(); SeedRelationships(context);
 
             var service = new WorkItemService(context);
 
@@ -142,7 +161,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void AddOrUpdateWorkItem_Returns_Fail_When_VehicleId_Is_Missing()
         {
-            using var context = DbContextFactory.Create();
+            using var context = DbContextFactory.Create(); SeedRelationships(context);
 
             var service = new WorkItemService(context);
 
@@ -158,7 +177,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void AddOrUpdateWorkItem_Adds_New_WorkItem()
         {
-            using var context = DbContextFactory.Create();
+            using var context = DbContextFactory.Create(); SeedRelationships(context);
 
             var service = new WorkItemService(context);
 
@@ -187,7 +206,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void AddOrUpdateWorkItem_Updates_Existing_WorkItem()
         {
-            using var context = DbContextFactory.Create();
+            using var context = DbContextFactory.Create(); SeedRelationships(context);
 
             context.WorkItem.Add(new WorkItem
             {
@@ -229,7 +248,7 @@ namespace GarageSaas.Tests.Services
         [TestMethod]
         public void AddOrUpdateWorkItem_Returns_Fail_When_Update_Target_Not_Found()
         {
-            using var context = DbContextFactory.Create();
+            using var context = DbContextFactory.Create(); SeedRelationships(context);
 
             var service = new WorkItemService(context);
 

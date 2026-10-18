@@ -1,4 +1,4 @@
-﻿using GarageSaas.Models;
+using GarageSaas.Models;
 using GarageSaas.Services;
 using GarageSaas.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication;
@@ -59,9 +59,7 @@ namespace GarageSaas.Controllers
             }
 
             var garage =
-                _context.GarageBusiness
-                    .FirstOrDefault(x =>
-                        x.Id == invitation.GarageBusinessId);
+                GarageAvailability.Eligible(_context, invitation.GarageBusinessId).FirstOrDefault();
 
             if (garage == null)
             {
@@ -117,7 +115,7 @@ namespace GarageSaas.Controllers
                         !x.Revoked &&
                         x.ExpiresDate > DateTime.UtcNow);
 
-            if (invitation == null)
+            if (invitation == null || !GarageAvailability.Eligible(_context, invitation.GarageBusinessId).Any())
             {
                 return View("InvalidInvitation");
             }
@@ -159,23 +157,17 @@ namespace GarageSaas.Controllers
             var tokenHash =
                 GarageInvitationTokenService.HashToken(token);
 
-            using (var transaction = _context.Database.BeginTransaction(
-                System.Data.IsolationLevel.Serializable))
+            // Classification grants no permission. Revalidate the hash and all state
+            // after the garage shared key and fresh invitation update key are held.
+            var target = _context.GarageUserInvitation.AsNoTracking().Where(x => x.InvitationTokenHash == tokenHash)
+                .Select(x => new { x.Id, x.GarageBusinessId }).FirstOrDefault();
+            if (target == null) return View("InvalidInvitation");
+            try
             {
-                // Retrieve the invitation and confirm it is still valid.
-                var invitation =
-                    _context.GarageUserInvitation
-                        .FirstOrDefault(x =>
-                            x.InvitationTokenHash == tokenHash &&
-                            !x.Accepted &&
-                            !x.Revoked &&
-                            x.ExpiresDate > DateTime.UtcNow);
-
-                if (invitation == null)
-                {
+                using var mutation = new StaffInvitationMutation(_context);
+                var invitation = mutation.Load(target.GarageBusinessId, target.Id);
+                if (invitation == null || invitation.InvitationTokenHash != tokenHash || invitation.Accepted || invitation.Revoked || invitation.ExpiresDate <= DateTime.UtcNow)
                     return View("InvalidInvitation");
-                }
-
                 // Confirm that the authenticated email matches.
                 if (!_identityVerificationService.IsVerifiedInvitedUser(
                     User,
@@ -185,9 +177,7 @@ namespace GarageSaas.Controllers
                 }
 
                 // Retrieve the authenticated B2C user.
-                var user = _context.Users
-                    .SingleOrDefault(x =>
-                        x.ExternalUserId == externalUserId);
+                var user = mutation.User(externalUserId, invitation.EmailAddress);
 
                 if (user == null)
                 {
@@ -230,7 +220,7 @@ namespace GarageSaas.Controllers
                         CreatedBy = "Garage Invitation"
                     };
 
-                    _context.Users.Add(user);
+                    mutation.Add(user);
 
                     _context.SaveChanges();
                 }
@@ -241,10 +231,7 @@ namespace GarageSaas.Controllers
                 }
 
                 // Check whether this user already belongs to the garage.
-                var existingMembership = _context.GarageBusinessUser
-                    .FirstOrDefault(x =>
-                        x.GarageBusinessId == invitation.GarageBusinessId &&
-                        x.UserId == user.Id);
+                var existingMembership = mutation.Membership(invitation.GarageBusinessId, user.Id);
 
                 if (existingMembership == null)
                 {
@@ -265,7 +252,7 @@ namespace GarageSaas.Controllers
                         CreatedBy = "Garage Invitation"
                     };
 
-                    _context.GarageBusinessUser.Add(membership);
+                    mutation.Add(membership);
                 }
                 else if (!existingMembership.IsActive)
                 {
@@ -280,9 +267,14 @@ namespace GarageSaas.Controllers
 
                 _context.SaveChanges();
 
-                transaction.Commit();
+                mutation.Commit();
             }
 
+            catch (Exception error) when (error is Microsoft.Data.SqlClient.SqlException || error is DbUpdateException || error is InvalidOperationException)
+            {
+                Response.StatusCode = 503;
+                return View("InvitationUnavailable");
+            }
             return RedirectToAction("Index", "Home");
         }
 

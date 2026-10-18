@@ -1,0 +1,251 @@
+MONITOR_CONNECTED
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:11.6102914|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:11.7396938|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:11.8547173|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:11.9683979|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:12.0801460|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:12.1911673|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:12.3025163|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:12.4184956|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:12.5297998|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:12.6406830|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:12.7531103|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:12.8569198|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:12.9692709|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:13.0798977|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:13.1913338|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:13.3057060|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:13.4229830|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:13.5346378|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:13.6475136|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:13.7615938|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:13.8665852|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:13.9819572|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:14.0944849|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:14.2076879|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:14.3226205|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:14.4401067|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:14.5538649|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:14.6664417|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:14.7822358|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:14.8898009|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:15.0023364|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:15.1142377|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:15.2286422|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:15.3414829|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:15.4594484|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:15.5730155|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:15.6865133|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:15.7990547|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:15.9061626|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:16.0196649|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:16.1326037|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:16.2452914|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:16.3571959|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:16.4716982|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:16.5733316|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:16.6874696|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:16.8001898|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:16.9139725|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:17.0274932|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
+ObservedUtc|OtherTargetRequests|BlockedRequests
+-----------|-------------------|---------------
+2026-10-18 16:44:17.1401417|0|0
+session_id|command|status|total_elapsed_time|cpu_time|reads|writes|wait_type|wait_time|wait_resource|blocking_session_id|percent_complete
+----------|-------|------|------------------|--------|-----|------|---------|---------|-------------|-------------------|----------------
