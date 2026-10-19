@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="a5e1151f-5a0f-4e8b-a13c-7a9596b0dd4a" name="ggall@GARVAN_ASUS 2026-10-19 20:38:29" runUser="GARVAN_ASUS\ggall" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-19T20:38:29.7583876+01:00" queuing="2026-10-19T20:38:29.7583884+01:00" start="2026-10-19T20:38:26.3964145+01:00" finish="2026-10-19T20:38:31.6851005+01:00" />
+  <TestSettings name="default" id="50677444-27ab-4c25-b530-1637498f35b1">
+    <Deployment runDeploymentRoot="ggall_GARVAN_ASUS_2026-10-19_20_38_29" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="5a30f6c5-f0b9-4e7e-9482-21bb9c257ecb" testId="231b0eed-6527-c716-fb5f-914e3e2bc2de" testName="CoreWorkflowRendersHistoryAndRejectsStaleGarageWork" computerName="GARVAN_ASUS" duration="00:00:00.7782251" startTime="2026-10-19T20:38:29.0465353+01:00" endTime="2026-10-19T20:38:29.8250746+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5a30f6c5-f0b9-4e7e-9482-21bb9c257ecb" />
+    <UnitTestResult executionId="e64133ba-e681-43bb-af28-66a8b9022d07" testId="3a7c0890-c434-8051-0a83-0cdda18479a5" testName="RenderedWorkFormsSubmitOneContextTokenAndRejectStaleEdits" computerName="GARVAN_ASUS" duration="00:00:01.0605392" startTime="2026-10-19T20:38:27.9733969+01:00" endTime="2026-10-19T20:38:29.0426052+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e64133ba-e681-43bb-af28-66a8b9022d07" />
+    <UnitTestResult executionId="34ffcbcc-bad4-4d3e-90cb-2cc5b04b5837" testId="28a4d5db-918c-02db-78b3-67a2d13d1e05" testName="UnauthorisedOrUnavailableSelectionDoesNotReplacePreference (999)" computerName="GARVAN_ASUS" duration="00:00:00.0578476" startTime="2026-10-19T20:38:30.3989776+01:00" endTime="2026-10-19T20:38:30.4574715+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="34ffcbcc-bad4-4d3e-90cb-2cc5b04b5837" />
+    <UnitTestResult executionId="f873f0c0-2194-42ad-bf6a-60aac89f944c" testId="6b91a056-7e00-dab7-60a9-f6fde38a8981" testName="RememberedGarageBecomingUnavailableRequiresAnotherExplicitChoice (membership)" computerName="GARVAN_ASUS" duration="00:00:00.1109139" startTime="2026-10-19T20:38:30.6272107+01:00" endTime="2026-10-19T20:38:30.7384274+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f873f0c0-2194-42ad-bf6a-60aac89f944c" />
+    <UnitTestResult executionId="d699d74c-9a73-43ca-9330-c497f47f624f" testId="96f88d05-72fd-bfed-1926-d5ac26900b81" testName="StaleFormsAndAjaxCannotMutateNewGarage" computerName="GARVAN_ASUS" duration="00:00:00.3307757" startTime="2026-10-19T20:38:30.9877811+01:00" endTime="2026-10-19T20:38:31.3188513+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d699d74c-9a73-43ca-9330-c497f47f624f" />
+    <UnitTestResult executionId="88f1290c-e03c-418c-b97a-789efd3d0f39" testId="a4b12978-6d3f-40ab-42e8-e6ebf4a9dded" testName="SwitchRememberRolesAndTenantReadsUseSelectedGarage" computerName="GARVAN_ASUS" duration="00:00:00.4494195" startTime="2026-10-19T20:38:29.9492460+01:00" endTime="2026-10-19T20:38:30.3988938+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="88f1290c-e03c-418c-b97a-789efd3d0f39" />
+    <UnitTestResult executionId="59924b8e-7f5d-4093-8a85-e5e5628b7b94" testId="ff2f31df-8178-97b2-27ed-65fcc3ba6520" testName="WorkflowScreensRequireAuthenticationAndGarage (/ServiceHistory/Index?vehicleId=1)" computerName="GARVAN_ASUS" duration="00:00:00.0742696" startTime="2026-10-19T20:38:29.8261449+01:00" endTime="2026-10-19T20:38:29.9034357+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="59924b8e-7f5d-4093-8a85-e5e5628b7b94" />
+    <UnitTestResult executionId="d1bb3309-f3c5-4cbe-bc1f-872167546342" testId="b4f70f86-de1b-84ba-bfef-10d44b0ac236" testName="SelectionRequiresAuthenticationAndAntiforgery (anonymous)" computerName="GARVAN_ASUS" duration="00:00:00.0352864" startTime="2026-10-19T20:38:30.5890212+01:00" endTime="2026-10-19T20:38:30.6245605+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d1bb3309-f3c5-4cbe-bc1f-872167546342" />
+    <UnitTestResult executionId="195ab00b-bff3-494d-9e0e-b2a09ce67e55" testId="cf31f95d-0f64-7738-cdad-58fc4430b11c" testName="SelectionRequiresAuthenticationAndAntiforgery (invalid)" computerName="GARVAN_ASUS" duration="00:00:00.0427554" startTime="2026-10-19T20:38:30.5459403+01:00" endTime="2026-10-19T20:38:30.5889312+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="195ab00b-bff3-494d-9e0e-b2a09ce67e55" />
+    <UnitTestResult executionId="371c2be8-45bc-45ab-8f83-a9143fd5b0c5" testId="478d45a9-c310-b88e-a146-f86e4482fc7c" testName="UnauthorisedOrUnavailableSelectionDoesNotReplacePreference (3)" computerName="GARVAN_ASUS" duration="00:00:00.0525472" startTime="2026-10-19T20:38:30.4575569+01:00" endTime="2026-10-19T20:38:30.5103751+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="371c2be8-45bc-45ab-8f83-a9143fd5b0c5" />
+    <UnitTestResult executionId="60dff8b8-e5fc-4310-a120-10cbd3bf01a2" testId="cfa4e993-0fd3-d630-23cd-1d1ff80d466b" testName="SingleGarageLoginAndInvitationRoutesRemainUsable" computerName="GARVAN_ASUS" duration="00:00:00.1686350" startTime="2026-10-19T20:38:31.3189971+01:00" endTime="2026-10-19T20:38:31.4880207+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="60dff8b8-e5fc-4310-a120-10cbd3bf01a2" />
+    <UnitTestResult executionId="360581fb-14f9-4cc3-8f97-a8b0596f3c1a" testId="7dbb64d3-94a0-f95e-d5b9-2b8cc157835c" testName="RememberedGarageBecomingUnavailableRequiresAnotherExplicitChoice (blocked)" computerName="GARVAN_ASUS" duration="00:00:00.1261649" startTime="2026-10-19T20:38:30.8611031+01:00" endTime="2026-10-19T20:38:30.9876676+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="360581fb-14f9-4cc3-8f97-a8b0596f3c1a" />
+    <UnitTestResult executionId="01305316-5056-4a12-8952-a3de823b87c3" testId="d9c46f6c-9c0a-7bc0-9eb6-87866efaa60d" testName="SecondGarageInvitationReturnReachesChooserThenSelectedDashboard" computerName="GARVAN_ASUS" duration="00:00:00.1212606" startTime="2026-10-19T20:38:31.4881139+01:00" endTime="2026-10-19T20:38:31.6099624+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="01305316-5056-4a12-8952-a3de823b87c3" />
+    <UnitTestResult executionId="5ace1da8-2434-4d8c-a0c0-20e09d7c318a" testId="349d520a-28f3-257b-c56d-6d46f7d8e2e9" testName="RememberedGarageBecomingUnavailableRequiresAnotherExplicitChoice (deactivated)" computerName="GARVAN_ASUS" duration="00:00:00.1221490" startTime="2026-10-19T20:38:30.7385077+01:00" endTime="2026-10-19T20:38:30.8609804+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5ace1da8-2434-4d8c-a0c0-20e09d7c318a" />
+    <UnitTestResult executionId="68064adb-edc0-406e-b751-c0518640a41c" testId="64b70a4d-5854-9ccb-ace9-4344d63b0480" testName="WorkflowScreensRequireAuthenticationAndGarage (/WorkItem/ForVehicle?vehicleId=1)" computerName="GARVAN_ASUS" duration="00:00:00.0449249" startTime="2026-10-19T20:38:29.9037852+01:00" endTime="2026-10-19T20:38:29.9491476+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="68064adb-edc0-406e-b751-c0518640a41c" />
+    <UnitTestResult executionId="dc2b801a-643d-484a-9021-baf92ffbe26a" testId="a1eb14eb-45b9-be1d-f731-fe01e3bcf02e" testName="SelectionRequiresAuthenticationAndAntiforgery (missing)" computerName="GARVAN_ASUS" duration="00:00:00.0351093" startTime="2026-10-19T20:38:30.5104652+01:00" endTime="2026-10-19T20:38:30.5458458+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dc2b801a-643d-484a-9021-baf92ffbe26a" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="UnauthorisedOrUnavailableSelectionDoesNotReplacePreference (3)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="478d45a9-c310-b88e-a146-f86e4482fc7c">
+      <Execution id="371c2be8-45bc-45ab-8f83-a9143fd5b0c5" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="UnauthorisedOrUnavailableSelectionDoesNotReplacePreference" />
+    </UnitTest>
+    <UnitTest name="SwitchRememberRolesAndTenantReadsUseSelectedGarage" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="a4b12978-6d3f-40ab-42e8-e6ebf4a9dded">
+      <Execution id="88f1290c-e03c-418c-b97a-789efd3d0f39" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="SwitchRememberRolesAndTenantReadsUseSelectedGarage" />
+    </UnitTest>
+    <UnitTest name="WorkflowScreensRequireAuthenticationAndGarage (/WorkItem/ForVehicle?vehicleId=1)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="64b70a4d-5854-9ccb-ace9-4344d63b0480">
+      <Execution id="68064adb-edc0-406e-b751-c0518640a41c" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="WorkflowScreensRequireAuthenticationAndGarage" />
+    </UnitTest>
+    <UnitTest name="SecondGarageInvitationReturnReachesChooserThenSelectedDashboard" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="d9c46f6c-9c0a-7bc0-9eb6-87866efaa60d">
+      <Execution id="01305316-5056-4a12-8952-a3de823b87c3" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="SecondGarageInvitationReturnReachesChooserThenSelectedDashboard" />
+    </UnitTest>
+    <UnitTest name="SelectionRequiresAuthenticationAndAntiforgery (invalid)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="cf31f95d-0f64-7738-cdad-58fc4430b11c">
+      <Execution id="195ab00b-bff3-494d-9e0e-b2a09ce67e55" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="SelectionRequiresAuthenticationAndAntiforgery" />
+    </UnitTest>
+    <UnitTest name="RememberedGarageBecomingUnavailableRequiresAnotherExplicitChoice (membership)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="6b91a056-7e00-dab7-60a9-f6fde38a8981">
+      <Execution id="f873f0c0-2194-42ad-bf6a-60aac89f944c" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="RememberedGarageBecomingUnavailableRequiresAnotherExplicitChoice" />
+    </UnitTest>
+    <UnitTest name="CoreWorkflowRendersHistoryAndRejectsStaleGarageWork" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="231b0eed-6527-c716-fb5f-914e3e2bc2de">
+      <Execution id="5a30f6c5-f0b9-4e7e-9482-21bb9c257ecb" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="CoreWorkflowRendersHistoryAndRejectsStaleGarageWork" />
+    </UnitTest>
+    <UnitTest name="SelectionRequiresAuthenticationAndAntiforgery (anonymous)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="b4f70f86-de1b-84ba-bfef-10d44b0ac236">
+      <Execution id="d1bb3309-f3c5-4cbe-bc1f-872167546342" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="SelectionRequiresAuthenticationAndAntiforgery" />
+    </UnitTest>
+    <UnitTest name="SingleGarageLoginAndInvitationRoutesRemainUsable" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="cfa4e993-0fd3-d630-23cd-1d1ff80d466b">
+      <Execution id="60dff8b8-e5fc-4310-a120-10cbd3bf01a2" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="SingleGarageLoginAndInvitationRoutesRemainUsable" />
+    </UnitTest>
+    <UnitTest name="StaleFormsAndAjaxCannotMutateNewGarage" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="96f88d05-72fd-bfed-1926-d5ac26900b81">
+      <Execution id="d699d74c-9a73-43ca-9330-c497f47f624f" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="StaleFormsAndAjaxCannotMutateNewGarage" />
+    </UnitTest>
+    <UnitTest name="UnauthorisedOrUnavailableSelectionDoesNotReplacePreference (999)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="28a4d5db-918c-02db-78b3-67a2d13d1e05">
+      <Execution id="34ffcbcc-bad4-4d3e-90cb-2cc5b04b5837" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="UnauthorisedOrUnavailableSelectionDoesNotReplacePreference" />
+    </UnitTest>
+    <UnitTest name="RenderedWorkFormsSubmitOneContextTokenAndRejectStaleEdits" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="3a7c0890-c434-8051-0a83-0cdda18479a5">
+      <Execution id="e64133ba-e681-43bb-af28-66a8b9022d07" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="RenderedWorkFormsSubmitOneContextTokenAndRejectStaleEdits" />
+    </UnitTest>
+    <UnitTest name="WorkflowScreensRequireAuthenticationAndGarage (/ServiceHistory/Index?vehicleId=1)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="ff2f31df-8178-97b2-27ed-65fcc3ba6520">
+      <Execution id="59924b8e-7f5d-4093-8a85-e5e5628b7b94" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="WorkflowScreensRequireAuthenticationAndGarage" />
+    </UnitTest>
+    <UnitTest name="RememberedGarageBecomingUnavailableRequiresAnotherExplicitChoice (blocked)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="7dbb64d3-94a0-f95e-d5b9-2b8cc157835c">
+      <Execution id="360581fb-14f9-4cc3-8f97-a8b0596f3c1a" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="RememberedGarageBecomingUnavailableRequiresAnotherExplicitChoice" />
+    </UnitTest>
+    <UnitTest name="SelectionRequiresAuthenticationAndAntiforgery (missing)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="a1eb14eb-45b9-be1d-f731-fe01e3bcf02e">
+      <Execution id="dc2b801a-643d-484a-9021-baf92ffbe26a" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="SelectionRequiresAuthenticationAndAntiforgery" />
+    </UnitTest>
+    <UnitTest name="RememberedGarageBecomingUnavailableRequiresAnotherExplicitChoice (deactivated)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="349d520a-28f3-257b-c56d-6d46f7d8e2e9">
+      <Execution id="5ace1da8-2434-4d8c-a0c0-20e09d7c318a" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests" name="RememberedGarageBecomingUnavailableRequiresAnotherExplicitChoice" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="231b0eed-6527-c716-fb5f-914e3e2bc2de" executionId="5a30f6c5-f0b9-4e7e-9482-21bb9c257ecb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3a7c0890-c434-8051-0a83-0cdda18479a5" executionId="e64133ba-e681-43bb-af28-66a8b9022d07" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="28a4d5db-918c-02db-78b3-67a2d13d1e05" executionId="34ffcbcc-bad4-4d3e-90cb-2cc5b04b5837" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6b91a056-7e00-dab7-60a9-f6fde38a8981" executionId="f873f0c0-2194-42ad-bf6a-60aac89f944c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="96f88d05-72fd-bfed-1926-d5ac26900b81" executionId="d699d74c-9a73-43ca-9330-c497f47f624f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a4b12978-6d3f-40ab-42e8-e6ebf4a9dded" executionId="88f1290c-e03c-418c-b97a-789efd3d0f39" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ff2f31df-8178-97b2-27ed-65fcc3ba6520" executionId="59924b8e-7f5d-4093-8a85-e5e5628b7b94" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b4f70f86-de1b-84ba-bfef-10d44b0ac236" executionId="d1bb3309-f3c5-4cbe-bc1f-872167546342" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cf31f95d-0f64-7738-cdad-58fc4430b11c" executionId="195ab00b-bff3-494d-9e0e-b2a09ce67e55" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="478d45a9-c310-b88e-a146-f86e4482fc7c" executionId="371c2be8-45bc-45ab-8f83-a9143fd5b0c5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cfa4e993-0fd3-d630-23cd-1d1ff80d466b" executionId="60dff8b8-e5fc-4310-a120-10cbd3bf01a2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7dbb64d3-94a0-f95e-d5b9-2b8cc157835c" executionId="360581fb-14f9-4cc3-8f97-a8b0596f3c1a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d9c46f6c-9c0a-7bc0-9eb6-87866efaa60d" executionId="01305316-5056-4a12-8952-a3de823b87c3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="349d520a-28f3-257b-c56d-6d46f7d8e2e9" executionId="5ace1da8-2434-4d8c-a0c0-20e09d7c318a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="64b70a4d-5854-9ccb-ace9-4344d63b0480" executionId="68064adb-edc0-406e-b751-c0518640a41c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a1eb14eb-45b9-be1d-f731-fe01e3bcf02e" executionId="dc2b801a-643d-484a-9021-baf92ffbe26a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="16" executed="16" passed="16" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+  </ResultSummary>
+</TestRun>

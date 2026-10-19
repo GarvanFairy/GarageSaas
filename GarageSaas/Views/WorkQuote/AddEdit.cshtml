@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@using Microsoft.AspNetCore.Mvc.Rendering
 @using GarageSaas.Services.Models;
 
 @{
@@ -164,7 +164,6 @@
         </div>
     </div>
 
-    <div id="workItemsContainer" class="row g-3"></div>
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
@@ -291,13 +290,13 @@
     </div>
 </div>
 
-<input type="hidden" id="WorkQuoteId" value="@workQuoteId" />
+
 
 @section Scripts {
     <script>
         const workQuoteId = parseInt($("#workQuoteId").val() || "0", 10);
         const isEditMode = workQuoteId > 0;
-        const vatRate = 0.23;
+        const vatRate = 0.235;
         let selectedWorkItemIds = [];
 
         function updateInvoiceButtons(quote) {
@@ -356,7 +355,7 @@
         $("#btnConvertToInvoice").on("click", function () {
 
             const workQuoteId =
-                parseInt($("#WorkQuoteId").val() || "0", 10);
+                parseInt($("#workQuoteId").val() || "0", 10);
 
             if (workQuoteId <= 0) {
 
@@ -494,52 +493,6 @@
             $("#txtNewRepairInstructions").val("");
         });
 
-                let workItemModal = null;
-
-        $(document).ready(function () {
-            const modalElement =
-                document.getElementById("workItemModal");
-
-            if (modalElement) {
-                workItemModal =
-                    new bootstrap.Modal(modalElement);
-            }
-
-        $("#btnAddWorkItem").on("click", function () {
-            const customerId =
-                parseInt($("#ddlCustomer").val() || "0", 10);
-
-            const vehicleId =
-                parseInt($("#ddlVehicle").val() || "0", 10);
-
-            if (customerId <= 0) {
-                showStatus(
-                    "warning",
-                    "Select a customer before adding a work item."
-                );
-                return;
-            }
-
-            if (vehicleId <= 0) {
-                showStatus(
-                    "warning",
-                    "Select a vehicle before adding a work item."
-                );
-                return;
-            }
-
-            $("#editWorkItemId").val("0");
-            $("#txtNewRepairInstructions").val("");
-            $("#workItemModalStatus").empty();
-
-            $("#workItemModal .modal-title").text("Add Work Item");
-            $("#btnSaveWorkItem").text("Save Work Item");
-
-            $("#workItemModal").modal("show");
-        });
-
-        });
-
         $(document).on("click", ".edit-work-item", function () {
             const workItemId = parseInt(
                 $(this).data("work-item-id"),
@@ -611,6 +564,13 @@
             selectedWorkItemIds
         ) {
             const vehicleDropdown = $("#ddlVehicle");
+            if (isEditMode) {
+                vehicleDropdown.val(selectedVehicleId);
+                loadWorkItems(selectedWorkItemIds || []);
+                return;
+            }
+            clearWorkItems();
+
 
             if (!garageCustomerId || garageCustomerId <= 0) {
                 vehicleDropdown
@@ -832,6 +792,7 @@
                 </div>
             `);
 
+            selectedWorkItemIds = [];
             $("#selectedWorkItemCount").text("0 selected");
         }
 
@@ -861,17 +822,6 @@
         $(function () {
             $(".quote-amount").on("input", recalculateTotals);
 
-            $("#ddlVehicle").on("change", function () {
-                const vehicleId = parseInt($(this).val() || "0", 10);
-
-                if (!vehicleId) {
-                    $("#workItemsContainer").html('<div class="col-12 text-muted">Select a vehicle to load work items.</div>');
-                    return;
-                }
-
-                loadWorkItems([]);
-            });
-
             if (isEditMode) {
                 loadExistingQuote(workQuoteId);
             }
@@ -893,7 +843,7 @@
                     const quote = response.data;
 
 
-                    $("#WorkQuoteId").val(quote.workQuoteId);
+                    $("#workQuoteId").val(quote.workQuoteId);
 
                     updateInvoiceButtons(quote);
 
@@ -984,7 +934,7 @@
 
                     recalculateTotals();
 
-                    const selectedWorkItemIds =
+                    selectedWorkItemIds =
             (quote.workItemIds || []).map(Number);
 
                     loadVehiclesForCustomer(
@@ -1006,7 +956,7 @@
             selectedIds = (selectedIds || []).map(Number);
 
             const workQuoteId =
-                parseInt($("#WorkQuoteId").val() || "0", 10);
+                parseInt($("#workQuoteId").val() || "0", 10);
 
             const checkedIds = (selectedIds || [])
                 .map(function (id) {
@@ -1023,12 +973,8 @@
             `);
 
             $.getJSON(
-                "/WorkItem/GetAvailableForQuote",
-                {
-                    workQuoteId: workQuoteId > 0
-                        ? workQuoteId
-                        : null
-                }
+                isEditMode ? "/WorkItem/GetAvailableForQuote" : "/WorkItem/GetByVehicle",
+                { vehicleId: Number($("#ddlVehicle").val()), workQuoteId: workQuoteId }
             )
                 .done(function (response) {
                     if (response.status !== "Success") {
@@ -1263,35 +1209,16 @@
             });
         }
 
-                $("#btnAddWorkItem").on("click", function () {
-            const customerId =
-                parseInt($("#ddlCustomer").val() || "0", 10);
-
-            const vehicleId =
-                parseInt($("#ddlVehicle").val() || "0", 10);
-
-            if (customerId <= 0) {
-                showStatus(
-                    "warning",
-                    "Select a customer before adding a work item."
-                );
-
+        $("#btnAddWorkItem").on("click", function () {
+            if (!Number($("#ddlCustomer").val()) || !Number($("#ddlVehicle").val())) {
+                showStatus("warning", "Select a customer and vehicle before adding work.");
                 return;
             }
-
-            if (vehicleId <= 0) {
-                showStatus(
-                    "warning",
-                    "Select a vehicle before adding a work item."
-                );
-
-                return;
-            }
-
+            $("#editWorkItemId").val("0");
             $("#txtNewRepairInstructions").val("");
             $("#workItemModalStatus").empty();
-
-        $("#workItemModal").modal("show");
+            $("#workItemModal .modal-title").text("Add Work Item");
+            $("#workItemModal").modal("show");
         });
 
          $("#btnSaveWorkItem").on("click", function () {

@@ -36,6 +36,41 @@ namespace GarageSaas.Controllers
         }
 
         [HttpGet]
+        public IActionResult ForVehicle(int vehicleId,
+            [FromServices] GarageSaas.Services.VehicleServiceHistoryService history,
+            [FromServices] IVehicleInvoiceService invoices)
+        {
+            var user = _currentGarageUserService.GetCurrentUser();
+            var result = history.Get(vehicleId, user.GarageBusinessId);
+            if (!result.Success) return NotFound();
+            ViewData["Customers"] = invoices.GetCustomersForGarageBusiness(user.GarageBusinessId);
+            return View(result.Data);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Save(int vehicleId, int? customerId, int id, string repairInstructions)
+        {
+            var user = _currentGarageUserService.GetCurrentUser();
+            if (string.IsNullOrWhiteSpace(repairInstructions))
+            {
+                TempData["Error"] = "Enter work performed or required.";
+                return RedirectToAction(nameof(ForVehicle), new { vehicleId });
+            }
+            var item = new WorkItem { Id = id, VehicleId = vehicleId, CustomerId = customerId,
+                RepairInstructions = repairInstructions.Trim() };
+            if (id > 0)
+            {
+                var stored = _workItemService.GetWorkItem(id, user.GarageBusinessId);
+                if (!stored.Success || stored.Data.VehicleId != vehicleId) return NotFound();
+                item.CustomerId = stored.Data.CustomerId;
+            }
+            var result = _workItemService.AddOrUpdateWorkItem(item, user.GarageBusinessId, user.EmailAddress ?? User.Identity?.Name ?? string.Empty);
+            TempData[result.Success ? "Success" : "Error"] = result.Success ? "Work item saved." : result.ErrorMessage;
+            return RedirectToAction(nameof(ForVehicle), new { vehicleId });
+        }
+
+        [HttpGet]
         public IActionResult Get(int workItemId)
         {
             var currentUser =

@@ -178,6 +178,8 @@
                             </td>
 
                             <td class="text-end">
+<a class="btn btn-sm btn-outline-primary" asp-controller="WorkItem" asp-action="ForVehicle" asp-route-vehicleId="@vehicle.VehicleId">Work items</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-controller="ServiceHistory" asp-action="Index" asp-route-vehicleId="@vehicle.VehicleId">History</a>
                                 <a class="btn btn-sm btn-outline-primary"
                                    asp-controller="CustomerVehicle"
                                    asp-action="EditCustomerVehicle"
@@ -226,7 +228,9 @@
                     </a>
                 </div>
 
-                <div class="vehicle-card-details">
+                <a class="btn btn-sm btn-outline-primary" asp-controller="WorkItem" asp-action="ForVehicle" asp-route-vehicleId="@vehicle.VehicleId">Work items</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-controller="ServiceHistory" asp-action="Index" asp-route-vehicleId="@vehicle.VehicleId">History</a>
+<div class="vehicle-card-details">
                     @if (!string.IsNullOrWhiteSpace(vehicle.VehicleRegistration))
                     {
                         <span class="registration-plate">@vehicle.VehicleRegistration</span>

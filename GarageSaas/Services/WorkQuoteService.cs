@@ -786,29 +786,18 @@ namespace GarageSaas.Services
                     .Fail("Garage customer couldn't be found.");
             }
 
-            var vehicles =
-                (from customerOwnedVehicle in _context.CustomerOwnedVehicles.AsNoTracking()
-                 join customerVehicle in _context.CustomerVehicle.AsNoTracking()
-                     on customerOwnedVehicle.VehicleId equals customerVehicle.Id
-                 join vehicleMake in _context.VehicleMake
-                     on customerVehicle.VehicleMakeId equals vehicleMake.Id
-                 join vehicleModel in _context.VehicleModel
-                     on customerVehicle.VehicleModelId equals vehicleModel.Id
-                 where customerOwnedVehicle.GarageBusinessCustomerId == garageCustomerId
-                       && customerOwnedVehicle.GarageBusinessId == garageBusinessId
-                       && customerVehicle.GarageBusinessId == garageBusinessId
-                       && customerVehicle.GarageOwned == false
-                 orderby vehicleMake.Make,
-                         vehicleModel.Model,
-                         customerVehicle.VehicleRegistration
-                 select new VehicleBriefInfo
-                 {
-                     Id = customerVehicle.Id,
-                     Make = vehicleMake.Make,
-                     Model = vehicleModel.Model,
-                     VehicleRegistration = customerVehicle.VehicleRegistration
-                 })
-                .ToList();
+            var vehicles = _context.CustomerVehicle.AsNoTracking()
+                .Where(v => v.GarageBusinessId == garageBusinessId &&
+                    (v.GarageOwned == true || _context.CustomerOwnedVehicles.Any(o =>
+                        o.VehicleId == v.Id && o.GarageBusinessId == garageBusinessId &&
+                        o.GarageBusinessCustomerId == garageCustomerId)))
+                .OrderBy(v => v.VehicleRegistration)
+                .Select(v => new VehicleBriefInfo
+                {
+                    Id = v.Id, VehicleRegistration = v.VehicleRegistration,
+                    Make = v.VehicleMake == null ? "" : v.VehicleMake.Make,
+                    Model = v.VehicleModel == null ? "" : v.VehicleModel.Model
+                }).ToList();
 
             return ServiceResult<List<VehicleBriefInfo>>.Ok(vehicles);
         }

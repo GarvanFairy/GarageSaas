@@ -25,7 +25,9 @@ namespace GarageSaas.Filters
             var controller = context.RouteData.Values["controller"]?.ToString();
             if (context.HttpContext.User.Identity?.IsAuthenticated == true)
                 context.HttpContext.Response.Headers["Cache-Control"] = "no-store";
-            if (!IsTenantController(controller)) { await next(); return; }
+            var historyRead = string.Equals(controller, "ServiceHistory", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(context.RouteData.Values["action"]?.ToString(), "Index", StringComparison.OrdinalIgnoreCase);
+            if (!IsTenantController(controller) && !historyRead) { await next(); return; }
             var request = context.HttpContext.Request;
             context.HttpContext.Response.Headers["Cache-Control"] = "no-store";
             var user = _current.GetCurrentUser();

@@ -1,0 +1,45 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using System.Linq
+@model GarageSaas.Services.Models.VehicleServiceHistoryModel
+@{
+    ViewData["Title"] = "Vehicle work items";
+    var customers = ViewData["Customers"] as List<SelectListItem> ?? new List<SelectListItem>();
+}
+<h1>Work items — @Model.Vehicle.VehicleRegistration</h1>
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a class="btn btn-primary" asp-controller="WorkQuote" asp-action="AddEdit">Create quote</a>
+    <a class="btn btn-outline-primary" asp-controller="ServiceHistory" asp-action="Index" asp-route-vehicleId="@Model.Vehicle.Id">Service history</a>
+    <a class="btn btn-outline-secondary" asp-controller="CustomerVehicle" asp-action="CustomerVehicleList">Vehicles</a>
+</div>
+<p class="text-muted">Record work required or performed. Invoiced and paid labels come from issued invoices; there is no separate completion status.</p>
+<div class="card mb-4"><div class="card-body">
+    <h2 class="h5">Add work</h2>
+    <form asp-action="Save" method="post">
+        <input type="hidden" name="vehicleId" value="@Model.Vehicle.Id" />
+        <label for="customerId" class="form-label">Customer (optional for garage work)</label>
+        <select name="customerId" id="customerId" class="form-select mb-3" asp-items="customers"><option value="">No customer</option></select>
+        <label for="newWork" class="form-label">Work performed or required</label>
+        <textarea id="newWork" name="repairInstructions" class="form-control mb-3" rows="3" required></textarea>
+        <button class="btn btn-primary" type="submit">Save work item</button>
+    </form>
+</div></div>
+@if (Model.WorkItems.Count == 0) { <p>No work recorded for this vehicle.</p> }
+@foreach (var item in Model.WorkItems)
+{
+    var entries = Model.Entries.Where(e => e.WorkItems.Any(w => w.Id == item.Id)).ToList();
+    <article class="card mb-3" id="work-@item.Id"><div class="card-body">
+        <h2 class="h5">Work #@item.Id <small class="text-muted">@item.CreatedDate.ToString("dd MMM yyyy")</small></h2>
+        <p>Status: @(entries.Any(e => e.Status == "Paid") ? "Paid" : entries.Any() ? "Invoiced" : "Recorded")</p>
+        <form asp-action="Save" method="post">
+            <input type="hidden" name="vehicleId" value="@Model.Vehicle.Id" />
+            <input type="hidden" name="id" value="@item.Id" />
+            <label class="form-label" for="description-@item.Id">Work performed or required</label>
+            <textarea id="description-@item.Id" class="form-control mb-2" name="repairInstructions" rows="3" required>@item.RepairInstructions</textarea>
+            <button type="submit" class="btn btn-outline-primary">Save description</button>
+        </form>
+        @foreach (var entry in entries)
+        {
+            <a class="d-inline-block mt-2" asp-controller="VehicleInvoice" asp-action="Detail" asp-route-id="@entry.InvoiceId">@entry.InvoiceNumber</a>
+        }
+    </div></article>
+}

@@ -1,0 +1,46 @@
+@model GarageSaas.Services.Models.VehicleServiceHistoryModel
+@{
+    ViewData["Title"] = "Vehicle service history";
+}
+<div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+    <div><h1>Service history</h1><p>@Model.Vehicle.VehicleRegistration</p></div>
+    <div>
+        <a class="btn btn-primary" asp-controller="WorkItem" asp-action="ForVehicle" asp-route-vehicleId="@Model.Vehicle.Id">Work items</a>
+        <a class="btn btn-outline-secondary" asp-controller="CustomerVehicle" asp-action="CustomerVehicleList">Vehicles</a>
+    </div>
+</div>
+<p class="text-muted">Issued invoices and their recorded work, newest first. Draft and cancelled invoices are excluded. Invoice dates are shown; a separate work completion date is not recorded.</p>
+@if (!string.IsNullOrWhiteSpace(Model.LatestMileage))
+{
+    <p>Latest vehicle mileage: <strong>@Model.LatestMileage km</strong>
+        @if (Model.Vehicle.VehicleMileageDate != default) { <span>recorded @Model.Vehicle.VehicleMileageDate.ToString("dd MMM yyyy")</span> }
+        <span class="text-muted">(not a historical reading for each service)</span>
+    </p>
+}
+else
+{
+    <p class="text-muted">No mileage reading available.</p>
+}
+@if (Model.Entries.Count == 0)
+{
+    <div class="alert alert-info">No invoiced service history for this vehicle.</div>
+}
+@foreach (var entry in Model.Entries)
+{
+    <article class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+                <h2 class="h5">@entry.Date.ToString("dd MMM yyyy")</h2>
+                <a asp-controller="VehicleInvoice" asp-action="Detail" asp-route-id="@entry.InvoiceId">@(entry.InvoiceNumber ?? $"Invoice #{entry.InvoiceId}")</a>
+            </div>
+            <p><span class="badge bg-secondary">@entry.Status</span></p>
+            @if (!string.IsNullOrWhiteSpace(entry.Description)) { <p class="text-break">@entry.Description</p> }
+            <ul>
+                @foreach (var item in entry.WorkItems)
+                {
+                    <li class="text-break">@item.RepairInstructions <a asp-controller="WorkItem" asp-action="ForVehicle" asp-route-vehicleId="@Model.Vehicle.Id" asp-fragment="work-@item.Id">Work #@item.Id</a></li>
+                }
+            </ul>
+        </div>
+    </article>
+}

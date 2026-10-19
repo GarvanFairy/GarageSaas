@@ -45,8 +45,8 @@ or schema changes are required.
 
 ## Deferred endpoints (MVP Phase 1.3 Stage B1)
 
-VehiclePart functionality is deferred pending redesign. ServiceHistory functionality
-is temporarily retired and will be implemented in Phase 3. Models, services, tables
+VehiclePart functionality is deferred pending redesign. The legacy ServiceHistory mutation/JSON
+routes below remain retired; Phase 3 adds the read-only `/ServiceHistory/Index?vehicleId=...` screen. Models, services, tables
 and existing data are retained; these endpoints no longer read or write feature data.
 
 | Route | Preserved HTTP methods |
@@ -258,3 +258,28 @@ not executed in this stage. See the [SQL test guide](../GarageSaas.UnitTests/SQL
 Unit/HTTP coverage does not prove SQL rollback or isolation. Quote edit/delete,
 work-item edits and external relationship changes still require C2b/later coordination;
 creation atomicity does not add immutable history or cross-request stale-form protection.
+
+
+## Phase 3 core garage workflow
+
+From Vehicles, open **Work items** to record or edit work performed/required, then
+create a quote using the existing customer, vehicle and work-item selectors.
+Save the quote, reopen it and choose **Convert to Invoice**. Invoice editing and
+**Mark as Paid** retain their existing routes, numbering and financial rules.
+The quote preview now uses the invoice calculation's existing 23.5% VAT rate.
+This does not introduce a configurable tax policy or change that existing rate.
+
+**History** is available on desktop/mobile vehicle records and invoice details.
+It is a read-only projection of Pending/Paid invoices and their vehicle-specific
+work items, newest invoice date first. Draft/cancelled invoices are excluded.
+Manual invoice descriptions, legacy direct quote links and multi-quote invoices
+use the existing invoice graph validation. Work linked to other vehicles is not
+shown on this vehicle's history. Uninvoiced work remains on Work items.
+
+There is no independent job-completion field in the existing schema. Labels are
+Recorded, Invoiced and Paid, not invented completion events. Invoice dates are
+explicitly labelled as such. Mileage is the latest vehicle reading with its date,
+not a claimed historical mileage snapshot. No ServiceHistory rows or schema are
+created or modified. Existing retired endpoint contracts remain unchanged.
+
+See [Phase 3 verification](../GarageSaas.UnitTests/PHASE3-CORE-WORKFLOW-RESULTS.md).

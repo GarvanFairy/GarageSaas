@@ -17,7 +17,7 @@ namespace GarageSaas.Controllers
             _currentGarageUserService = currentGarageUserService;
         }
 
-        // Retired until Phase 3. Do not bind payloads or access history records.
+        // Legacy mutation/JSON contracts stay retired; Index is the read-only Phase 3 screen.
         [HttpPost]
         public IActionResult Create() => Retired();
 
@@ -25,6 +25,15 @@ namespace GarageSaas.Controllers
         public IActionResult Get() => Retired();
 
         public IActionResult GetServiceHistoryByVehicleId() => Retired();
+
+        [HttpGet]
+        public IActionResult Index(int vehicleId, [FromServices] GarageSaas.Services.VehicleServiceHistoryService history)
+        {
+            var user = _currentGarageUserService.GetCurrentUser();
+            var result = history.Get(vehicleId, user.GarageBusinessId);
+            if (!result.Success) return NotFound();
+            return View(result.Data);
+        }
 
         private IActionResult Retired()
         {

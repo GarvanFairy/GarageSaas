@@ -28,6 +28,10 @@
 
             @if (invoice != null)
             {
+                @if (invoice.VehicleId.HasValue)
+                {
+                    <a class="btn btn-outline-secondary" asp-controller="ServiceHistory" asp-action="Index" asp-route-vehicleId="@invoice.VehicleId">Service history</a>
+                }
                 <a asp-controller="VehicleInvoice"
                    asp-action="AddEdit"
                    asp-route-id="@invoice.Id"

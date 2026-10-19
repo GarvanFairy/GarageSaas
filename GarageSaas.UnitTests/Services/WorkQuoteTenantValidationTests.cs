@@ -190,12 +190,12 @@ public class WorkQuoteTenantValidationTests
         var vehicle = db.CustomerVehicle.Single(x => x.Id == 10); vehicle.VehicleMakeId = 1; vehicle.VehicleModelId = 1;
         db.CustomerOwnedVehicles.Single().GarageBusinessId = 2; db.SaveChanges(); Detach(db);
         var service = new WorkQuoteService(db);
-        Assert.AreEqual(0, service.GetVehiclesForGarageCustomer(101, 1).Data.Count);
+        CollectionAssert.AreEquivalent(new[] { 11 }, service.GetVehiclesForGarageCustomer(101, 1).Data.Select(v => v.Id).ToArray(), "Only the garage-owned vehicle remains selectable when ownership is mislabelled.");
         Assert.IsFalse(service.GetVehiclesForGarageCustomer(201, 1).Success);
         Assert.IsFalse(service.GetCustomerDropdownItems(1).Any(x => x.Value == "201"));
         Assert.IsFalse(service.GetVehicleDropdownItems(1).Any(x => x.Value == "20"));
         db.CustomerOwnedVehicles.Single().GarageBusinessId = 1; db.SaveChanges(); Detach(db);
-        Assert.AreEqual(10, service.GetVehiclesForGarageCustomer(101, 1).Data.Single().Id);
+        CollectionAssert.AreEquivalent(new[] { 10, 11 }, service.GetVehiclesForGarageCustomer(101, 1).Data.Select(v => v.Id).ToArray());
     }
 
     [TestMethod]

@@ -1,3 +1,5 @@
+using System.Net.Http.Json;
+using System.Text.Json;
 using System.Net;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
@@ -32,6 +34,119 @@ namespace GarageSaas.UnitTests.Controllers;
 [TestClass]
 public class GarageSwitchingHttpTests
 {
+    [TestMethod]
+    public async Task RenderedWorkFormsSubmitOneContextTokenAndRejectStaleEdits()
+    {
+        await using var h = await SwitchHost.Start(); await h.Select(1);
+        int vehicleId;
+        using (var db = new SignupContext(h.Options))
+        {
+            var vehicle = new CustomerVehicle { GarageBusinessId = 1, VehicleRegistration = "FORM-TEST" };
+            db.Add(vehicle); db.SaveChanges(); vehicleId = vehicle.Id;
+        }
+        async Task<Dictionary<string, string>> Form(int index)
+        {
+            using var page = await h.Send("GET", "/WorkItem/ForVehicle?vehicleId=" + vehicleId);
+            Assert.AreEqual(HttpStatusCode.OK, page.StatusCode);
+            var forms = Regex.Matches(await page.Content.ReadAsStringAsync(), @"<form\b[^>]*>([\s\S]*?)</form>")
+                .Cast<System.Text.RegularExpressions.Match>().Where(m => m.Value.Contains("/WorkItem/Save")).ToArray();
+            var inputs = Regex.Matches(forms[index].Value, @"<input\b[^>]*>").Cast<System.Text.RegularExpressions.Match>()
+                .Select(m => new { Name = Regex.Match(m.Value, "name=\"([^\"]+)\"").Groups[1].Value,
+                    Value = WebUtility.HtmlDecode(Regex.Match(m.Value, "value=\"([^\"]*)\"").Groups[1].Value) }).ToList();
+            Assert.AreEqual(1, inputs.Count(i => i.Name == "__GarageContext"), "Each rendered form must submit exactly one garage-context token.");
+            Assert.AreEqual(1, inputs.Count(i => i.Name == "__RequestVerificationToken"));
+            return inputs.Where(i => i.Name.Length > 0).ToDictionary(i => i.Name, i => i.Value);
+        }
+        var add = await Form(0); add["repairInstructions"] = "New work from rendered form";
+        using var created = await h.Send("POST", "/WorkItem/Save", add, antiforgery: "missing");
+        Assert.AreEqual(HttpStatusCode.Redirect, created.StatusCode);
+        var edit = await Form(1); edit["repairInstructions"] = "Edited work from rendered form";
+        using var updated = await h.Send("POST", "/WorkItem/Save", edit, antiforgery: "missing");
+        Assert.AreEqual(HttpStatusCode.Redirect, updated.StatusCode);
+        var stale = await Form(1); stale["repairInstructions"] = "Must not save after switch";
+        await h.Select(2);
+        using var rejected = await h.Send("POST", "/WorkItem/Save", stale, antiforgery: "missing");
+        Assert.AreEqual(HttpStatusCode.Conflict, rejected.StatusCode);
+        using var check = new SignupContext(h.Options);
+        Assert.AreEqual("Edited work from rendered form", check.WorkItem.Single(w => w.VehicleId == vehicleId).RepairInstructions);
+    }
+
+    [TestMethod]
+    public async Task CoreWorkflowRendersHistoryAndRejectsStaleGarageWork()
+    {
+        await using var h = await SwitchHost.Start(); await h.Select(1);
+        using var page = await h.Send("GET", "/CustomerVehicle/CustomerVehicleList");
+        Assert.AreEqual(HttpStatusCode.OK, page.StatusCode);
+        var html = await page.Content.ReadAsStringAsync();
+        var context = Regex.Match(html, "name=\"garage-context\" content=\"([^\"]+)\"").Groups[1].Value;
+        Assert.IsFalse(string.IsNullOrEmpty(context));
+        using var customer = await h.Send("POST", "/GarageCustomers/AddUpdateGarageCustomer", new()
+        { ["Customer.GarageCustomerForename"] = "WorkflowCustomer", ["Customer.GarageCustomerSurname"] = "Driver", ["__GarageContext"] = context });
+        Assert.AreEqual(HttpStatusCode.Redirect, customer.StatusCode);
+        int customerId;
+        using (var db = new SignupContext(h.Options)) customerId = db.GarageBusinessCustomer.Single(c => c.GarageCustomerForename == "WorkflowCustomer").Id;
+        using var vehicle = await h.Json("/CustomerVehicle/AddUpdateCustomerVehicle", new VehicleAndCustomers
+        { Vehicle = new CustomerVehicle { VehicleRegistration = "WORKFLOW-REG", VehicleMileageDate = DateTime.Today },
+          GarageVehicleOwnerListItem = new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Value = customerId.ToString() } }, context);
+        Assert.AreEqual(HttpStatusCode.OK, vehicle.StatusCode); Assert.AreEqual("Success", await vehicle.Content.ReadFromJsonAsync<string>());
+        int vehicleId;
+        using (var db = new SignupContext(h.Options)) vehicleId = db.CustomerVehicle.Single(v => v.VehicleRegistration == "WORKFLOW-REG").Id;
+        using var missingToken = await h.Send("POST", "/WorkItem/Save", new()
+        { ["vehicleId"] = vehicleId.ToString(), ["repairInstructions"] = "Must not save", ["__GarageContext"] = context }, antiforgery: "missing");
+        Assert.AreEqual(HttpStatusCode.BadRequest, missingToken.StatusCode);
+        using var work = await h.Send("POST", "/WorkItem/Save", new()
+        { ["vehicleId"] = vehicleId.ToString(), ["customerId"] = customerId.ToString(), ["repairInstructions"] = "HTTP brake replacement", ["__GarageContext"] = context });
+        Assert.AreEqual(HttpStatusCode.Redirect, work.StatusCode);
+        int workId;
+        using (var db = new SignupContext(h.Options)) workId = db.WorkItem.Single(w => w.VehicleId == vehicleId).Id;
+        using var quote = await h.Json("/WorkQuote/AddWorkQuote", new CombinedWorkQuoteWorkitem
+        { CustomerId = customerId, VehicleId = vehicleId, WorkQuoteDate = DateTime.Today, Labour = 100, WorkItemIds = new() { workId } }, context);
+        var quoteJson = await quote.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.AreEqual("Success", quoteJson.GetProperty("status").GetString());
+        var quoteId = quoteJson.GetProperty("data").GetProperty("workQuoteId").GetInt32();
+        using var conversion = await h.Send("POST", "/VehicleInvoice/CreateFromWorkQuote", new()
+        { ["workQuoteId"] = quoteId.ToString(), ["__GarageContext"] = context });
+        var converted = await conversion.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.AreEqual("Success", converted.GetProperty("status").GetString());
+        var invoiceId = converted.GetProperty("data").GetProperty("invoiceId").GetInt32();
+        using var payment = await h.Send("POST", "/VehicleInvoice/MarkAsPaid", new()
+        { ["invoiceId"] = invoiceId.ToString(), ["__GarageContext"] = context });
+        Assert.AreEqual(HttpStatusCode.Redirect, payment.StatusCode);
+        using var history = await h.Send("GET", "/ServiceHistory/Index?vehicleId=" + vehicleId);
+        var historyHtml = await history.Content.ReadAsStringAsync(); Assert.AreEqual(HttpStatusCode.OK, history.StatusCode);
+        StringAssert.Contains(historyHtml, "HTTP brake replacement"); StringAssert.Contains(historyHtml, "Paid"); Assert.IsTrue(history.Headers.CacheControl!.NoStore);
+        using var workPage = await h.Send("GET", "/WorkItem/ForVehicle?vehicleId=" + vehicleId);
+        Assert.AreEqual(HttpStatusCode.OK, workPage.StatusCode); StringAssert.Contains(await workPage.Content.ReadAsStringAsync(), "HTTP brake replacement");
+        using var quotePage = await h.Send("GET", "/WorkQuote/AddEdit?id=" + quoteId); Assert.AreEqual(HttpStatusCode.OK, quotePage.StatusCode);
+        using var invoicePage = await h.Send("GET", "/VehicleInvoice/Detail?id=" + invoiceId); Assert.AreEqual(HttpStatusCode.OK, invoicePage.StatusCode);
+        await h.Select(2);
+        using var denied = await h.Send("GET", "/ServiceHistory/Index?vehicleId=" + vehicleId); Assert.AreEqual(HttpStatusCode.NotFound, denied.StatusCode);
+        using var deniedWork = await h.Send("GET", "/WorkItem/ForVehicle?vehicleId=" + vehicleId); Assert.AreEqual(HttpStatusCode.NotFound, deniedWork.StatusCode);
+        using var stale = await h.Send("POST", "/WorkItem/Save", new()
+        { ["id"] = workId.ToString(), ["vehicleId"] = vehicleId.ToString(), ["repairInstructions"] = "Injected", ["__GarageContext"] = context });
+        Assert.AreEqual(HttpStatusCode.Conflict, stale.StatusCode);
+        using var secondPage = await h.Send("GET", "/CustomerVehicle/CustomerVehicleList");
+        var secondContext = Regex.Match(await secondPage.Content.ReadAsStringAsync(), "name=\"garage-context\" content=\"([^\"]+)\"").Groups[1].Value;
+        using var crossGarage = await h.Send("POST", "/WorkItem/Save", new()
+        { ["id"] = workId.ToString(), ["vehicleId"] = vehicleId.ToString(), ["repairInstructions"] = "Injected", ["__GarageContext"] = secondContext });
+        Assert.AreEqual(HttpStatusCode.NotFound, crossGarage.StatusCode);
+        using var staleHistory = await h.Send("GET", "/ServiceHistory/Index?vehicleId=" + vehicleId, context: context); Assert.AreEqual(HttpStatusCode.Conflict, staleHistory.StatusCode);
+        using var check = new SignupContext(h.Options);
+        Assert.AreEqual("HTTP brake replacement", check.WorkItem.Single(w => w.Id == workId).RepairInstructions);
+        Assert.AreEqual("Paid", check.VehicleInvoice.Single(i => i.Id == invoiceId).InvoiceStatus);
+    }
+
+    [DataTestMethod]
+    [DataRow("/ServiceHistory/Index?vehicleId=1")]
+    [DataRow("/WorkItem/ForVehicle?vehicleId=1")]
+    public async Task WorkflowScreensRequireAuthenticationAndGarage(string path)
+    {
+        await using var h = await SwitchHost.Start();
+        using var anonymous = await h.Send("GET", path, identity: null); Assert.AreEqual(HttpStatusCode.Unauthorized, anonymous.StatusCode);
+        using var unselected = await h.Send("GET", path); Assert.AreEqual(HttpStatusCode.Forbidden, unselected.StatusCode);
+        using var platform = await h.Send("GET", path, identity: "platform"); Assert.AreEqual(HttpStatusCode.Forbidden, platform.StatusCode);
+    }
+
     [TestMethod]
     public async Task SwitchRememberRolesAndTenantReadsUseSelectedGarage()
     {
@@ -142,7 +257,7 @@ public class GarageSwitchingHttpTests
                 web.UseKestrel(s=>s.Listen(IPAddress.Loopback,0));web.ConfigureServices(s=>{
                     s.AddLogging();s.AddHttpContextAccessor();s.AddDataProtection();s.AddScoped(_=>new SignupContext(h.Options));s.AddScoped<GarageSelectionService>();s.AddScoped<GarageContextFilter>();
                     s.AddScoped<ICurrentGarageUserService,CurrentGarageUserService>();s.AddScoped<IGarageAuthorizationService,GarageAuthorizationService>();
-                    s.AddScoped<IGarageCustomersService,GarageCustomersService>();s.AddScoped<IGarageBusinessService,GarageBusinessService>();s.AddSingleton(Mock.Of<IVehicleLookupService>());
+                    s.AddScoped<ICustomerVehicleService,CustomerVehicleService>();s.AddScoped<IWorkItemService,WorkItemService>();s.AddScoped<IWorkQuoteService,WorkQuoteService>();s.AddScoped<IVehicleInvoiceService,VehicleInvoiceService>();s.AddScoped<VehicleServiceHistoryService>();s.AddScoped<IGarageCustomersService,GarageCustomersService>();s.AddScoped<IGarageBusinessService,GarageBusinessService>();s.AddSingleton(Mock.Of<IVehicleLookupService>());
                     s.AddSingleton(Mock.Of<IEmailService>());s.AddSingleton(Mock.Of<IRegistrationRequestLock>());s.AddScoped<IInvitationIdentityVerificationService,InvitationIdentityVerificationService>();
                     s.AddScoped(_=>new OnboardingInvitationService(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?>{["Onboarding:PublicOrigin"]="https://trusted.example"}).Build(),Mock.Of<IEmailService>(),NullLogger<OnboardingInvitationService>.Instance));
                     s.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler,PlatformAdministratorHandler>();
@@ -173,6 +288,15 @@ public class GarageSwitchingHttpTests
             var response=await _client.SendAsync(request);
             if(response.Headers.TryGetValues("Set-Cookie",out var values))foreach(var value in values){var cookie=value.Split(';')[0];if(cookie.StartsWith(GarageSelectionService.CookieName+"="))Preference=cookie;else if(cookie.StartsWith(".AspNetCore.Antiforgery"))_antiforgeryCookie=cookie;}
             return response;
+        }
+        internal async Task<HttpResponseMessage> Json(string path, object body, string context)
+        {
+            using var token = await Send("GET", "/test/token");
+            using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body) };
+            request.Headers.Add("X-Test-Identity", "member"); request.Headers.Add("X-Garage-Context", WebUtility.HtmlDecode(context));
+            request.Headers.Add("RequestVerificationToken", await token.Content.ReadAsStringAsync());
+            request.Headers.Add("Cookie", string.Join("; ", new[] { Preference, _antiforgeryCookie }.Where(x => x != null)));
+            return await _client.SendAsync(request);
         }
         public async ValueTask DisposeAsync(){_client?.Dispose();if(_host!=null){await _host.StopAsync();_host.Dispose();}}
     }
