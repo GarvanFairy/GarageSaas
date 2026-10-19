@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="f4a1bf78-b862-4442-8ee0-cb131c5f2130" name="ggall@GARVAN_ASUS 2026-10-19 21:07:05" runUser="GARVAN_ASUS\ggall" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-19T21:07:05.6081036+01:00" queuing="2026-10-19T21:07:05.6081041+01:00" start="2026-10-19T21:07:04.2592071+01:00" finish="2026-10-19T21:07:05.6585309+01:00" />
+  <TestSettings name="default" id="d111eb08-75b0-4984-8b2d-b848b7dbc5cb">
+    <Deployment runDeploymentRoot="ggall_GARVAN_ASUS_2026-10-19_21_07_05" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="306d9f98-de85-4a31-8c4e-97d5f188087b" testId="288e5a6c-3929-4878-fd75-e703b5dfb06f" testName="InvalidRecipientsAreRejected (a@example.com&#xD;&#xA;Bcc:b@example.com)" computerName="GARVAN_ASUS" duration="00:00:00.0000005" startTime="2026-10-19T21:07:05.6087561+01:00" endTime="2026-10-19T21:07:05.6088394+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="306d9f98-de85-4a31-8c4e-97d5f188087b" />
+    <UnitTestResult executionId="605da5fc-dd89-4723-adab-cc242e24d118" testId="7a07dd86-9b85-7b15-c4b4-47daa5e026ff" testName="InvalidRecipientsAreRejected (a@localhost)" computerName="GARVAN_ASUS" duration="00:00:00.0000419" startTime="2026-10-19T21:07:05.6086163+01:00" endTime="2026-10-19T21:07:05.6086989+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="605da5fc-dd89-4723-adab-cc242e24d118" />
+    <UnitTestResult executionId="4e403a26-274f-4d54-964f-67a7c61cf3a5" testId="a9301faf-c0a4-00d7-12d0-7d664ce1d84b" testName="InvalidRecipientsAreRejected (a@example.com,b@example.com)" computerName="GARVAN_ASUS" duration="00:00:00.0000023" startTime="2026-10-19T21:07:05.6087060+01:00" endTime="2026-10-19T21:07:05.6087241+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4e403a26-274f-4d54-964f-67a7c61cf3a5" />
+    <UnitTestResult executionId="bd668055-3f7b-488e-840e-6f3b6e40b20e" testId="778cd7a4-159d-24ef-46b4-fe8e59554926" testName="MissingForeignAndInvalidDocumentsFailClosed (quote,999,1)" computerName="GARVAN_ASUS" duration="00:00:00.0007488" startTime="2026-10-19T21:07:05.5416910+01:00" endTime="2026-10-19T21:07:05.5424971+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bd668055-3f7b-488e-840e-6f3b6e40b20e" />
+    <UnitTestResult executionId="2e5922b4-6eae-411d-86f7-470a361d578e" testId="9adea802-6f68-2365-f3aa-d7d7ff594322" testName="MissingForeignAndInvalidDocumentsFailClosed (invoice,0,1)" computerName="GARVAN_ASUS" duration="00:00:00.0006920" startTime="2026-10-19T21:07:05.5425137+01:00" endTime="2026-10-19T21:07:05.5432572+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2e5922b4-6eae-411d-86f7-470a361d578e" />
+    <UnitTestResult executionId="973164a7-dca3-422a-945f-23b541eb4064" testId="d7117c30-5bb1-4cd0-c3fb-bbae29756882" testName="QuoteRetainsStoredAmountsAndNullsWithoutInventingInvoiceCalculations" computerName="GARVAN_ASUS" duration="00:00:00.0153519" startTime="2026-10-19T21:07:05.5228334+01:00" endTime="2026-10-19T21:07:05.5390967+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="973164a7-dca3-422a-945f-23b541eb4064" />
+    <UnitTestResult executionId="202f01b3-5697-4f25-acf0-5b4bb7bc0dfd" testId="74589b67-2283-a4db-5b46-becd0a0bd52b" testName="DocumentUsesValidatedGarageCustomerVehicleAndExistingAmounts (quote)" computerName="GARVAN_ASUS" duration="00:00:00.7283412" startTime="2026-10-19T21:07:04.6982887+01:00" endTime="2026-10-19T21:07:05.4353769+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="202f01b3-5697-4f25-acf0-5b4bb7bc0dfd" />
+    <UnitTestResult executionId="e6ffc326-f776-4a5e-8e9c-2624997ff7e1" testId="6da48883-7f63-062e-90e4-5bd5aa44097e" testName="UnsafeRelatedCustomerIsNeverReturned" computerName="GARVAN_ASUS" duration="00:00:00.0029157" startTime="2026-10-19T21:07:05.5697441+01:00" endTime="2026-10-19T21:07:05.5727797+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e6ffc326-f776-4a5e-8e9c-2624997ff7e1" />
+    <UnitTestResult executionId="0222c94f-98c3-42fc-b628-aceb497923fd" testId="d7646264-a40c-bf6f-0a5c-6ae4f84a2b49" testName="InvalidRecipientsAreRejected (invalid)" computerName="GARVAN_ASUS" duration="00:00:00.0003771" startTime="2026-10-19T21:07:05.6081466+01:00" endTime="2026-10-19T21:07:05.6085985+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0222c94f-98c3-42fc-b628-aceb497923fd" />
+    <UnitTestResult executionId="5ac626a0-7c9e-4936-9fa7-4c25db19b653" testId="e2c33ced-19bf-612a-abc4-b25254e4f975" testName="LongDescriptionsAndNotesPaginateOnA4" computerName="GARVAN_ASUS" duration="00:00:00.0338841" startTime="2026-10-19T21:07:05.5728229+01:00" endTime="2026-10-19T21:07:05.6067997+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5ac626a0-7c9e-4936-9fa7-4c25db19b653" />
+    <UnitTestResult executionId="77f1fb3e-1a01-4a59-841c-37d07c45da73" testId="ddf8ca9f-9281-c706-9ed5-8fd5a4984172" testName="MissingForeignAndInvalidDocumentsFailClosed (invoice,1,2)" computerName="GARVAN_ASUS" duration="00:00:00.0009792" startTime="2026-10-19T21:07:05.5406256+01:00" endTime="2026-10-19T21:07:05.5416719+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="77f1fb3e-1a01-4a59-841c-37d07c45da73" />
+    <UnitTestResult executionId="095a9b22-499f-4ade-b226-48211a5ff710" testId="73cba1c5-fde6-c4a5-1d02-85c27912509f" testName="MissingForeignAndInvalidDocumentsFailClosed (quote,100,2)" computerName="GARVAN_ASUS" duration="00:00:00.0011988" startTime="2026-10-19T21:07:05.5391408+01:00" endTime="2026-10-19T21:07:05.5406025+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="095a9b22-499f-4ade-b226-48211a5ff710" />
+    <UnitTestResult executionId="ae3ffd4c-81f0-499b-b3d3-62f529755e59" testId="bf949586-bf5b-8512-4354-6c4c958dd0ff" testName="MissingForeignAndInvalidDocumentsFailClosed (unknown,1,1)" computerName="GARVAN_ASUS" duration="00:00:00.0007014" startTime="2026-10-19T21:07:05.5440474+01:00" endTime="2026-10-19T21:07:05.5448007+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ae3ffd4c-81f0-499b-b3d3-62f529755e59" />
+    <UnitTestResult executionId="b1286ec7-fc92-4104-991f-d73930f0b972" testId="6e7d80a4-e872-bf5c-a195-1caab8e89e3b" testName="MissingForeignAndInvalidDocumentsFailClosed (invoice,-1,1)" computerName="GARVAN_ASUS" duration="00:00:00.0007057" startTime="2026-10-19T21:07:05.5432730+01:00" endTime="2026-10-19T21:07:05.5440309+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b1286ec7-fc92-4104-991f-d73930f0b972" />
+    <UnitTestResult executionId="c8195a3e-99dd-474f-8e29-3c476325d7d0" testId="06fcce8e-c2e3-008a-08fc-7c00c7031a08" testName="InvalidRecipientsAreRejected ()" computerName="GARVAN_ASUS" duration="00:00:00.0010531" startTime="2026-10-19T21:07:05.6068771+01:00" endTime="2026-10-19T21:07:05.6081179+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c8195a3e-99dd-474f-8e29-3c476325d7d0" />
+    <UnitTestResult executionId="a3b6ce62-a456-4cea-8538-69f822b5bc11" testId="d4e7a342-1301-93f8-cc7b-801f1a03be5c" testName="InvalidRecipientsAreRejected (A &lt;a@example.com&gt;)" computerName="GARVAN_ASUS" duration="00:00:00.0000136" startTime="2026-10-19T21:07:05.6087284+01:00" endTime="2026-10-19T21:07:05.6087528+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a3b6ce62-a456-4cea-8538-69f822b5bc11" />
+    <UnitTestResult executionId="4cf5f858-a3d9-46a2-98f8-195139b85127" testId="572ade2e-d5a4-e19e-d403-cde133cbd781" testName="DocumentUsesValidatedGarageCustomerVehicleAndExistingAmounts (invoice)" computerName="GARVAN_ASUS" duration="00:00:00.0840916" startTime="2026-10-19T21:07:05.4381333+01:00" endTime="2026-10-19T21:07:05.5224977+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4cf5f858-a3d9-46a2-98f8-195139b85127" />
+    <UnitTestResult executionId="83e29060-64d6-446a-afe3-4016310da6a2" testId="d2d4e572-f767-20de-e846-d7eb521e8803" testName="SendTokensBindIdentityGarageDocumentRecipientAndAreSingleUse" computerName="GARVAN_ASUS" duration="00:00:00.0023340" startTime="2026-10-19T21:07:05.6088447+01:00" endTime="2026-10-19T21:07:05.6112990+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="83e29060-64d6-446a-afe3-4016310da6a2" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="LongDescriptionsAndNotesPaginateOnA4" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="e2c33ced-19bf-612a-abc4-b25254e4f975">
+      <Execution id="5ac626a0-7c9e-4936-9fa7-4c25db19b653" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="LongDescriptionsAndNotesPaginateOnA4" />
+    </UnitTest>
+    <UnitTest name="MissingForeignAndInvalidDocumentsFailClosed (invoice,1,2)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="ddf8ca9f-9281-c706-9ed5-8fd5a4984172">
+      <Execution id="77f1fb3e-1a01-4a59-841c-37d07c45da73" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="MissingForeignAndInvalidDocumentsFailClosed" />
+    </UnitTest>
+    <UnitTest name="QuoteRetainsStoredAmountsAndNullsWithoutInventingInvoiceCalculations" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="d7117c30-5bb1-4cd0-c3fb-bbae29756882">
+      <Execution id="973164a7-dca3-422a-945f-23b541eb4064" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="QuoteRetainsStoredAmountsAndNullsWithoutInventingInvoiceCalculations" />
+    </UnitTest>
+    <UnitTest name="DocumentUsesValidatedGarageCustomerVehicleAndExistingAmounts (quote)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="74589b67-2283-a4db-5b46-becd0a0bd52b">
+      <Execution id="202f01b3-5697-4f25-acf0-5b4bb7bc0dfd" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="DocumentUsesValidatedGarageCustomerVehicleAndExistingAmounts" />
+    </UnitTest>
+    <UnitTest name="UnsafeRelatedCustomerIsNeverReturned" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="6da48883-7f63-062e-90e4-5bd5aa44097e">
+      <Execution id="e6ffc326-f776-4a5e-8e9c-2624997ff7e1" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="UnsafeRelatedCustomerIsNeverReturned" />
+    </UnitTest>
+    <UnitTest name="DocumentUsesValidatedGarageCustomerVehicleAndExistingAmounts (invoice)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="572ade2e-d5a4-e19e-d403-cde133cbd781">
+      <Execution id="4cf5f858-a3d9-46a2-98f8-195139b85127" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="DocumentUsesValidatedGarageCustomerVehicleAndExistingAmounts" />
+    </UnitTest>
+    <UnitTest name="InvalidRecipientsAreRejected ()" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="06fcce8e-c2e3-008a-08fc-7c00c7031a08">
+      <Execution id="c8195a3e-99dd-474f-8e29-3c476325d7d0" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="InvalidRecipientsAreRejected" />
+    </UnitTest>
+    <UnitTest name="SendTokensBindIdentityGarageDocumentRecipientAndAreSingleUse" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="d2d4e572-f767-20de-e846-d7eb521e8803">
+      <Execution id="83e29060-64d6-446a-afe3-4016310da6a2" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="SendTokensBindIdentityGarageDocumentRecipientAndAreSingleUse" />
+    </UnitTest>
+    <UnitTest name="InvalidRecipientsAreRejected (a@example.com&#xD;&#xA;Bcc:b@example.com)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="288e5a6c-3929-4878-fd75-e703b5dfb06f">
+      <Execution id="306d9f98-de85-4a31-8c4e-97d5f188087b" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="InvalidRecipientsAreRejected" />
+    </UnitTest>
+    <UnitTest name="MissingForeignAndInvalidDocumentsFailClosed (quote,100,2)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="73cba1c5-fde6-c4a5-1d02-85c27912509f">
+      <Execution id="095a9b22-499f-4ade-b226-48211a5ff710" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="MissingForeignAndInvalidDocumentsFailClosed" />
+    </UnitTest>
+    <UnitTest name="MissingForeignAndInvalidDocumentsFailClosed (invoice,0,1)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="9adea802-6f68-2365-f3aa-d7d7ff594322">
+      <Execution id="2e5922b4-6eae-411d-86f7-470a361d578e" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="MissingForeignAndInvalidDocumentsFailClosed" />
+    </UnitTest>
+    <UnitTest name="InvalidRecipientsAreRejected (invalid)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="d7646264-a40c-bf6f-0a5c-6ae4f84a2b49">
+      <Execution id="0222c94f-98c3-42fc-b628-aceb497923fd" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="InvalidRecipientsAreRejected" />
+    </UnitTest>
+    <UnitTest name="MissingForeignAndInvalidDocumentsFailClosed (quote,999,1)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="778cd7a4-159d-24ef-46b4-fe8e59554926">
+      <Execution id="bd668055-3f7b-488e-840e-6f3b6e40b20e" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="MissingForeignAndInvalidDocumentsFailClosed" />
+    </UnitTest>
+    <UnitTest name="InvalidRecipientsAreRejected (a@example.com,b@example.com)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="a9301faf-c0a4-00d7-12d0-7d664ce1d84b">
+      <Execution id="4e403a26-274f-4d54-964f-67a7c61cf3a5" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="InvalidRecipientsAreRejected" />
+    </UnitTest>
+    <UnitTest name="MissingForeignAndInvalidDocumentsFailClosed (unknown,1,1)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="bf949586-bf5b-8512-4354-6c4c958dd0ff">
+      <Execution id="ae3ffd4c-81f0-499b-b3d3-62f529755e59" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="MissingForeignAndInvalidDocumentsFailClosed" />
+    </UnitTest>
+    <UnitTest name="MissingForeignAndInvalidDocumentsFailClosed (invoice,-1,1)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="6e7d80a4-e872-bf5c-a195-1caab8e89e3b">
+      <Execution id="b1286ec7-fc92-4104-991f-d73930f0b972" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="MissingForeignAndInvalidDocumentsFailClosed" />
+    </UnitTest>
+    <UnitTest name="InvalidRecipientsAreRejected (a@localhost)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="7a07dd86-9b85-7b15-c4b4-47daa5e026ff">
+      <Execution id="605da5fc-dd89-4723-adab-cc242e24d118" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="InvalidRecipientsAreRejected" />
+    </UnitTest>
+    <UnitTest name="InvalidRecipientsAreRejected (A &lt;a@example.com&gt;)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\debug\net10.0\garagesaas.unittests.dll" id="d4e7a342-1301-93f8-cc7b-801f1a03be5c">
+      <Execution id="a3b6ce62-a456-4cea-8538-69f822b5bc11" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Debug\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.CustomerDocumentTests" name="InvalidRecipientsAreRejected" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="288e5a6c-3929-4878-fd75-e703b5dfb06f" executionId="306d9f98-de85-4a31-8c4e-97d5f188087b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7a07dd86-9b85-7b15-c4b4-47daa5e026ff" executionId="605da5fc-dd89-4723-adab-cc242e24d118" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a9301faf-c0a4-00d7-12d0-7d664ce1d84b" executionId="4e403a26-274f-4d54-964f-67a7c61cf3a5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="778cd7a4-159d-24ef-46b4-fe8e59554926" executionId="bd668055-3f7b-488e-840e-6f3b6e40b20e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9adea802-6f68-2365-f3aa-d7d7ff594322" executionId="2e5922b4-6eae-411d-86f7-470a361d578e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d7117c30-5bb1-4cd0-c3fb-bbae29756882" executionId="973164a7-dca3-422a-945f-23b541eb4064" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="74589b67-2283-a4db-5b46-becd0a0bd52b" executionId="202f01b3-5697-4f25-acf0-5b4bb7bc0dfd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6da48883-7f63-062e-90e4-5bd5aa44097e" executionId="e6ffc326-f776-4a5e-8e9c-2624997ff7e1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d7646264-a40c-bf6f-0a5c-6ae4f84a2b49" executionId="0222c94f-98c3-42fc-b628-aceb497923fd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e2c33ced-19bf-612a-abc4-b25254e4f975" executionId="5ac626a0-7c9e-4936-9fa7-4c25db19b653" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ddf8ca9f-9281-c706-9ed5-8fd5a4984172" executionId="77f1fb3e-1a01-4a59-841c-37d07c45da73" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="73cba1c5-fde6-c4a5-1d02-85c27912509f" executionId="095a9b22-499f-4ade-b226-48211a5ff710" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bf949586-bf5b-8512-4354-6c4c958dd0ff" executionId="ae3ffd4c-81f0-499b-b3d3-62f529755e59" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6e7d80a4-e872-bf5c-a195-1caab8e89e3b" executionId="b1286ec7-fc92-4104-991f-d73930f0b972" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="06fcce8e-c2e3-008a-08fc-7c00c7031a08" executionId="c8195a3e-99dd-474f-8e29-3c476325d7d0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d4e7a342-1301-93f8-cc7b-801f1a03be5c" executionId="a3b6ce62-a456-4cea-8538-69f822b5bc11" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="572ade2e-d5a4-e19e-d403-cde133cbd781" executionId="4cf5f858-a3d9-46a2-98f8-195139b85127" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d2d4e572-f767-20de-e846-d7eb521e8803" executionId="83e29060-64d6-446a-afe3-4016310da6a2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="18" executed="18" passed="18" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+  </ResultSummary>
+</TestRun>

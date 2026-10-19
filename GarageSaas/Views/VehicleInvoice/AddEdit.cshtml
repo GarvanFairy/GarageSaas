@@ -11,6 +11,14 @@
 
 <div class="container-fluid mt-4">
     <h1>@ViewData["Title"]</h1>
+    @if (Model?.Invoice.Id > 0)
+    {
+        <div class="d-flex flex-wrap mb-3">
+    <a class="btn btn-outline-primary mr-2 mb-2" asp-controller="CustomerDocument" asp-action="Download" asp-route-kind="invoice" asp-route-id="@Model.Invoice.Id">Download PDF</a>
+    <a class="btn btn-outline-secondary mb-2" asp-controller="CustomerDocument" asp-action="Send" asp-route-kind="invoice" asp-route-id="@Model.Invoice.Id">Send to Customer</a>
+</div>
+        <p class="small text-muted">PDFs use saved details. Save any changes before downloading or sending.</p>
+    }
 
     @if (TempData["Error"] != null)
     {

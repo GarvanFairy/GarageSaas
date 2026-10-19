@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="TestHelpers\Fixtures\GarageLogo.*" CopyToOutputDirectory="PreserveNewest" />
     <ProjectReference Include="..\GarageSaas\GarageSaas.csproj" />
     <ProjectReference Include="..\SignupAPI\SignupAPI.csproj" />
   </ItemGroup>

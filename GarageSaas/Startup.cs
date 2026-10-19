@@ -102,6 +102,9 @@ namespace GarageSaas
             services.AddScoped<IGarageCustomersService, GarageCustomersService>();
             services.AddScoped<IWorkItemService, WorkItemService>();
             services.AddScoped<VehicleServiceHistoryService>();
+            services.AddScoped<CustomerDocumentService>();
+            services.AddScoped<ICustomerDocumentPdfRenderer, CustomerDocumentPdfRenderer>();
+            services.AddSingleton<DocumentSendTokens>();
             services.AddScoped<IWorkQuoteService, WorkQuoteService>();
             services.AddScoped<IVehicleInvoiceService, VehicleInvoiceService>();
             services.AddScoped<IVehiclePartService, VehiclePartService>();

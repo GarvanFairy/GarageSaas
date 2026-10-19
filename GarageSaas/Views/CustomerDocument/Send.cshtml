@@ -1,0 +1,40 @@
+@model GarageSaas.Services.Models.SendCustomerDocumentModel
+@{
+    ViewData["Title"] = "Send to Customer";
+    var sourceController = Model.Document.Kind == "quote" ? "WorkQuote" : "VehicleInvoice";
+}
+<div class="card mx-auto" style="max-width: 680px"><div class="card-body">
+    <h1 class="h3">Send @Model.Document.Title to Customer</h1>
+    <p>Document: <strong>@Model.Document.Number</strong></p>
+    <p>Customer: @Model.Document.Customer?.GarageCustomerForename @Model.Document.Customer?.GarageCustomerSurname</p>
+    <p>Recipient: <strong class="text-break">@(Model.Document.Recipient ?? "No email address recorded")</strong></p>
+    <p>The PDF will use the latest saved document details and will be attached. Verify the customer and address before sending.</p>
+    <a class="btn btn-outline-primary mb-3" asp-action="Download" asp-route-kind="@Model.Document.Kind" asp-route-id="@Model.Document.Id">Download PDF to review</a>
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <div class="alert alert-warning">@Model.Error</div>
+        @if (Model.Document.Customer != null)
+        {
+            <a class="btn btn-outline-secondary" asp-controller="GarageCustomers" asp-action="EditGarageCustomer" asp-route-garageCustomerId="@Model.Document.Customer.Id">Edit customer</a>
+        }
+    }
+    else
+    {
+        <form asp-action="Send" method="post" id="sendDocumentForm">
+            <input type="hidden" name="kind" value="@Model.Document.Kind" />
+            <input type="hidden" name="id" value="@Model.Document.Id" />
+            <input type="hidden" name="sendToken" value="@Model.SendToken" />
+            <button type="submit" class="btn btn-primary">Confirm and send</button>
+        </form>
+    }
+    <a class="btn btn-link mt-2" asp-controller="@sourceController" asp-action="AddEdit" asp-route-id="@Model.Document.Id">Back to @Model.Document.Title</a>
+</div></div>
+@section Scripts {
+    <script>
+        document.getElementById('sendDocumentForm')?.addEventListener('submit', function () {
+            const button = this.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.textContent = 'Sending...';
+        });
+    </script>
+}

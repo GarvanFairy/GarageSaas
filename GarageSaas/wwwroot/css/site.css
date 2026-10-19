@@ -1631,3 +1631,16 @@ label.form-label {
     max-height: 120px;
     object-fit: contain;
 }
+
+/* Compact document controls keep table actions readable at narrow widths. */
+.document-row-actions {
+    display: inline-flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+.document-row-actions > .document-action {
+    padding: .2rem .5rem;
+    font-size: .75rem;
+    line-height: 1.35;
+    white-space: nowrap;
+}

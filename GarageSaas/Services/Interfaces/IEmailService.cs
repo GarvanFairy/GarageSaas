@@ -4,6 +4,8 @@ namespace GarageSaas.Services.Interfaces
 {
     public interface IEmailService
     {
+        Task SendDocumentAsync(string recipientEmail, string subject, string htmlBody, string fileName, byte[] pdf);
+
         Task SendEmailAsync(
             string recipientEmail,
             string subject,

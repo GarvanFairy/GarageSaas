@@ -28,6 +28,14 @@
         </a>
     </div>
 
+    @if (isEditMode)
+    {
+        <div class="d-flex flex-wrap mb-3">
+    <a class="btn btn-outline-primary mr-2 mb-2" asp-controller="CustomerDocument" asp-action="Download" asp-route-kind="quote" asp-route-id="@workQuoteId">Download PDF</a>
+    <a class="btn btn-outline-secondary mb-2" asp-controller="CustomerDocument" asp-action="Send" asp-route-kind="quote" asp-route-id="@workQuoteId">Send to Customer</a>
+</div>
+        <p class="small text-muted">PDFs use saved details. Save any changes before downloading or sending.</p>
+    }
     <input type="hidden" id="workQuoteId" value="@workQuoteId" />
 
     <div id="statusArea"></div>

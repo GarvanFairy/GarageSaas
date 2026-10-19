@@ -28,6 +28,19 @@ namespace GarageSaas.Services
             string subject,
             string htmlBody)
         {
+            await SendMessageAsync(recipientEmail, subject, new BodyBuilder { HtmlBody = htmlBody });
+        }
+
+        public async Task SendDocumentAsync(string recipientEmail, string subject, string htmlBody, string fileName, byte[] pdf)
+        {
+            if (pdf == null || pdf.Length == 0) throw new System.ArgumentException("PDF attachment is required.", nameof(pdf));
+            var body = new BodyBuilder { HtmlBody = htmlBody };
+            body.Attachments.Add(fileName, pdf, new ContentType("application", "pdf"));
+            await SendMessageAsync(recipientEmail, subject, body);
+        }
+
+        private async Task SendMessageAsync(string recipientEmail, string subject, BodyBuilder body)
+        {
             var message = new MimeMessage();
 
             message.From.Add(
@@ -40,10 +53,7 @@ namespace GarageSaas.Services
 
             message.Subject = subject;
 
-            message.Body = new BodyBuilder
-            {
-                HtmlBody = htmlBody
-            }.ToMessageBody();
+            message.Body = body.ToMessageBody();
 
             using (var client = new SmtpClient())
             {

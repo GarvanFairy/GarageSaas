@@ -283,3 +283,20 @@ not a claimed historical mileage snapshot. No ServiceHistory rows or schema are
 created or modified. Existing retired endpoint contracts remain unchanged.
 
 See [Phase 3 verification](../GarageSaas.UnitTests/PHASE3-CORE-WORKFLOW-RESULTS.md).
+
+## Phase 4 customer documents
+
+Saved quote and invoice screens provide **Download PDF** and **Send to Customer**.
+PDFs use existing validated data and financial rules; save edits before generating.
+The send confirmation displays the stored customer email and attaches the PDF.
+Repeated submissions of the same confirmation are prevented within one app instance.
+No database schema changes are needed.
+
+PDFsharp/MigraDoc and embedded Noto Sans fonts generate A4 documents without an
+external browser/PDF executable. Open a downloaded PDF in the normal browser viewer
+to print. Existing EmailSettings control SMTP; development expects a local capture
+server at localhost:1025. Configure the existing SMTP settings/secrets for a real
+provider. Use a single instance or session affinity for short-lived send tokens.
+After an uncertain SMTP outcome, check delivery before sending again.
+
+See [Phase 4 implementation, verification and acceptance notes](../GarageSaas.UnitTests/PHASE4-CUSTOMER-DOCUMENTS-RESULTS.md).

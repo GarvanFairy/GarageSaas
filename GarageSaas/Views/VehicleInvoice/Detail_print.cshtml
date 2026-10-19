@@ -83,6 +83,10 @@
     </div>
 
 
+    <div class="no-print"><div class="d-flex flex-wrap mb-3">
+    <a class="btn btn-outline-primary mr-2 mb-2" asp-controller="CustomerDocument" asp-action="Download" asp-route-kind="invoice" asp-route-id="@Model.Invoice.Id">Download PDF</a>
+    <a class="btn btn-outline-secondary mb-2" asp-controller="CustomerDocument" asp-action="Send" asp-route-kind="invoice" asp-route-id="@Model.Invoice.Id">Send to Customer</a>
+</div></div>
     <!-- Actual printable invoice -->
     <div class="invoice-document">
 
