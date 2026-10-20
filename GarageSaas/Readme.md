@@ -300,3 +300,32 @@ provider. Use a single instance or session affinity for short-lived send tokens.
 After an uncertain SMTP outcome, check delivery before sending again.
 
 See [Phase 4 implementation, verification and acceptance notes](../GarageSaas.UnitTests/PHASE4-CUSTOMER-DOCUMENTS-RESULTS.md).
+
+## Phase 5 work-description suggestions
+
+The Work Quote Add/Edit work-item modal offers **Suggest Description**, with a
+separate preview and explicit **Use Suggestion** / **Dismiss** actions. Suggestions
+are optional; manual editing and existing saves continue without an API key.
+Configure OpenAI:ApiKey using .NET User Secrets (the project now has a UserSecretsId)
+or OpenAI__ApiKey through secure environment/Azure configuration. Never add keys to
+tracked settings or browser code. Non-secret pilot limits/model are in appsettings.
+
+The configured default is gpt-6-luna, using reasoning effort none and low verbosity.
+The key must be stored as OpenAI:ApiKey for this project's UserSecretsId;
+User Secrets load automatically in Development. Restart the application after
+changing the key or model, and verify account access during live acceptance.
+Defaults are 15 seconds,
+1,000 draft characters, 200 output tokens and five requests/user/minute. Responses
+are not stored by the app merely because they were generated. Enter repair details
+only; the limited identifier checks do not guarantee anonymous free text.
+
+See [Phase 5 implementation, costs, tests and acceptance](../GarageSaas.UnitTests/PHASE5-AI-QUOTE-SUGGESTIONS-RESULTS.md).
+
+
+AI uses one centrally managed server-side API key and stateless requests with
+store=false; no suggestion cache or shared conversation history is used. In
+addition to the per-user cap, OpenAI:GarageRequestsPerMinute defaults to 20 shared
+requests per garage per minute. Internal numeric usage/outcome/token counters are
+attributed to the server-validated garage, never sent as tenant metadata to OpenAI
+or exposed through a metrics endpoint. Quotas and counters are process local and
+reset on restart; usage counters expire after 24 hours and are not a billing ledger.

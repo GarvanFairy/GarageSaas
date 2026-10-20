@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Mvc.Rendering
 @using GarageSaas.Services.Models;
+@inject Microsoft.Extensions.Options.IOptions<GarageSaas.Configuration.OpenAIOptions> AiOptions
 
 @{
     var workQuoteId = Convert.ToInt32(ViewData["WorkQuoteId"] ?? 0);
@@ -148,6 +149,23 @@
                                   rows="4"></textarea>
                     </div>
 
+                    <div id="quoteSuggestionArea" class="mb-3" data-max-input="@AiOptions.Value.MaxInputCharacters">
+                        @Html.AntiForgeryToken()
+                        <button type="button" id="btnSuggestDescription" class="btn btn-sm btn-outline-primary">
+                            <span id="quoteSuggestionSpinner" class="spinner-border spinner-border-sm mr-1" aria-hidden="true" hidden></span>
+                            Suggest Description
+                        </button>
+                        <p class="small text-muted mt-2">Send repair details only, without customer names, contact details, vehicle registrations or confidential garage information. Draft text is sent to OpenAI. Review suggested wording for accuracy before use.</p>
+                        <div id="quoteSuggestionStatus" class="small mb-2" role="status" aria-live="polite"></div>
+                        <div id="quoteSuggestionPreview" class="border rounded p-3" hidden>
+                            <strong>Suggested description</strong>
+                            <p id="quoteSuggestionText" class="text-break mt-2" style="white-space: pre-wrap;"></p>
+                            <div class="d-flex flex-wrap">
+                                <button type="button" id="btnUseSuggestion" class="btn btn-sm btn-primary mr-2 mb-2">Use Suggestion</button>
+                                <button type="button" id="btnDismissSuggestion" class="btn btn-sm btn-outline-secondary mb-2">Dismiss</button>
+                            </div>
+                        </div>
+                    </div>
                     <div id="workItemModalStatus"></div>
 
                 </div>
@@ -301,6 +319,7 @@
 
 
 @section Scripts {
+    <script src="~/js/quote-suggestions.js" asp-append-version="true"></script>
     <script>
         const workQuoteId = parseInt($("#workQuoteId").val() || "0", 10);
         const isEditMode = workQuoteId > 0;

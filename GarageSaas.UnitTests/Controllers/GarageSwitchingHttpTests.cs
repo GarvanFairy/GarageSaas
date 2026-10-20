@@ -239,7 +239,8 @@ public class GarageSwitchingHttpTests
         private IHost _host=null!;private HttpClient _client=null!;
         internal DbContextOptions<SignupContext> Options {get;private set;}=null!;
         internal string? Preference;
-        internal static async Task<SwitchHost> Start(bool single=false, IEmailService? email=null, ICustomerDocumentPdfRenderer? pdf=null)
+        internal QuoteSuggestionUsage AiUsage => _host.Services.GetRequiredService<QuoteSuggestionUsage>();
+        internal static async Task<SwitchHost> Start(bool single=false, IEmailService? email=null, ICustomerDocumentPdfRenderer? pdf=null, IQuoteSuggestionService? suggestions=null, Action<GarageSaas.Configuration.OpenAIOptions>? configureAi=null)
         {
             var h=new SwitchHost{Options=StaffInvitationData.Options()};StaffInvitationData.Seed(h.Options);
             using(var db=new SignupContext(h.Options))
@@ -255,7 +256,7 @@ public class GarageSwitchingHttpTests
             }
             h._host=await new HostBuilder().ConfigureWebHost(web=>{
                 web.UseKestrel(s=>s.Listen(IPAddress.Loopback,0));web.ConfigureServices(s=>{
-                    s.AddLogging();s.AddHttpContextAccessor();s.AddDataProtection();s.AddMemoryCache();s.AddSingleton<DocumentSendTokens>();s.AddScoped<CustomerDocumentService>();s.AddSingleton<ICustomerDocumentPdfRenderer>(pdf ?? new CustomerDocumentPdfRenderer());s.AddScoped(_=>new SignupContext(h.Options));s.AddScoped<GarageSelectionService>();s.AddScoped<GarageContextFilter>();
+                    s.Configure<GarageSaas.Configuration.OpenAIOptions>(options=>configureAi?.Invoke(options));s.AddSingleton<QuoteSuggestionRateLimiter>();s.AddSingleton<QuoteSuggestionUsage>();s.AddSingleton<IQuoteSuggestionService>(suggestions ?? Mock.Of<IQuoteSuggestionService>());s.AddLogging();s.AddHttpContextAccessor();s.AddDataProtection();s.AddMemoryCache();s.AddSingleton<DocumentSendTokens>();s.AddScoped<CustomerDocumentService>();s.AddSingleton<ICustomerDocumentPdfRenderer>(pdf ?? new CustomerDocumentPdfRenderer());s.AddScoped(_=>new SignupContext(h.Options));s.AddScoped<GarageSelectionService>();s.AddScoped<GarageContextFilter>();
                     s.AddScoped<ICurrentGarageUserService,CurrentGarageUserService>();s.AddScoped<IGarageAuthorizationService,GarageAuthorizationService>();
                     s.AddScoped<ICustomerVehicleService,CustomerVehicleService>();s.AddScoped<IWorkItemService,WorkItemService>();s.AddScoped<IWorkQuoteService,WorkQuoteService>();s.AddScoped<IVehicleInvoiceService,VehicleInvoiceService>();s.AddScoped<VehicleServiceHistoryService>();s.AddScoped<IGarageCustomersService,GarageCustomersService>();s.AddScoped<IGarageBusinessService,GarageBusinessService>();s.AddSingleton(Mock.Of<IVehicleLookupService>());
                     s.AddSingleton<IEmailService>(email ?? Mock.Of<IEmailService>());s.AddSingleton(Mock.Of<IRegistrationRequestLock>());s.AddScoped<IInvitationIdentityVerificationService,InvitationIdentityVerificationService>();
@@ -290,12 +291,12 @@ public class GarageSwitchingHttpTests
             if(response.Headers.TryGetValues("Set-Cookie",out var values))foreach(var value in values){var cookie=value.Split(';')[0];if(cookie.StartsWith(GarageSelectionService.CookieName+"="))Preference=cookie;else if(cookie.StartsWith(".AspNetCore.Antiforgery"))_antiforgeryCookie=cookie;else if(cookie.StartsWith(".AspNetCore.Mvc.CookieTempDataProvider"))_tempDataCookie=cookie;}
             return response;
         }
-        internal async Task<HttpResponseMessage> Json(string path, object body, string context)
+        internal async Task<HttpResponseMessage> Json(string path, object body, string context, string antiforgery="valid", string? identity="member")
         {
-            using var token = await Send("GET", "/test/token");
+            using var token = await Send("GET", "/test/token", identity: identity);
             using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body) };
-            request.Headers.Add("X-Test-Identity", "member"); request.Headers.Add("X-Garage-Context", WebUtility.HtmlDecode(context));
-            request.Headers.Add("RequestVerificationToken", await token.Content.ReadAsStringAsync());
+            if (identity != null) request.Headers.Add("X-Test-Identity", identity); request.Headers.Add("X-Garage-Context", WebUtility.HtmlDecode(context));
+            if (antiforgery != "missing") request.Headers.Add("RequestVerificationToken", antiforgery == "invalid" ? "forged" : await token.Content.ReadAsStringAsync());
             request.Headers.Add("Cookie", string.Join("; ", new[] { Preference, _antiforgeryCookie, _tempDataCookie }.Where(x => x != null)));
             return await _client.SendAsync(request);
         }

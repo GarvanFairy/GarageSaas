@@ -14,7 +14,7 @@ namespace GarageSaas.Filters
     public sealed class GarageContextFilter : IAsyncResourceFilter
     {
         private static readonly HashSet<string> TenantControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        { "GarageBusiness", "GarageCustomers", "CustomerVehicle", "WorkItem", "WorkQuote", "VehicleInvoice", "GarageTeam", "CustomerDocument" };
+        { "GarageBusiness", "GarageCustomers", "CustomerVehicle", "WorkItem", "WorkQuote", "VehicleInvoice", "GarageTeam", "CustomerDocument", "QuoteSuggestion" };
         public static bool IsTenantController(string name) => name != null && TenantControllers.Contains(name);
         private readonly ICurrentGarageUserService _current;
         private readonly GarageSelectionService _selection;

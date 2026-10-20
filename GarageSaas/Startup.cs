@@ -89,6 +89,12 @@ namespace GarageSaas
 
             // 🔹 Cache
             services.AddMemoryCache();
+            services.Configure<OpenAIOptions>(Configuration.GetSection("OpenAI"));
+            services.AddSingleton<QuoteSuggestionRateLimiter>();
+            services.AddSingleton<QuoteSuggestionUsage>();
+            services.AddHttpClient<IQuoteSuggestionService, OpenAIQuoteSuggestionService>(client =>
+                client.Timeout = System.Threading.Timeout.InfiniteTimeSpan)
+                .ConfigurePrimaryHttpMessageHandler(() => new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 
             // 🔹 Vehicle lookup service
             services.AddScoped<ICustomerVehicleService, CustomerVehicleService>();
