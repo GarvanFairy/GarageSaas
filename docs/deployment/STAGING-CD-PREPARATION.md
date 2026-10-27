@@ -1,5 +1,68 @@
 # Staging CD preparation — deployment disabled
 
+## Release prerequisite hardening after merged baseline 60be91e
+
+The manual candidate-preparation checker now requires **both** exact jobs from the
+same eligible `.github/workflows/ci.yml` **master-push run and run attempt**:
+
+- `Windows build and tests`
+- `Artifact security validation (no deployment)`
+
+The selected full lowercase SHA must be master or an ancestor of master. The run
+must be completed/successful for that exact SHA and master push, not a PR merge
+preview, feature/focused run or different workflow. Overall workflow success alone
+is insufficient. Each required job must appear exactly once, have a distinct job
+ID, matching run ID/attempt/head SHA, and completed/successful status/conclusion.
+All existing full-test steps (plus the tested-runtime fingerprint) and every current
+artifact-validation step are required by exact name, completed and successful.
+The artifact requirements explicitly include restore/build, no-rebuild publish and
+package validation, all 37 security cases, and independent inventory/SHA-256 checks.
+Missing, renamed, duplicate, skipped, cancelled, running, failed or inconsistent
+required evidence fails closed. Optional unrelated jobs cannot substitute for either
+required job.
+
+Collection uses GitHub's attempt-specific jobs endpoint, verifies the reported
+total job count against the received records, and re-reads the workflow run before
+acceptance to reject an attempt/state change during inspection. A truncated jobs
+page fails closed; there is no fallback to the Windows job alone or to jobs from a
+different run/attempt. Run selection retains the existing bounded first-page lookup
+of eligible successful runs. If eligible evidence is outside that page, unavailable
+or incomplete, preparation is refused rather than inferred. This does not download
+or promote an artifact from an unapproved branch.
+
+Repository offline regression entry point:
+
+```powershell
+./.github/scripts/Test-StagingReleasePrerequisites.ps1
+```
+
+Validated locally: **5 positive and 98 negative cases, all passed**. The original
+nine prerequisite cases were retained with complete metadata representing GitHub's
+real job schema. New fixtures cover both jobs, all critical artifact steps, mixed
+run/attempt/SHA evidence, duplicates, incomplete metadata and invalid/non-ancestor
+commits. Mocked HTTP boundary tests cover manual master/repository restrictions,
+the attempt-specific route, unavailable/truncated responses and run changes during
+inspection. No real token, HTTP request, workflow dispatch, Azure operation or SQL
+access occurs in these tests. Fixture mode does not claim to test live authorization
+or GitHub availability; collection/context checks are tested separately with a
+fail-closed HTTP mock. Step rows have no independent commit/attempt identifiers in
+GitHub's schema: they are bound through their validated parent job and attempt-specific
+response, not through invented per-step fields. API snapshots cannot prevent a
+later external rerun after the final read; deployments remain separately gated.
+
+No change was necessary to either workflow. Candidate packaging still depends on
+successful prerequisite validation; the staging workflow remains manual/master-only,
+and deployment remains unconditionally disabled by `if: ${{ false }}`. GitHub/Azure
+permissions, required CI check names, 1,317 application tests, three JavaScript
+suites and artifact-security behavior are unchanged. Those application/security
+suites were **not rerun** for this prerequisite-script/documentation-only change.
+
+**Passing both jobs authorizes release-candidate preparation only.** It does not
+approve a deployment, configure OIDC/environments, change Azure resources, permit
+schema changes or waive independent hash/recovery/capacity/authenticated-acceptance
+approvals. This follow-up is prepared on a feature branch for review, with no
+commit/push or deployment performed.
+
 > Artifact-checker follow-up: the narrowly scoped false-positive corrections are
 > now implemented locally; the actual 408-entry ZIP is accepted and independently
 > hash/inventory-verified. See [STAGING-ARTIFACT-CHECKER.md](STAGING-ARTIFACT-CHECKER.md).
