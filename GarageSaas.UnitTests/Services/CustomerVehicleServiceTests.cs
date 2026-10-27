@@ -124,7 +124,7 @@ namespace GarageSaas.UnitTests.Services
             var lookupMock = BuildLookupMock();
 
             context.Users.Add(new Users
-            {
+            { LastName = "User", FirstName = "Test",
                 Id = 100,
                 GarageBusinessId = 5
             });
@@ -175,7 +175,7 @@ namespace GarageSaas.UnitTests.Services
             var model = new VehicleAndCustomers
             {
                 Vehicle = new CustomerVehicle
-                {
+                { GarageOwned = false,
                     VehicleRegistration = "10-D-12345",
                     VehicleMileageDate = DateTime.Now
                 },
@@ -219,7 +219,7 @@ namespace GarageSaas.UnitTests.Services
             var model = new VehicleAndCustomers
             {
                 Vehicle = new CustomerVehicle
-                {
+                { GarageOwned = false,
                     VehicleRegistration = "11-D-99999",
                     VehicleMileageDate = DateTime.Now
                 },
@@ -253,7 +253,7 @@ namespace GarageSaas.UnitTests.Services
             var model = new VehicleAndCustomers
             {
                 Vehicle = new CustomerVehicle
-                {
+                { GarageOwned = false,
                     VehicleRegistration = "12-D-11111",
                     VehicleMileageDate = DateTime.Now
                 },
@@ -316,7 +316,7 @@ namespace GarageSaas.UnitTests.Services
             using var context = DbContextFactory.Create(nameof(BuildAddCustomerVehicleVmAsync_Returns_Lookups));
 
             context.Users.Add(new Users
-            {
+            { LastName = "User", FirstName = "Test",
                 Id = 100,
                 GarageBusinessId = 5
             });

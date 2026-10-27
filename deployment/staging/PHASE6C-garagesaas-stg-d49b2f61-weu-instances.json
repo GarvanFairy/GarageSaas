@@ -1,0 +1,24 @@
+{
+  "id": null,
+  "nextLink": null,
+  "value": [
+    {
+      "id": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu/instances/3bd0789e0da4bff9f5b8dc9566a5e9389d324155fdf57fb006d707fce10752cc",
+      "location": "West Europe",
+      "name": "3bd0789e0da4bff9f5b8dc9566a5e9389d324155fdf57fb006d707fce10752cc",
+      "properties": {
+        "consoleUrl": "https://garagesaas-stg-d49b2f61-weu.scm.azurewebsites.net/DebugConsole?instance=3bd0789e0da4bff9f5b8dc9566a5e9389d324155fdf57fb006d707fce10752cc",
+        "containers": null,
+        "detectorUrl": "https://garagesaas-stg-d49b2f61-weu.scm.azurewebsites.net/detectors",
+        "healthCheckUrl": "/health",
+        "machineName": "dw0sdwk000EIL",
+        "name": "3bd0789e0da4bff9f5b8dc9566a5e9389d324155fdf57fb006d707fce10752cc",
+        "physicalZone": "westeurope-az2",
+        "siteInstanceName": "3bd0789e0da4bff9f5b8dc9566a5e9389d324155fdf57fb006d707fce10752cc",
+        "state": "READY",
+        "statusUrl": ""
+      },
+      "type": "Microsoft.Web/sites/instances"
+    }
+  ]
+}

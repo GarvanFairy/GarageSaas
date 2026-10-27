@@ -1,0 +1,74 @@
+[
+  {
+    "columns": [
+      {
+        "columnName": "Status",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Message",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Data.Name",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Data.Value",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Expanded",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Solutions",
+        "columnType": null,
+        "dataType": "String"
+      }
+    ],
+    "rows": [
+      [
+        "Success",
+        "No Application crashes detected during this timeframe",
+        "",
+        "",
+        "False",
+        "null"
+      ]
+    ],
+    "rendering": {
+      "description": "",
+      "isVisible": true,
+      "title": "",
+      "type": 7
+    }
+  },
+  {
+    "columns": [
+      {
+        "columnName": "Markdown",
+        "columnType": null,
+        "dataType": "String"
+      }
+    ],
+    "rows": [
+      [
+        "\r\nThe following links can help you diagnose crashes in your application:-\r\n\r\n- <a href=\"https://aka.ms/app-service-diagnostics-crash-monitoring\" target=\"_blank\">Crash Monitoring in Azure App Service</a>.\r\n"
+      ]
+    ],
+    "rendering": {
+      "description": null,
+      "enableEmailButtons": false,
+      "isContainerNeeded": true,
+      "isVisible": true,
+      "title": "Some Useful Links",
+      "type": 9
+    }
+  }
+]

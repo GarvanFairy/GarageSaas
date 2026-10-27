@@ -41,7 +41,7 @@ public class GarageSwitchingHttpTests
         int vehicleId;
         using (var db = new SignupContext(h.Options))
         {
-            var vehicle = new CustomerVehicle { GarageBusinessId = 1, VehicleRegistration = "FORM-TEST" };
+            var vehicle = new CustomerVehicle { GarageOwned = false,  GarageBusinessId = 1, VehicleRegistration = "FORM-TEST" };
             db.Add(vehicle); db.SaveChanges(); vehicleId = vehicle.Id;
         }
         async Task<Dictionary<string, string>> Form(int index)
@@ -86,7 +86,7 @@ public class GarageSwitchingHttpTests
         int customerId;
         using (var db = new SignupContext(h.Options)) customerId = db.GarageBusinessCustomer.Single(c => c.GarageCustomerForename == "WorkflowCustomer").Id;
         using var vehicle = await h.Json("/CustomerVehicle/AddUpdateCustomerVehicle", new VehicleAndCustomers
-        { Vehicle = new CustomerVehicle { VehicleRegistration = "WORKFLOW-REG", VehicleMileageDate = DateTime.Today },
+        { Vehicle = new CustomerVehicle { GarageOwned = false,  VehicleRegistration = "WORKFLOW-REG", VehicleMileageDate = DateTime.Today },
           GarageVehicleOwnerListItem = new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Value = customerId.ToString() } }, context);
         Assert.AreEqual(HttpStatusCode.OK, vehicle.StatusCode); Assert.AreEqual("Success", await vehicle.Content.ReadFromJsonAsync<string>());
         int vehicleId;
@@ -251,7 +251,7 @@ public class GarageSwitchingHttpTests
                 if(!single)db.Add(new GarageBusinessUser{Id=2,UserId=1,GarageBusinessId=2,IsActive=true,Role="Staff"});
                 db.Add(new GarageBusinessUser{Id=3,UserId=1,GarageBusinessId=3,IsActive=false,Role="Staff"});
                 if(single)db.Remove(db.GarageBusinessUser.Local.Single(x=>x.Id==3));
-                db.Add(new Users{Id=3,ExternalUserId="platform",Active=true,IsPlatformAdministrator=true});
+                db.Add(new Users{ LastName = "User", FirstName = "Test", Id=3,ExternalUserId="platform",Active=true,IsPlatformAdministrator=true});
                 db.AddRange(new GarageBusinessCustomer{Id=1,GarageBusinessId=1,GarageCustomerForename="CustomerAlpha",GarageCustomerSurname="OnlyA",Active=true},new GarageBusinessCustomer{Id=2,GarageBusinessId=2,GarageCustomerForename="CustomerBeta",GarageCustomerSurname="OnlyB",Active=true});db.SaveChanges();
             }
             h._host=await new HostBuilder().ConfigureWebHost(web=>{

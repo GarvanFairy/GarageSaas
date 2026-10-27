@@ -1,0 +1,22 @@
+[
+  {
+    "ip": "52.174.162.123",
+    "name": "staging-egress-01"
+  },
+  {
+    "ip": "52.174.17.32",
+    "name": "staging-egress-02"
+  },
+  {
+    "ip": "52.174.18.113",
+    "name": "staging-egress-03"
+  },
+  {
+    "ip": "52.174.193.161",
+    "name": "staging-egress-04"
+  },
+  {
+    "ip": "109.78.171.49",
+    "name": "staging-admin-initialization"
+  }
+]

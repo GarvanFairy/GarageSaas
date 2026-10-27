@@ -1,0 +1,67 @@
+{
+  "verifiedUtc": "2026-10-21T21:33:59.0551482Z",
+  "subscriptionId": "d49b2f61-156a-489f-ba4c-acba574d30a0",
+  "app": {
+    "affinity": true,
+    "httpsOnly": true,
+    "id": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu",
+    "identity": "SystemAssigned",
+    "location": "West Europe",
+    "plan": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/TestSite/providers/Microsoft.Web/serverfarms/ASP-TestSite-89a7",
+    "state": "Running"
+  },
+  "config": {
+    "alwaysOn": true,
+    "ftp": "Disabled",
+    "health": "/health",
+    "minTls": "1.2",
+    "netFrameworkVersion": "v10.0",
+    "use32Bit": false,
+    "windowsFxVersion": null
+  },
+  "database": {
+    "backupRedundancy": "Local",
+    "id": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Sql/servers/garagesaasdbserver/databases/GarageSaas_Staging",
+    "maxSizeBytes": 2147483648,
+    "sku": {
+      "capacity": 5,
+      "family": null,
+      "name": "Basic",
+      "size": null,
+      "tier": "Basic"
+    },
+    "status": "Online"
+  },
+  "backup": {
+    "retentionDays": 7
+  },
+  "vault": {
+    "id": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.KeyVault/vaults/gss-stg-d49b2f61-weu",
+    "location": "westeurope",
+    "purgeProtection": true,
+    "rbac": true,
+    "retentionDays": 7,
+    "sku": "standard",
+    "softDelete": true
+  },
+  "roles": {
+    "principalId": "b4c6c684-75bd-42f7-b2d1-3085cb64c335",
+    "role": "Key Vault Secrets User",
+    "scope": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.KeyVault/vaults/gss-stg-d49b2f61-weu"
+  },
+  "protectedApps": [
+    {
+      "name": "GarageSaas20230118225621",
+      "state": "Running"
+    },
+    {
+      "name": "AHIDSIdentityServer",
+      "state": "Stopped"
+    }
+  ],
+  "protectedDatabase": {
+    "name": "GarageSaas_db",
+    "sku": "GP_S_Gen5",
+    "status": "Paused"
+  }
+}

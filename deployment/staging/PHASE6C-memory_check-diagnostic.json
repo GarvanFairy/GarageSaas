@@ -1,0 +1,74 @@
+[
+  {
+    "columns": [
+      {
+        "columnName": "Status",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Message",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Data.Name",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Data.Value",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Expanded",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Solutions",
+        "columnType": null,
+        "dataType": "String"
+      }
+    ],
+    "rows": [
+      [
+        "Success",
+        "Memory is at 40%.",
+        "",
+        "",
+        "False",
+        "null"
+      ]
+    ],
+    "rendering": {
+      "description": "",
+      "isVisible": true,
+      "title": "",
+      "type": 7
+    }
+  },
+  {
+    "columns": [
+      {
+        "columnName": "Markdown",
+        "columnType": null,
+        "dataType": "String"
+      }
+    ],
+    "rows": [
+      [
+        "**Memory usage:** `40%` over the selected time range."
+      ]
+    ],
+    "rendering": {
+      "description": null,
+      "enableEmailButtons": false,
+      "isContainerNeeded": true,
+      "isVisible": true,
+      "title": "Memory Detail",
+      "type": 9
+    }
+  }
+]

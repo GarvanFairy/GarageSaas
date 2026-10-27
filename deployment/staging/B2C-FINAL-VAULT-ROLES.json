@@ -1,0 +1,7 @@
+[
+  {
+    "id": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.KeyVault/vaults/gss-stg-d49b2f61-weu/providers/Microsoft.Authorization/roleAssignments/fdfbf384-c605-4518-848f-c9cd129289bd",
+    "principal": "b4c6c684-75bd-42f7-b2d1-3085cb64c335",
+    "role": "Key Vault Secrets User"
+  }
+]

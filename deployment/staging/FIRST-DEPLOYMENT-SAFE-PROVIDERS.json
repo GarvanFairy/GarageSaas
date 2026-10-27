@@ -1,0 +1,1 @@
+{"EmailSettings__SmtpHost":"127.0.0.1","EmailSettings__SmtpPort":"1","EmailSettings__UseStartTls":"true","EmailSettings__SenderEmail":"staging@example.invalid","EmailSettings__SenderName":"GarageSaas Staging","EmailSettings__Username":"","EmailSettings__Password":"","OpenAI__ApiKey":""}

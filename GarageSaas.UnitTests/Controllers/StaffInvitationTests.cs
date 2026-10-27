@@ -144,9 +144,9 @@ internal static class StaffInvitationData
     {
         using var db = new SignupContext(options);
         if (garage != "missing") db.Add(new GarageBusiness { Id = 1, GarageBusinessName = "Invited garage", Active = garage != "inactive", Blocked = garage == "blocked" });
-        db.Add(new Users { Id = 1, ExternalUserId = "admin", EmailAddress = "admin@test.invalid", Active = true });
+        db.Add(new Users { LastName = "User", FirstName = "Test",  Id = 1, ExternalUserId = "admin", EmailAddress = "admin@test.invalid", Active = true });
         db.Add(new GarageBusinessUser { Id = 1, GarageBusinessId = 1, UserId = 1, Role = issuerRole, IsOwner = issuerRole == "Owner", IsActive = true });
-        if (userState != "new") db.Add(new Users { Id = 2, ExternalUserId = "invitee", EmailAddress = "invitee@test.invalid", Active = userState != "inactive", Blocked = userState == "blocked" });
+        if (userState != "new") db.Add(new Users { LastName = "User", FirstName = "Test",  Id = 2, ExternalUserId = "invitee", EmailAddress = "invitee@test.invalid", Active = userState != "inactive", Blocked = userState == "blocked" });
         if (userState is "inactive-membership" or "existing-membership") db.Add(new GarageBusinessUser
         { Id = 2, GarageBusinessId = 1, UserId = 2, Role = "Administrator", IsActive = userState == "existing-membership" });
         if (userState == "multiple")

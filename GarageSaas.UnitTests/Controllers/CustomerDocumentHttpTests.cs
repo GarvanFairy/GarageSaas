@@ -19,7 +19,7 @@ public class CustomerDocumentHttpTests
         var h=await SwitchHost.Start(email:email?.Object,pdf:pdf);await h.Select(1);
         using var db=new SignupContext(h.Options);CustomerDocumentTests.Seed(db,1,1,10,100,1);
         db.Add(new GarageBusinessCustomer { Id=3,GarageBusinessId=2,GarageCustomerForename="Foreign customer",GarageCustomerEmailAddress="secret@example.invalid" });
-        db.Add(new CustomerVehicle { Id=20,GarageBusinessId=2,VehicleRegistration="SECRET" });
+        db.Add(new CustomerVehicle { GarageOwned = false,  Id=20,GarageBusinessId=2,VehicleRegistration="SECRET" });
         db.Add(new WorkQuote { Id=200,GarageBusinessCustomerId=2,CustomerId=3,VehicleId=20 });
         db.Add(new VehicleInvoice { Id=2,GarageBusinessId=2,CustomerId=3,VehicleId=20 });db.SaveChanges();return h;
     }

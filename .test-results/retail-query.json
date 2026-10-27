@@ -1,0 +1,1 @@
+{"currencyCode":"EUR","$filter":"serviceName eq 'Azure App Service' and armRegionName eq 'westeurope' and skuName eq 'B1'"}

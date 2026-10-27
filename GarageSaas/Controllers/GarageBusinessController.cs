@@ -11,6 +11,8 @@ using System.Diagnostics;
 using System.IO;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using GarageSaas.Configuration;
 
 namespace GarageSaas.Controllers
 {
@@ -22,18 +24,20 @@ namespace GarageSaas.Controllers
         private readonly IWebHostEnvironment _environment;
         private readonly ICurrentGarageUserService _currentGarageUserService;
         private readonly IGarageAuthorizationService _authorizationService;
+        private readonly IConfiguration _configuration;
 
         public GarageBusinessController(
             IGarageBusinessService garageBusinessService,
             ICurrentGarageUserService currentGarageUserService,
             IWebHostEnvironment environment,
-            ILogger<GarageBusinessController> logger, IGarageAuthorizationService authorizationService)
+            ILogger<GarageBusinessController> logger, IGarageAuthorizationService authorizationService, IConfiguration configuration = null)
         {
             _garageBusinessService = garageBusinessService;
             _currentGarageUserService = currentGarageUserService;
             _environment = environment;
             _logger = logger;
             _authorizationService = authorizationService;
+            _configuration = configuration;
         }
 
         public IActionResult GarageBusinessDetail()
@@ -158,11 +162,7 @@ namespace GarageSaas.Controllers
                         garageBusiness);
                 }
 
-                var uploadDirectory =
-                    Path.Combine(
-                        _environment.WebRootPath,
-                        "uploads",
-                        "garage-logos");
+                var uploadDirectory = DeploymentStorage.LogoDirectory(_environment, _configuration);
 
                 Directory.CreateDirectory(
                     uploadDirectory);

@@ -1,0 +1,26 @@
+[
+  {
+    "url": "https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/health",
+    "status": 200,
+    "healthy": true
+  },
+  {
+    "url": "http://garagesaas-stg-d49b2f61-weu.azurewebsites.net/health",
+    "status": 301,
+    "redirectHost": "garagesaas-stg-d49b2f61-weu.azurewebsites.net",
+    "redirectPath": "/health"
+  },
+  {
+    "url": "https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/",
+    "status": 200
+  },
+  {
+    "url": "https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/MicrosoftIdentity/Account/SignIn",
+    "status": 302,
+    "redirectHost": "fairycastlews.b2clogin.com",
+    "redirectPath": "/fairycastlews.onmicrosoft.com/b2c_1_webapp3susi1/oauth2/v2.0/authorize",
+    "clientId": "6a6b59d3-6db1-4124-86b1-d43c457dd17e",
+    "callback": "https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/signin-oidc",
+    "responseType": "id_token"
+  }
+]

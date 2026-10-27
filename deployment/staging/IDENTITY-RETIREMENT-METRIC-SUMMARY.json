@@ -1,0 +1,56 @@
+[
+  {
+    "metric": "MemoryPercentage",
+    "period": "before",
+    "count": 30,
+    "first": "2026-10-21T20:51:00Z",
+    "last": "2026-10-21T21:20:00Z",
+    "average": 74.67777777777778,
+    "peak": 80.0
+  },
+  {
+    "metric": "MemoryPercentage",
+    "period": "after",
+    "count": 1,
+    "first": "2026-10-21T21:23:00Z",
+    "last": "2026-10-21T21:23:00Z",
+    "average": 75.0,
+    "peak": 77.0
+  },
+  {
+    "metric": "CpuPercentage",
+    "period": "before",
+    "count": 30,
+    "first": "2026-10-21T20:51:00Z",
+    "last": "2026-10-21T21:20:00Z",
+    "average": 4.438888888888888,
+    "peak": 84.0
+  },
+  {
+    "metric": "CpuPercentage",
+    "period": "after",
+    "count": 1,
+    "first": "2026-10-21T21:23:00Z",
+    "last": "2026-10-21T21:23:00Z",
+    "average": 4.666666666666667,
+    "peak": 8.0
+  },
+  {
+    "metric": "HttpQueueLength",
+    "period": "before",
+    "count": 30,
+    "first": "2026-10-21T20:51:00Z",
+    "last": "2026-10-21T21:20:00Z",
+    "average": 0.0,
+    "peak": 0.0
+  },
+  {
+    "metric": "HttpQueueLength",
+    "period": "after",
+    "count": 3,
+    "first": "2026-10-21T21:23:00Z",
+    "last": "2026-10-21T21:25:00Z",
+    "average": 0.0,
+    "peak": 0.0
+  }
+]

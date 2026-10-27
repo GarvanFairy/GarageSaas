@@ -1,0 +1,16 @@
+{
+  "stopRequestedUtc": "2026-10-21T21:21:16.920106Z",
+  "verifiedUtc": "2026-10-21T21:21:24.0046072Z",
+  "subscriptionId": "d49b2f61-156a-489f-ba4c-acba574d30a0",
+  "identity": {
+    "id": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/TestSite/providers/Microsoft.Web/sites/AHIDSIdentityServer",
+    "state": "Stopped"
+  },
+  "preservedGarage": {
+    "id": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/TestSite/providers/Microsoft.Web/sites/GarageSaas20230118225621",
+    "state": "Running"
+  },
+  "onlyAzureMutation": "Stop AHIDSIdentityServer",
+  "finalChecksUtc": "2026-10-21T21:27:09.5183615Z",
+  "metricsConclusion": "Limited delayed post-stop data: 75% memory, 4.67% CPU, queue zero; no demonstrated memory saving. Recheck settled window before provisioning."
+}

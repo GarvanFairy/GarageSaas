@@ -1,0 +1,162 @@
+[
+  {
+    "columns": [
+      {
+        "columnName": "Status",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Message",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Data.Name",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Data.Value",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Expanded",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Solutions",
+        "columnType": null,
+        "dataType": "String"
+      }
+    ],
+    "rows": [
+      [
+        "Critical",
+        "Application stop events are detected",
+        "Description",
+        "<markdown>We analyzed ``2`` Environment Variables Changed Events, ``1`` Platform Event.\n\n\n\n<div><table><tbody>\n<tr>\n<td style=\"width: 20%\">Environment Variables Changed</td>\n<td style=\"width: 80%\"><div style=\"margin-top: 10px\">Your application process was restarted as application environment variables changed. This can most likely occur due to update in app settings or swap operation. This event occurred multiple times during the day.</div>\n<div style=\"margin-top: 10px\"><em>Learn more:</em></div>\n<div><ul><li>Check <strong>View Activity Log</strong> described in the <strong>Troubleshooting and Next Steps</strong>.</li>\n</ul></div>\n</td></tr>\n<tr></tr>\n<tr>\n<td style=\"width: 20%\">Platform(Platform Update)</td>\n<td style=\"width: 80%\"><div style=\"margin-top: 10px\">Around 10/26/2026 22:14:07 (UTC), on Instance DW0SDWK000EIL, your application was recycled because a platform update was applied to the instance.</div>\n</td></tr>\n<tr></tr>\n</tbody></table>\n</div>\n</markdown>",
+        "True",
+        "[{\"Name\":\"Activity Log Blade\",\"Title\":\"View Activity Log\",\"DescriptionMarkdown\":\"\\r\\n        ### Go To Activity Log Blade In Your App\\r\\n        The activity log contains all write operations (PUT, POST, DELETE) for your resources. It doesn\\u0027t include read operations (GET). You can use the activity logs to find an error when troubleshooting or to monitor how a user in your organization modified your app.\\r\\n        \\r\\n        Activity logs are kept for 90 days. You can query for any range of dates, as long as the starting date isn\\u0027t more than 90 days in the past. \\r\\n\\r\\n        Refer to \\u003Ca target = \\u0027_blank\\u0027 href = \\u0027https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-audit\\u0027\\u003EView activity logs to monitor actions on resources\\u003C/a\\u003E for more details.\\r\\n        \",\"Action\":\"GoToBlade\",\"ApiOptions\":null,\"BladeOptions\":{\"DetailBlade\":\"ActivityLogBlade\",\"DetailBladeInputs\":{\"queryInputs\":{\"id\":\"/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu\"}},\"Extension\":\"Microsoft_Azure_ActivityLog\"},\"TabOptions\":null,\"OverrideOptions\":null,\"RequiresConfirmation\":false,\"ResourceUri\":\"/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu\",\"InternalMarkdown\":\"\\r\\nAlternatively, follow the instructions below.\\r\\n\\r\\n1. Navigate to the application in the Azure Portal.\\r\\n2. In the left hand side menu click on **Activity Log**.\\r\\n\\r\\n\",\"TypeTag\":1,\"IsInternal\":false,\"DetectorId\":\"\"}]"
+      ],
+      [
+        "Critical",
+        "Application stop events are detected",
+        "Additional Information",
+        "<markdown>Application initialization can be complex and require a long time to complete after the restart. *IIS Application Initialization* module was built to handle the needs of gracefully recycling worker processes within a single IIS server. In additonal to decreasing the response time for first requests by pre-loading worker processes it also enables you to enhance the user experience during initialization by redirecting a request to static pages, such as a placeholder or splash screen.\n\n\nThe overall Azure App Service has been integrated with *IIS Application Initialization*. In addtional to the above features within a single server it is designed to understand an application's initialization behavior and route traffic with awareness of warm and cold instances.\n\n\nIt is **recommended** that you use the **Application Initialization** feature and ensure you are scaled to **multiple workers** to enhance the user experience while the Application is warming up.\n\n\nFor more details, please refer to:\n* <a href=\"https://azure.github.io/AppService/2020/05/15/Robust-Apps-for-the-cloud.html\" target=\"_blank\">The Ultimate Guide to Running Healthy Apps in the Cloud</a>\n</markdown>",
+        "True",
+        "[{\"Name\":\"Activity Log Blade\",\"Title\":\"View Activity Log\",\"DescriptionMarkdown\":\"\\r\\n        ### Go To Activity Log Blade In Your App\\r\\n        The activity log contains all write operations (PUT, POST, DELETE) for your resources. It doesn\\u0027t include read operations (GET). You can use the activity logs to find an error when troubleshooting or to monitor how a user in your organization modified your app.\\r\\n        \\r\\n        Activity logs are kept for 90 days. You can query for any range of dates, as long as the starting date isn\\u0027t more than 90 days in the past. \\r\\n\\r\\n        Refer to \\u003Ca target = \\u0027_blank\\u0027 href = \\u0027https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-audit\\u0027\\u003EView activity logs to monitor actions on resources\\u003C/a\\u003E for more details.\\r\\n        \",\"Action\":\"GoToBlade\",\"ApiOptions\":null,\"BladeOptions\":{\"DetailBlade\":\"ActivityLogBlade\",\"DetailBladeInputs\":{\"queryInputs\":{\"id\":\"/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu\"}},\"Extension\":\"Microsoft_Azure_ActivityLog\"},\"TabOptions\":null,\"OverrideOptions\":null,\"RequiresConfirmation\":false,\"ResourceUri\":\"/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu\",\"InternalMarkdown\":\"\\r\\nAlternatively, follow the instructions below.\\r\\n\\r\\n1. Navigate to the application in the Azure Portal.\\r\\n2. In the left hand side menu click on **Activity Log**.\\r\\n\\r\\n\",\"TypeTag\":1,\"IsInternal\":false,\"DetectorId\":\"\"}]"
+      ]
+    ],
+    "rendering": {
+      "description": "",
+      "isVisible": true,
+      "title": "",
+      "type": 7
+    }
+  },
+  {
+    "columns": [
+      {
+        "columnName": "Label",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Key",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "Selected",
+        "columnType": null,
+        "dataType": "Boolean"
+      },
+      {
+        "columnName": "Value",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "DropdownType",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "DropdownPosition",
+        "columnType": null,
+        "dataType": "String"
+      }
+    ],
+    "rows": [
+      [
+        "Select the instance",
+        "Overall",
+        true,
+        "[{\"table\":{\"tableName\":\"\",\"columns\":[{\"columnName\":\"PreciseTimeStamp\",\"dataType\":\"DateTime\",\"columnType\":null},{\"columnName\":\"MetricName\",\"dataType\":\"String\",\"columnType\":null},{\"columnName\":\"Count\",\"dataType\":\"Int32\",\"columnType\":null}],\"rows\":[[\"2026-10-26T22:10:00Z\",\"Platform(Platform Update)\",1],[\"2026-10-26T23:45:00Z\",\"Environment Variables Changed\",1],[\"2026-10-27T00:10:00Z\",\"Environment Variables Changed\",1]]},\"renderingProperties\":{\"defaultValue\":0,\"graphType\":1,\"graphOptions\":{\"yAxis\":{\"allowDecimals\":false}},\"timestampColumnName\":null,\"roleInstanceColumnName\":null,\"seriesColumns\":null,\"metricType\":1,\"eventStatusColumnName\":null,\"startTimestampColumnName\":null,\"endTimestampColumnName\":null,\"seriesOrder\":0,\"scopeGanttChartToDetectorTimeRange\":false,\"type\":2,\"title\":\"\",\"description\":null,\"isVisible\":true}}]",
+        "Legacy",
+        "FloatLeft"
+      ],
+      [
+        "Select the instance",
+        "DW0SDWK000EIL",
+        false,
+        "[{\"table\":{\"tableName\":\"\",\"columns\":[{\"columnName\":\"PreciseTimeStamp\",\"dataType\":\"DateTime\",\"columnType\":null},{\"columnName\":\"MetricName\",\"dataType\":\"String\",\"columnType\":null},{\"columnName\":\"Count\",\"dataType\":\"Int32\",\"columnType\":null}],\"rows\":[[\"2026-10-26T22:10:00Z\",\"Platform(Platform Update)\",1],[\"2026-10-26T23:45:00Z\",\"Environment Variables Changed\",1],[\"2026-10-27T00:10:00Z\",\"Environment Variables Changed\",1]]},\"renderingProperties\":{\"defaultValue\":0,\"graphType\":1,\"graphOptions\":{\"yAxis\":{\"allowDecimals\":false}},\"timestampColumnName\":null,\"roleInstanceColumnName\":null,\"seriesColumns\":null,\"metricType\":1,\"eventStatusColumnName\":null,\"startTimestampColumnName\":null,\"endTimestampColumnName\":null,\"seriesOrder\":0,\"scopeGanttChartToDetectorTimeRange\":false,\"type\":2,\"title\":\"\",\"description\":null,\"isVisible\":true}}]",
+        "Legacy",
+        "FloatLeft"
+      ]
+    ],
+    "rendering": {
+      "description": null,
+      "isVisible": true,
+      "title": "App Restart Events Timeline",
+      "type": 11
+    }
+  },
+  {
+    "columns": [
+      {
+        "columnName": "DetectorSearchEnabled",
+        "columnType": null,
+        "dataType": "Boolean"
+      },
+      {
+        "columnName": "WebSearchEnabled",
+        "columnType": null,
+        "dataType": "Boolean"
+      },
+      {
+        "columnName": "DetectorSearchConfiguration",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "WebSearchConfiguration",
+        "columnType": null,
+        "dataType": "String"
+      },
+      {
+        "columnName": "CustomQueryString",
+        "columnType": null,
+        "dataType": "String"
+      }
+    ],
+    "rows": [
+      [
+        true,
+        true,
+        "{\"MinScoreThreshold\":0.3,\"MaxResults\":10}",
+        "{\"MaxResults\":5,\"UseStack\":true,\"PreferredSites\":[],\"ExcludedSites\":[]}",
+        null
+      ]
+    ],
+    "rendering": {
+      "description": null,
+      "isVisible": true,
+      "title": null,
+      "type": 23
+    }
+  }
+]

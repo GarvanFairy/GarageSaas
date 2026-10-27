@@ -96,7 +96,7 @@ namespace GarageSaas.Tests.Services
             var lookupMock = BuildVehicleLookupMock();
 
             context.Users.Add(new Users
-            {
+            { LastName = "User", FirstName = "Test",
                 Id = 100,
                 GarageBusinessId = 5
             });
@@ -159,7 +159,7 @@ namespace GarageSaas.Tests.Services
             var model = new VehicleAndCustomers
             {
                 Vehicle = new CustomerVehicle
-                {
+                { GarageOwned = false,
                     Id = 0,
                     VehicleRegistration = "10-D-12345",
                     VehicleMileageDate = DateTime.Now
@@ -209,7 +209,7 @@ namespace GarageSaas.Tests.Services
             var model = new VehicleAndCustomers
             {
                 Vehicle = new CustomerVehicle
-                {
+                { GarageOwned = false,
                     Id = 0,
                     VehicleRegistration = "11-D-99999",
                     VehicleMileageDate = DateTime.Now
@@ -248,7 +248,7 @@ namespace GarageSaas.Tests.Services
             var model = new VehicleAndCustomers
             {
                 Vehicle = new CustomerVehicle
-                {
+                { GarageOwned = false,
                     Id = 0,
                     VehicleRegistration = "12-D-11111",
                     VehicleMileageDate = DateTime.Now
@@ -335,7 +335,7 @@ namespace GarageSaas.Tests.Services
             var model = new VehicleAndCustomers
             {
                 Vehicle = new CustomerVehicle
-                {
+                { GarageOwned = false,
                     Id = 100,
                     VehicleRegistration = "NEW-REG",
                     VehicleMileageDate = DateTime.Now
@@ -425,7 +425,7 @@ namespace GarageSaas.Tests.Services
             var model = new VehicleAndCustomers
             {
                 Vehicle = new CustomerVehicle
-                {
+                { GarageOwned = false,
                     Id = 100,
                     VehicleRegistration = "10-D-12345",
                     VehicleMileageDate = DateTime.Now
@@ -459,7 +459,7 @@ namespace GarageSaas.Tests.Services
             var lookupMock = BuildVehicleLookupMock();
 
             context.Users.Add(new Users
-            {
+            { LastName = "User", FirstName = "Test",
                 Id = 100,
                 GarageBusinessId = 5
             });

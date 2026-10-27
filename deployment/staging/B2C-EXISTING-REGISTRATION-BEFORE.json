@@ -1,0 +1,72 @@
+{
+  "appId": "f92ce15d-019c-449e-bff2-ab5af18cbe40",
+  "id": "fd0cc50f-4adc-424c-a56b-c810e30ad89c",
+  "permissions": [
+    {
+      "resourceAccess": [
+        {
+          "id": "7427e0e9-2fba-42fe-b0c0-848c9e6a8182",
+          "type": "Scope"
+        },
+        {
+          "id": "37f7f235-527c-4136-accd-4a02d197296e",
+          "type": "Scope"
+        },
+        {
+          "id": "62a82d76-70ea-41e2-9197-370581804d09",
+          "type": "Role"
+        },
+        {
+          "id": "79a677f7-b79d-40d0-a36a-3e6f8688dd7a",
+          "type": "Role"
+        },
+        {
+          "id": "741f803b-c850-494e-b5df-cde7c675a1ca",
+          "type": "Role"
+        },
+        {
+          "id": "b0afded3-3588-46d8-8b3d-9842eff778da",
+          "type": "Role"
+        }
+      ],
+      "resourceAppId": "00000003-0000-0000-c000-000000000000"
+    }
+  ],
+  "web": {
+    "homePageUrl": null,
+    "implicitGrantSettings": {
+      "enableAccessTokenIssuance": true,
+      "enableIdTokenIssuance": true
+    },
+    "logoutUrl": null,
+    "redirectUriSettings": [
+      {
+        "index": null,
+        "uri": "https://garagesaas20230118225621.azurewebsites.net"
+      },
+      {
+        "index": null,
+        "uri": "https://garagesaas20230118225621.azurewebsites.net/.auth/login/aadb2c/callback"
+      },
+      {
+        "index": null,
+        "uri": "https://garagesaas20230118225621.azurewebsites.net/signin-oidc"
+      },
+      {
+        "index": null,
+        "uri": "https://localhost:44301/signin-oidc"
+      },
+      {
+        "index": null,
+        "uri": "https://jwt.ms"
+      }
+    ],
+    "redirectUris": [
+      "https://garagesaas20230118225621.azurewebsites.net",
+      "https://garagesaas20230118225621.azurewebsites.net/.auth/login/aadb2c/callback",
+      "https://garagesaas20230118225621.azurewebsites.net/signin-oidc",
+      "https://localhost:44301/signin-oidc",
+      "https://jwt.ms"
+    ]
+  }
+}

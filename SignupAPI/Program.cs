@@ -35,6 +35,11 @@ namespace SignupAPI
                     .ConfigureAppConfiguration((Host, config) =>
                     {
                         config.AddJsonFile("signupappsettings.json", optional: true);
+                        config.AddJsonFile($"signupappsettings.{Host.HostingEnvironment.EnvironmentName}.json", optional: true);
+                        if (Host.HostingEnvironment.IsDevelopment())
+                            config.AddUserSecrets<Program>(optional: true);
+                        config.AddEnvironmentVariables();
+                        if (args.Length > 0) config.AddCommandLine(args);
                     })
                     .ConfigureWebHostDefaults(webBuilder =>
                     {

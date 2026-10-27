@@ -1,0 +1,11 @@
+{
+  "diagnosticOnly": true,
+  "responseType": "code",
+  "responseMode": "form_post",
+  "pkceMethod": "S256",
+  "status": 200,
+  "passwordFormPresent": true,
+  "providerErrorCodes": [],
+  "accountSubmitted": false,
+  "configurationChanged": false
+}

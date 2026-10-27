@@ -1,0 +1,9 @@
+{
+  "eventsExamined": 5,
+  "authErrorCodes": [
+    "AADB2C90057"
+  ],
+  "exceptionTypes": [],
+  "authCategoriesSuppressedByProductionSource": true,
+  "rawLogsSaved": false
+}

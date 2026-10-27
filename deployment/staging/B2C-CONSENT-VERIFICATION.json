@@ -1,0 +1,8 @@
+[
+  {
+    "clientId": "af67009a-0192-433a-8b0b-ccc73d266a30",
+    "consentType": "AllPrincipals",
+    "resourceId": "0b1c96f9-3908-4dae-8862-a5005dcbb8ae",
+    "scope": "openid offline_access"
+  }
+]

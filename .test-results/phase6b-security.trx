@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="aa4b2cc4-2b27-492f-8e6a-8f139c522fec" name="ggall@GARVAN_ASUS 2026-10-20 23:47:26" runUser="GARVAN_ASUS\ggall" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-20T23:47:26.2565925+01:00" queuing="2026-10-20T23:47:26.2565927+01:00" start="2026-10-20T23:47:24.1732114+01:00" finish="2026-10-20T23:47:26.8261927+01:00" />
+  <TestSettings name="default" id="201ec8dd-ec3e-438f-9ab7-f947e6ef2f03">
+    <Deployment runDeploymentRoot="ggall_GARVAN_ASUS_2026-10-20_23_47_26" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="3da880f8-6624-4662-bd5e-9c1371709fd1" testId="cdf7857e-2b16-36a5-b8d5-4c3485414427" testName="UnsafeConfigurationFailsWithSanitizedErrors (OpenAI:GarageRequestsPerMinute,0)" computerName="GARVAN_ASUS" duration="00:00:00.0017748" startTime="2026-10-20T23:47:26.2475312+01:00" endTime="2026-10-20T23:47:26.2493624+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3da880f8-6624-4662-bd5e-9c1371709fd1" />
+    <UnitTestResult executionId="71e360fe-cffc-4022-987c-1323ba800999" testId="987f25ab-9200-19b7-561d-ed5d2b4769ea" testName="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (AzureAdB2C:SignUpSignInPolicyId)" computerName="GARVAN_ASUS" duration="00:00:00.0000356" startTime="2026-10-20T23:47:26.2363975+01:00" endTime="2026-10-20T23:47:26.2364628+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="71e360fe-cffc-4022-987c-1323ba800999" />
+    <UnitTestResult executionId="fbb1c58b-802a-417b-94d4-89860b7af104" testId="5c0d1b47-9b8e-7a13-c6af-d3f65a5ae500" testName="UnsafeConfigurationFailsWithSanitizedErrors (OpenAI:ApiKey,synthetic-secret&#xA;)" computerName="GARVAN_ASUS" duration="00:00:00.0006552" startTime="2026-10-20T23:47:26.2501769+01:00" endTime="2026-10-20T23:47:26.2508988+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fbb1c58b-802a-417b-94d4-89860b7af104" />
+    <UnitTestResult executionId="420191a8-eacf-4ab7-84f6-4279849f8643" testId="0e5f8c69-2431-4a6e-d1a6-7db98f51ad5e" testName="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (EmailSettings:SenderEmail)" computerName="GARVAN_ASUS" duration="00:00:00.0000231" startTime="2026-10-20T23:47:26.2366144+01:00" endTime="2026-10-20T23:47:26.2366546+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="420191a8-eacf-4ab7-84f6-4279849f8643" />
+    <UnitTestResult executionId="e2360ca1-aeee-415a-b491-cd434742067d" testId="d9912386-ba6b-343a-0ef5-a9a97c9aa592" testName="UnsafeConfigurationFailsWithSanitizedErrors (EmailSettings:UseStartTls,false)" computerName="GARVAN_ASUS" duration="00:00:00.0020616" startTime="2026-10-20T23:47:26.2439606+01:00" endTime="2026-10-20T23:47:26.2460566+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e2360ca1-aeee-415a-b491-cd434742067d" />
+    <UnitTestResult executionId="6f12800f-be2e-4bde-9f6c-dd442013c9cf" testId="78e74d45-c166-5ebd-6902-ed65848c1580" testName="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (ConnectionStrings:GarageSaasDBConnection)" computerName="GARVAN_ASUS" duration="00:00:00.0221046" startTime="2026-10-20T23:47:26.1696029+01:00" endTime="2026-10-20T23:47:26.2018843+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6f12800f-be2e-4bde-9f6c-dd442013c9cf" />
+    <UnitTestResult executionId="959ad8cd-d000-4a90-9120-b8352ce7e026" testId="8e28e54a-5645-2f26-e03a-8f65e6e75503" testName="UnsafeConfigurationFailsWithSanitizedErrors (AllowedHosts,*)" computerName="GARVAN_ASUS" duration="00:00:00.0000589" startTime="2026-10-20T23:47:26.2471209+01:00" endTime="2026-10-20T23:47:26.2472365+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="959ad8cd-d000-4a90-9120-b8352ce7e026" />
+    <UnitTestResult executionId="0a9a1a8d-69f4-4dae-9800-565da2e58cc3" testId="15b42323-39cf-7a70-997e-80aefb461adc" testName="UnsafeConfigurationFailsWithSanitizedErrors (ConnectionStrings:GarageSaasDBConnection,Server=sql;Database=test;TrustServerCertificate=True)" computerName="GARVAN_ASUS" duration="00:00:00.0000300" startTime="2026-10-20T23:47:26.2438727+01:00" endTime="2026-10-20T23:47:26.2439520+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0a9a1a8d-69f4-4dae-9800-565da2e58cc3" />
+    <UnitTestResult executionId="76756095-3ca7-42cc-9a81-1be26a5bdbaf" testId="6d14084b-5c22-3bab-981c-5f2cc02427a1" testName="ProductionPipelineProtectsCookiesMutationsAndErrorsWithoutLiveServices" computerName="GARVAN_ASUS" duration="00:00:00.4313368" startTime="2026-10-20T23:47:26.3378018+01:00" endTime="2026-10-20T23:47:26.7694114+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="76756095-3ca7-42cc-9a81-1be26a5bdbaf">
+      <Output>
+        <StdOut>info: Microsoft.Hosting.Lifetime[14]&#xD;
+      Now listening on: http://127.0.0.1:53729&#xD;
+info: Microsoft.Hosting.Lifetime[0]&#xD;
+      Application started. Press Ctrl+C to shut down.&#xD;
+info: Microsoft.Hosting.Lifetime[0]&#xD;
+      Hosting environment: Production&#xD;
+info: Microsoft.Hosting.Lifetime[0]&#xD;
+      Content root path: C:\Users\ggall\source\repos\GarageSaas\GarageSaas&#xD;
+fail: GarageSaas.Middleware.ProductionExceptionLoggingMiddleware[0]&#xD;
+      Request failed (InvalidOperationException); reference 0HNPEVGEI25MJ:00000006.&#xD;
+info: Microsoft.Hosting.Lifetime[0]&#xD;
+      Application is shutting down...</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="20c49a4f-9281-401a-b2c8-47dc0e30e40e" testId="132eff75-c6cd-1f49-df86-52e23de77438" testName="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (AzureAdB2C:ClientId)" computerName="GARVAN_ASUS" duration="00:00:00.0001165" startTime="2026-10-20T23:47:26.2361088+01:00" endTime="2026-10-20T23:47:26.2363787+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="20c49a4f-9281-401a-b2c8-47dc0e30e40e" />
+    <UnitTestResult executionId="28907034-036a-4f7b-82b3-ca437b5e5d35" testId="1af663c3-8a0c-be61-5a61-db3b5c55351e" testName="UnsafeConfigurationFailsWithSanitizedErrors (OpenAI:RequestsPerMinute,synthetic-secret)" computerName="GARVAN_ASUS" duration="00:00:00.0006979" startTime="2026-10-20T23:47:26.2493874+01:00" endTime="2026-10-20T23:47:26.2501550+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="28907034-036a-4f7b-82b3-ca437b5e5d35" />
+    <UnitTestResult executionId="b8c8ee85-76a1-4692-95b6-556a565fcc60" testId="d0e670f9-9039-e739-ebcf-3c7c850dd8be" testName="UnsafeConfigurationFailsWithSanitizedErrors (Onboarding:PublicOrigin,https://example.invalid/path?token=synthetic-secret)" computerName="GARVAN_ASUS" duration="00:00:00.0001590" startTime="2026-10-20T23:47:26.2472461+01:00" endTime="2026-10-20T23:47:26.2475132+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b8c8ee85-76a1-4692-95b6-556a565fcc60" />
+    <UnitTestResult executionId="f5155628-3403-43fb-abed-d68626ebadf0" testId="84319dd2-bf0b-81a5-f4d6-52e591a1d41e" testName="UnsafeConfigurationFailsWithSanitizedErrors (ConnectionStrings:GarageSaasDBConnection,Password=synthetic-secret;Unknown=synthetic-secret)" computerName="GARVAN_ASUS" duration="00:00:00.0021159" startTime="2026-10-20T23:47:26.2366599+01:00" endTime="2026-10-20T23:47:26.2388059+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f5155628-3403-43fb-abed-d68626ebadf0" />
+    <UnitTestResult executionId="cd7510fa-16c1-4b6d-a775-797ddb0d6870" testId="fc9bc06e-86f0-3e6f-a4d6-78477908f172" testName="UnsafeConfigurationFailsWithSanitizedErrors (EmailSettings:SmtpPort,synthetic-secret)" computerName="GARVAN_ASUS" duration="00:00:00.0009471" startTime="2026-10-20T23:47:26.2460809+01:00" endTime="2026-10-20T23:47:26.2470955+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cd7510fa-16c1-4b6d-a775-797ddb0d6870" />
+    <UnitTestResult executionId="6f6dadcb-9ec4-4c36-8185-25a82d970fc0" testId="07ab0ea3-3073-d489-bf90-3cd75d8fbd57" testName="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (AzureAdB2C:ClientSecret)" computerName="GARVAN_ASUS" duration="00:00:00.0308819" startTime="2026-10-20T23:47:26.2046724+01:00" endTime="2026-10-20T23:47:26.2357759+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6f6dadcb-9ec4-4c36-8185-25a82d970fc0" />
+    <UnitTestResult executionId="ebed0310-ac70-43b8-8c8e-130972353430" testId="6c7146dc-d1d8-0003-b9ed-167621bd2c4c" testName="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (AllowedHosts)" computerName="GARVAN_ASUS" duration="00:00:00.0000259" startTime="2026-10-20T23:47:26.2364693+01:00" endTime="2026-10-20T23:47:26.2365130+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ebed0310-ac70-43b8-8c8e-130972353430" />
+    <UnitTestResult executionId="53c0bd1c-bb00-4864-9e24-3bc0f447512f" testId="8c56a6d6-bc02-fa02-aeda-ee135e87d405" testName="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (EmailSettings:SmtpHost)" computerName="GARVAN_ASUS" duration="00:00:00.0000221" startTime="2026-10-20T23:47:26.2365686+01:00" endTime="2026-10-20T23:47:26.2366057+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="53c0bd1c-bb00-4864-9e24-3bc0f447512f" />
+    <UnitTestResult executionId="8fdd26cf-cca1-4b9b-8833-81528b5cb39f" testId="b866c336-b155-322a-581c-23296f01e9e9" testName="ValidProductionAllowsOptionalAiAndDevelopmentDoesNotRequireProductionSecrets" computerName="GARVAN_ASUS" duration="00:00:00.0846869" startTime="2026-10-20T23:47:26.2520787+01:00" endTime="2026-10-20T23:47:26.3377258+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8fdd26cf-cca1-4b9b-8833-81528b5cb39f" />
+    <UnitTestResult executionId="68b2b31c-27ec-4de8-a125-78cae4c4f667" testId="45753cf0-3da7-6f3e-49c0-33939cd62140" testName="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (Onboarding:PublicOrigin)" computerName="GARVAN_ASUS" duration="00:00:00.0000252" startTime="2026-10-20T23:47:26.2365204+01:00" endTime="2026-10-20T23:47:26.2365628+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="68b2b31c-27ec-4de8-a125-78cae4c4f667" />
+    <UnitTestResult executionId="97f42655-7758-42fc-ab37-d97afee418c5" testId="dac5e18f-abdc-fdf5-e771-6d6beb7e7b2e" testName="UnsafeConfigurationFailsWithSanitizedErrors (ConnectionStrings:GarageSaasDBConnection,Server=sql;Database=test;Encrypt=False)" computerName="GARVAN_ASUS" duration="00:00:00.0002386" startTime="2026-10-20T23:47:26.2435294+01:00" endTime="2026-10-20T23:47:26.2438494+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="97f42655-7758-42fc-ab37-d97afee418c5" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="UnsafeConfigurationFailsWithSanitizedErrors (EmailSettings:SmtpPort,synthetic-secret)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="fc9bc06e-86f0-3e6f-a4d6-78477908f172">
+      <Execution id="cd7510fa-16c1-4b6d-a775-797ddb0d6870" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="UnsafeConfigurationFailsWithSanitizedErrors" />
+    </UnitTest>
+    <UnitTest name="UnsafeConfigurationFailsWithSanitizedErrors (EmailSettings:UseStartTls,false)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="d9912386-ba6b-343a-0ef5-a9a97c9aa592">
+      <Execution id="e2360ca1-aeee-415a-b491-cd434742067d" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="UnsafeConfigurationFailsWithSanitizedErrors" />
+    </UnitTest>
+    <UnitTest name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (ConnectionStrings:GarageSaasDBConnection)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="78e74d45-c166-5ebd-6902-ed65848c1580">
+      <Execution id="6f12800f-be2e-4bde-9f6c-dd442013c9cf" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues" />
+    </UnitTest>
+    <UnitTest name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (AzureAdB2C:ClientId)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="132eff75-c6cd-1f49-df86-52e23de77438">
+      <Execution id="20c49a4f-9281-401a-b2c8-47dc0e30e40e" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues" />
+    </UnitTest>
+    <UnitTest name="UnsafeConfigurationFailsWithSanitizedErrors (OpenAI:ApiKey,synthetic-secret&#xA;)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="5c0d1b47-9b8e-7a13-c6af-d3f65a5ae500">
+      <Execution id="fbb1c58b-802a-417b-94d4-89860b7af104" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="UnsafeConfigurationFailsWithSanitizedErrors" />
+    </UnitTest>
+    <UnitTest name="UnsafeConfigurationFailsWithSanitizedErrors (OpenAI:RequestsPerMinute,synthetic-secret)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="1af663c3-8a0c-be61-5a61-db3b5c55351e">
+      <Execution id="28907034-036a-4f7b-82b3-ca437b5e5d35" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="UnsafeConfigurationFailsWithSanitizedErrors" />
+    </UnitTest>
+    <UnitTest name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (EmailSettings:SmtpHost)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="8c56a6d6-bc02-fa02-aeda-ee135e87d405">
+      <Execution id="53c0bd1c-bb00-4864-9e24-3bc0f447512f" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues" />
+    </UnitTest>
+    <UnitTest name="UnsafeConfigurationFailsWithSanitizedErrors (ConnectionStrings:GarageSaasDBConnection,Server=sql;Database=test;TrustServerCertificate=True)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="15b42323-39cf-7a70-997e-80aefb461adc">
+      <Execution id="0a9a1a8d-69f4-4dae-9800-565da2e58cc3" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="UnsafeConfigurationFailsWithSanitizedErrors" />
+    </UnitTest>
+    <UnitTest name="UnsafeConfigurationFailsWithSanitizedErrors (ConnectionStrings:GarageSaasDBConnection,Password=synthetic-secret;Unknown=synthetic-secret)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="84319dd2-bf0b-81a5-f4d6-52e591a1d41e">
+      <Execution id="f5155628-3403-43fb-abed-d68626ebadf0" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="UnsafeConfigurationFailsWithSanitizedErrors" />
+    </UnitTest>
+    <UnitTest name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (EmailSettings:SenderEmail)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="0e5f8c69-2431-4a6e-d1a6-7db98f51ad5e">
+      <Execution id="420191a8-eacf-4ab7-84f6-4279849f8643" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues" />
+    </UnitTest>
+    <UnitTest name="UnsafeConfigurationFailsWithSanitizedErrors (OpenAI:GarageRequestsPerMinute,0)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="cdf7857e-2b16-36a5-b8d5-4c3485414427">
+      <Execution id="3da880f8-6624-4662-bd5e-9c1371709fd1" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="UnsafeConfigurationFailsWithSanitizedErrors" />
+    </UnitTest>
+    <UnitTest name="ProductionPipelineProtectsCookiesMutationsAndErrorsWithoutLiveServices" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="6d14084b-5c22-3bab-981c-5f2cc02427a1">
+      <Execution id="76756095-3ca7-42cc-9a81-1be26a5bdbaf" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.ProductionSecurityHttpTests" name="ProductionPipelineProtectsCookiesMutationsAndErrorsWithoutLiveServices" />
+    </UnitTest>
+    <UnitTest name="UnsafeConfigurationFailsWithSanitizedErrors (ConnectionStrings:GarageSaasDBConnection,Server=sql;Database=test;Encrypt=False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="dac5e18f-abdc-fdf5-e771-6d6beb7e7b2e">
+      <Execution id="97f42655-7758-42fc-ab37-d97afee418c5" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="UnsafeConfigurationFailsWithSanitizedErrors" />
+    </UnitTest>
+    <UnitTest name="UnsafeConfigurationFailsWithSanitizedErrors (AllowedHosts,*)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="8e28e54a-5645-2f26-e03a-8f65e6e75503">
+      <Execution id="959ad8cd-d000-4a90-9120-b8352ce7e026" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="UnsafeConfigurationFailsWithSanitizedErrors" />
+    </UnitTest>
+    <UnitTest name="ValidProductionAllowsOptionalAiAndDevelopmentDoesNotRequireProductionSecrets" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="b866c336-b155-322a-581c-23296f01e9e9">
+      <Execution id="8fdd26cf-cca1-4b9b-8833-81528b5cb39f" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="ValidProductionAllowsOptionalAiAndDevelopmentDoesNotRequireProductionSecrets" />
+    </UnitTest>
+    <UnitTest name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (Onboarding:PublicOrigin)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="45753cf0-3da7-6f3e-49c0-33939cd62140">
+      <Execution id="68b2b31c-27ec-4de8-a125-78cae4c4f667" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues" />
+    </UnitTest>
+    <UnitTest name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (AzureAdB2C:ClientSecret)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="07ab0ea3-3073-d489-bf90-3cd75d8fbd57">
+      <Execution id="6f6dadcb-9ec4-4c36-8185-25a82d970fc0" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues" />
+    </UnitTest>
+    <UnitTest name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (AzureAdB2C:SignUpSignInPolicyId)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="987f25ab-9200-19b7-561d-ed5d2b4769ea">
+      <Execution id="71e360fe-cffc-4022-987c-1323ba800999" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues" />
+    </UnitTest>
+    <UnitTest name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues (AllowedHosts)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="6c7146dc-d1d8-0003-b9ed-167621bd2c4c">
+      <Execution id="ebed0310-ac70-43b8-8c8e-130972353430" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues" />
+    </UnitTest>
+    <UnitTest name="UnsafeConfigurationFailsWithSanitizedErrors (Onboarding:PublicOrigin,https://example.invalid/path?token=synthetic-secret)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="d0e670f9-9039-e739-ebcf-3c7c850dd8be">
+      <Execution id="b8c8ee85-76a1-4692-95b6-556a565fcc60" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Services.ProductionConfigurationTests" name="UnsafeConfigurationFailsWithSanitizedErrors" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="cdf7857e-2b16-36a5-b8d5-4c3485414427" executionId="3da880f8-6624-4662-bd5e-9c1371709fd1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="987f25ab-9200-19b7-561d-ed5d2b4769ea" executionId="71e360fe-cffc-4022-987c-1323ba800999" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5c0d1b47-9b8e-7a13-c6af-d3f65a5ae500" executionId="fbb1c58b-802a-417b-94d4-89860b7af104" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0e5f8c69-2431-4a6e-d1a6-7db98f51ad5e" executionId="420191a8-eacf-4ab7-84f6-4279849f8643" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d9912386-ba6b-343a-0ef5-a9a97c9aa592" executionId="e2360ca1-aeee-415a-b491-cd434742067d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="78e74d45-c166-5ebd-6902-ed65848c1580" executionId="6f12800f-be2e-4bde-9f6c-dd442013c9cf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8e28e54a-5645-2f26-e03a-8f65e6e75503" executionId="959ad8cd-d000-4a90-9120-b8352ce7e026" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="15b42323-39cf-7a70-997e-80aefb461adc" executionId="0a9a1a8d-69f4-4dae-9800-565da2e58cc3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6d14084b-5c22-3bab-981c-5f2cc02427a1" executionId="76756095-3ca7-42cc-9a81-1be26a5bdbaf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="132eff75-c6cd-1f49-df86-52e23de77438" executionId="20c49a4f-9281-401a-b2c8-47dc0e30e40e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1af663c3-8a0c-be61-5a61-db3b5c55351e" executionId="28907034-036a-4f7b-82b3-ca437b5e5d35" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d0e670f9-9039-e739-ebcf-3c7c850dd8be" executionId="b8c8ee85-76a1-4692-95b6-556a565fcc60" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="84319dd2-bf0b-81a5-f4d6-52e591a1d41e" executionId="f5155628-3403-43fb-abed-d68626ebadf0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fc9bc06e-86f0-3e6f-a4d6-78477908f172" executionId="cd7510fa-16c1-4b6d-a775-797ddb0d6870" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="07ab0ea3-3073-d489-bf90-3cd75d8fbd57" executionId="6f6dadcb-9ec4-4c36-8185-25a82d970fc0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6c7146dc-d1d8-0003-b9ed-167621bd2c4c" executionId="ebed0310-ac70-43b8-8c8e-130972353430" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8c56a6d6-bc02-fa02-aeda-ee135e87d405" executionId="53c0bd1c-bb00-4864-9e24-3bc0f447512f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b866c336-b155-322a-581c-23296f01e9e9" executionId="8fdd26cf-cca1-4b9b-8833-81528b5cb39f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="45753cf0-3da7-6f3e-49c0-33939cd62140" executionId="68b2b31c-27ec-4de8-a125-78cae4c4f667" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dac5e18f-abdc-fdf5-e771-6d6beb7e7b2e" executionId="97f42655-7758-42fc-ab37-d97afee418c5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="20" executed="20" passed="20" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+  </ResultSummary>
+</TestRun>

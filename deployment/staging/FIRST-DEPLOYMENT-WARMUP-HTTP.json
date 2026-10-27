@@ -1,0 +1,21 @@
+[
+  {
+    "url": "https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/health",
+    "status": 503,
+    "healthy": false
+  },
+  {
+    "url": "http://garagesaas-stg-d49b2f61-weu.azurewebsites.net/health",
+    "status": 301,
+    "redirectHost": "garagesaas-stg-d49b2f61-weu.azurewebsites.net",
+    "redirectPath": "/health"
+  },
+  {
+    "url": "https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/",
+    "status": 503
+  },
+  {
+    "url": "https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/MicrosoftIdentity/Account/SignIn",
+    "status": 503
+  }
+]

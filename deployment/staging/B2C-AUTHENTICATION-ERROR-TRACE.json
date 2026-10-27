@@ -1,0 +1,23 @@
+[
+  {
+    "host": "garagesaas-stg-d49b2f61-weu.azurewebsites.net",
+    "path": "/MicrosoftIdentity/Account/SignIn",
+    "status": 302,
+    "client_id": "6a6b59d3-6db1-4124-86b1-d43c457dd17e",
+    "redirect_uri": "https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/signin-oidc",
+    "response_type": "id_token",
+    "response_mode": "form_post",
+    "scope": "openid profile"
+  },
+  {
+    "host": "fairycastlews.b2clogin.com",
+    "path": "/fairycastlews.onmicrosoft.com/b2c_1_webapp3susi1/oauth2/v2.0/authorize",
+    "status": 200,
+    "passwordFormPresent": false,
+    "error": "unauthorized_client",
+    "error_description": "AADB2C90057: The provided application is not configured to allow the 'OAuth' Implicit flow.\r\nCorrelation ID: b073e183-a470-4dbd-9a1c-550b17078731\r\nTimestamp: 2026-10-26 23:45:33Z\r\n",
+    "providerErrorCodes": [
+      "AADB2C90057"
+    ]
+  }
+]

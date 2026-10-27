@@ -1,0 +1,156 @@
+{
+  "cost": 30,
+  "interval": "PT1M",
+  "namespace": "Microsoft.Web/serverfarms",
+  "resourceregion": "westeurope",
+  "timespan": "2026-10-21T21:23:00Z/2026-10-21T21:29:35Z",
+  "value": [
+    {
+      "displayDescription": "The average memory used across all instances of the plan.",
+      "errorCode": "Success",
+      "id": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/TestSite/providers/Microsoft.Web/serverfarms/ASP-TestSite-89a7/providers/Microsoft.Insights/metrics/MemoryPercentage",
+      "name": {
+        "localizedValue": "Memory Percentage",
+        "value": "MemoryPercentage"
+      },
+      "resourceGroup": "TestSite",
+      "timeseries": [
+        {
+          "data": [
+            {
+              "average": 74.5,
+              "maximum": 77.0,
+              "timeStamp": "2026-10-21T21:23:00Z"
+            },
+            {
+              "average": 74.66666666666667,
+              "maximum": 75.0,
+              "timeStamp": "2026-10-21T21:24:00Z"
+            },
+            {
+              "average": 75.16666666666667,
+              "maximum": 76.0,
+              "timeStamp": "2026-10-21T21:25:00Z"
+            },
+            {
+              "average": 74.0,
+              "maximum": 76.0,
+              "timeStamp": "2026-10-21T21:26:00Z"
+            },
+            {
+              "average": 75.16666666666667,
+              "maximum": 76.0,
+              "timeStamp": "2026-10-21T21:27:00Z"
+            },
+            {
+              "average": 75.0,
+              "maximum": 75.0,
+              "timeStamp": "2026-10-21T21:28:00Z"
+            }
+          ],
+          "metadatavalues": []
+        }
+      ],
+      "type": "Microsoft.Insights/metrics",
+      "unit": "Percent"
+    },
+    {
+      "displayDescription": "The average CPU used across all instances of the plan.",
+      "errorCode": "Success",
+      "id": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/TestSite/providers/Microsoft.Web/serverfarms/ASP-TestSite-89a7/providers/Microsoft.Insights/metrics/CpuPercentage",
+      "name": {
+        "localizedValue": "CPU Percentage",
+        "value": "CpuPercentage"
+      },
+      "resourceGroup": "TestSite",
+      "timeseries": [
+        {
+          "data": [
+            {
+              "average": 4.666666666666667,
+              "maximum": 8.0,
+              "timeStamp": "2026-10-21T21:23:00Z"
+            },
+            {
+              "average": 2.6666666666666665,
+              "maximum": 6.0,
+              "timeStamp": "2026-10-21T21:24:00Z"
+            },
+            {
+              "average": 3.6666666666666665,
+              "maximum": 9.0,
+              "timeStamp": "2026-10-21T21:25:00Z"
+            },
+            {
+              "average": 8.5,
+              "maximum": 18.0,
+              "timeStamp": "2026-10-21T21:26:00Z"
+            },
+            {
+              "average": 3.0,
+              "maximum": 5.0,
+              "timeStamp": "2026-10-21T21:27:00Z"
+            },
+            {
+              "average": 12.0,
+              "maximum": 30.0,
+              "timeStamp": "2026-10-21T21:28:00Z"
+            }
+          ],
+          "metadatavalues": []
+        }
+      ],
+      "type": "Microsoft.Insights/metrics",
+      "unit": "Percent"
+    },
+    {
+      "displayDescription": "The average number of HTTP requests that had to sit on the queue before being fulfilled. A high or increasing HTTP Queue length is a symptom of a plan under heavy load.",
+      "errorCode": "Success",
+      "id": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/TestSite/providers/Microsoft.Web/serverfarms/ASP-TestSite-89a7/providers/Microsoft.Insights/metrics/HttpQueueLength",
+      "name": {
+        "localizedValue": "Http Queue Length",
+        "value": "HttpQueueLength"
+      },
+      "resourceGroup": "TestSite",
+      "timeseries": [
+        {
+          "data": [
+            {
+              "average": 0.0,
+              "maximum": 0.0,
+              "timeStamp": "2026-10-21T21:23:00Z"
+            },
+            {
+              "average": 0.0,
+              "maximum": 0.0,
+              "timeStamp": "2026-10-21T21:24:00Z"
+            },
+            {
+              "average": 0.0,
+              "maximum": 0.0,
+              "timeStamp": "2026-10-21T21:25:00Z"
+            },
+            {
+              "average": 0.0,
+              "maximum": 0.0,
+              "timeStamp": "2026-10-21T21:26:00Z"
+            },
+            {
+              "average": 0.0,
+              "maximum": 0.0,
+              "timeStamp": "2026-10-21T21:27:00Z"
+            },
+            {
+              "average": 0.0,
+              "maximum": 0.0,
+              "timeStamp": "2026-10-21T21:28:00Z"
+            }
+          ],
+          "metadatavalues": []
+        }
+      ],
+      "type": "Microsoft.Insights/metrics",
+      "unit": "Count"
+    }
+  ]
+}

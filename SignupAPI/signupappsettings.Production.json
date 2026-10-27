@@ -1,0 +1,14 @@
+{
+  "AllowedHosts": "",
+  "ConnectionStrings": { "GarageSaasDBConnection": "" },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information",
+      "Microsoft.AspNetCore.Hosting.Diagnostics": "None",
+      "Microsoft.EntityFrameworkCore": "None",
+      "System.Net.Http.HttpClient": "None"
+    }
+  }
+}

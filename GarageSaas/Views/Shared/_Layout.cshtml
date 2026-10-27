@@ -2,6 +2,7 @@
 @using GarageSaas.Services.Interfaces
 @using GarageSaas.Exceptions
 @inject ICurrentGarageUserService CurrentGarageUserService
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     GarageSaas.Services.Models.CurrentGarageUserModel selectedGarage = null;
     if (User.Identity?.IsAuthenticated == true)
@@ -20,6 +21,10 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    @if (User.Identity?.IsAuthenticated != true || selectedGarage != null)
+    {
+        <meta name="request-verification-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+    }
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     @if (selectedGarage != null && garagePreference != null)
     { <meta name="garage-context" content="@garagePreference.ContextToken(selectedGarage.UserId, selectedGarage.GarageBusinessId)" /> }

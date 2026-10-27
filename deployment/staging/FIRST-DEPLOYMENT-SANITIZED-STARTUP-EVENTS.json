@@ -1,0 +1,26 @@
+[
+  {
+    "provider": ".NET Runtime",
+    "eventId": "1000",
+    "time": "2026-10-26T22:16:28Z",
+    "matchedTerms": "storage",
+    "exceptionTypes": "",
+    "errorCodes": ""
+  },
+  {
+    "provider": "IIS AspNetCore Module V2",
+    "eventId": "1032",
+    "time": "2026-10-26T22:16:31Z",
+    "matchedTerms": "success",
+    "exceptionTypes": "",
+    "errorCodes": ""
+  },
+  {
+    "provider": "ZipFS",
+    "eventId": "0",
+    "time": "2026-10-26T22:16:50Z",
+    "matchedTerms": "ZipFS",
+    "exceptionTypes": "",
+    "errorCodes": ""
+  }
+]

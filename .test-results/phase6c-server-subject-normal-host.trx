@@ -1,0 +1,443 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="5f03a9d2-8e5c-4c8f-a5c4-8fbf0aa48aa0" name="ggall@GARVAN_ASUS 2026-10-27 07:40:19" runUser="GARVAN_ASUS\ggall" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-27T07:40:19.4058368+00:00" queuing="2026-10-27T07:40:19.4058371+00:00" start="2026-10-27T07:39:18.8632063+00:00" finish="2026-10-27T07:40:22.0261448+00:00" />
+  <TestSettings name="default" id="9c7beab7-4321-4710-8601-7c516d4762fd">
+    <Deployment runDeploymentRoot="ggall_GARVAN_ASUS_2026-10-27_07_40_19" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="dbfdf9a6-4b4d-424b-aecd-ebd551f5497f" testId="7843505d-428f-92bc-15ee-f9722519ddd9" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (absent-flag,False)" computerName="GARVAN_ASUS" duration="00:00:00.1665560" startTime="2026-10-27T07:40:19.7138144+00:00" endTime="2026-10-27T07:40:19.8805665+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dbfdf9a6-4b4d-424b-aecd-ebd551f5497f">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d42adca7-a5e8-446c-af52-1c2e50daf214" testId="3bb8f81e-174c-a7b7-dbcc-d6398c71978a" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (multiple-subjects,False)" computerName="GARVAN_ASUS" duration="00:00:00.1463451" startTime="2026-10-27T07:40:21.3986390+00:00" endTime="2026-10-27T07:40:21.5452091+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d42adca7-a5e8-446c-af52-1c2e50daf214">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="2b206962-1a48-4928-b57f-6d4322baf61a" testId="b0c54a96-c787-163c-59b8-fc2d08389a92" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (public-home,False)" computerName="GARVAN_ASUS" duration="00:00:00.1392845" startTime="2026-10-27T07:40:21.8355044+00:00" endTime="2026-10-27T07:40:21.9751789+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2b206962-1a48-4928-b57f-6d4322baf61a">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b1c05c96-b70b-4d97-8011-0d233917ab83" testId="1e2f4d2f-371e-2a5e-4a54-eb66ddfb9502" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (email-only,False)" computerName="GARVAN_ASUS" duration="00:00:00.1429963" startTime="2026-10-27T07:40:20.1469614+00:00" endTime="2026-10-27T07:40:20.2901252+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b1c05c96-b70b-4d97-8011-0d233917ab83">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="01601639-ba6c-4ca9-833e-5917835e5fc6" testId="3100c906-d0ae-acb2-8d94-e2d6aace07d4" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (wrong-host,False)" computerName="GARVAN_ASUS" duration="00:00:00.1378143" startTime="2026-10-27T07:40:20.4431321+00:00" endTime="2026-10-27T07:40:20.5811178+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="01601639-ba6c-4ca9-833e-5917835e5fc6">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="418661c0-1cdc-453e-b9cd-fdf37ffd8cba" testId="8d6ebbf5-18b4-9778-269b-453310c52df2" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (http,False)" computerName="GARVAN_ASUS" duration="00:00:00.1258408" startTime="2026-10-27T07:40:20.9866175+00:00" endTime="2026-10-27T07:40:21.1126227+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="418661c0-1cdc-453e-b9cd-fdf37ffd8cba">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="54f76ed3-fb5a-4c95-aeab-29524245986c" testId="17975588-c466-6991-090e-792cc1945024" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (disabled,False)" computerName="GARVAN_ASUS" duration="00:00:00.1558139" startTime="2026-10-27T07:40:19.5575188+00:00" endTime="2026-10-27T07:40:19.7135850+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="54f76ed3-fb5a-4c95-aeab-29524245986c">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="35016e2f-5fd3-4854-beaa-5982d2e6332b" testId="db74c757-611c-12e0-7749-eed7ffacf7ee" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (different-request-principal,False)" computerName="GARVAN_ASUS" duration="00:00:00.1453020" startTime="2026-10-27T07:40:21.5452972+00:00" endTime="2026-10-27T07:40:21.6907714+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="35016e2f-5fd3-4854-beaa-5982d2e6332b">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="0e6683d2-a58e-4843-99bd-6270f4eae715" testId="892ab6a1-f887-663c-1503-d2b292cbd5b1" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (wrong-environment,False)" computerName="GARVAN_ASUS" duration="00:00:00.1340439" startTime="2026-10-27T07:40:20.8522473+00:00" endTime="2026-10-27T07:40:20.9864558+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0e6683d2-a58e-4843-99bd-6270f4eae715">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="0da349d8-7bd2-4ad7-ae31-40f22baf06fd" testId="ebd27f4e-fff3-fe26-e2c9-541d7a0ee548" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (wrong-site,False)" computerName="GARVAN_ASUS" duration="00:00:00.1431195" startTime="2026-10-27T07:40:20.7088763+00:00" endTime="2026-10-27T07:40:20.8521609+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0da349d8-7bd2-4ad7-ae31-40f22baf06fd">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="91c600b3-589c-4000-80fe-7b3117742214" testId="343ea9e0-2efb-6e90-fe4d-c5e6e94e1f9a" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (host-lookalike,False)" computerName="GARVAN_ASUS" duration="00:00:00.1261766" startTime="2026-10-27T07:40:20.5812124+00:00" endTime="2026-10-27T07:40:20.7075522+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="91c600b3-589c-4000-80fe-7b3117742214">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="2844c5d5-aca8-44cb-847e-2a6a4490510e" testId="b3c1dbee-9c8e-b404-9b66-765d1a59c617" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (failed-page,False)" computerName="GARVAN_ASUS" duration="00:00:00.1443513" startTime="2026-10-27T07:40:21.6909067+00:00" endTime="2026-10-27T07:40:21.8354297+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2844c5d5-aca8-44cb-847e-2a6a4490510e">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="316e57de-9890-4178-accd-a6099d61f3da" testId="77f8230a-c4ec-9e27-47fe-698dfd071b5e" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (approved,True)" computerName="GARVAN_ASUS" duration="00:00:00.4406793" startTime="2026-10-27T07:39:59.8926110+00:00" endTime="2026-10-27T07:40:19.3848622+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="316e57de-9890-4178-accd-a6099d61f3da">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="3bc7df4b-ea1d-49df-bbe6-76258d8b249e" testId="f2ed0a2a-50b1-8f91-2dc6-1ce8a1186663" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (wrong-path,False)" computerName="GARVAN_ASUS" duration="00:00:00.1400650" startTime="2026-10-27T07:40:21.1127041+00:00" endTime="2026-10-27T07:40:21.2529332+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3bc7df4b-ea1d-49df-bbe6-76258d8b249e">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="ed947441-9ddd-487e-aeef-c935e7cfefb4" testId="cdcd5726-36a0-f5d4-c1df-021172ea2885" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (conflicting-oid,False)" computerName="GARVAN_ASUS" duration="00:00:00.1526295" startTime="2026-10-27T07:40:20.2902153+00:00" endTime="2026-10-27T07:40:20.4430436+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ed947441-9ddd-487e-aeef-c935e7cfefb4">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e861fc76-b4df-47ec-b1aa-86735ecaa356" testId="9e693e83-48f2-bb6d-5fc5-4ff0398b42ab" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (other-account,False)" computerName="GARVAN_ASUS" duration="00:00:00.1309436" startTime="2026-10-27T07:40:20.0157430+00:00" endTime="2026-10-27T07:40:20.1468598+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e861fc76-b4df-47ec-b1aa-86735ecaa356">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="c16bb501-74d3-4c86-b3a7-b3760fc73a4b" testId="4599fc1d-63d2-9eb9-5b5e-d73d8fa3376d" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (anonymous,False)" computerName="GARVAN_ASUS" duration="00:00:00.1347834" startTime="2026-10-27T07:40:19.8806844+00:00" endTime="2026-10-27T07:40:20.0156516+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c16bb501-74d3-4c86-b3a7-b3760fc73a4b">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="f1bfd53f-ff22-4f2e-a71e-1bbd51c4d541" testId="8429b873-7932-0a67-5942-8371b35537bf" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (missing-subject,False)" computerName="GARVAN_ASUS" duration="00:00:00.1452921" startTime="2026-10-27T07:40:21.2530145+00:00" endTime="2026-10-27T07:40:21.3984943+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f1bfd53f-ff22-4f2e-a71e-1bbd51c4d541">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="1c36bf7d-c2e2-431f-92fc-4f2c29c21634" testId="95e99a62-9fd9-626b-57b4-81ff9eb52237" testName="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (mapped-oid,True)" computerName="GARVAN_ASUS" duration="00:00:00.1641139" startTime="2026-10-27T07:40:19.3922920+00:00" endTime="2026-10-27T07:40:19.5566495+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1c36bf7d-c2e2-431f-92fc-4f2c29c21634">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord threw exception: &#xD;
+System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)</Message>
+          <StackTrace>    at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine&amp; stateMachine)&#xD;
+   at GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(String scenario, Boolean expected)&#xD;
+   at InvokeStub_StagingSubjectVerificationTests.OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord(Object, Span`1)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (multiple-subjects,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="3bb8f81e-174c-a7b7-dbcc-d6398c71978a">
+      <Execution id="d42adca7-a5e8-446c-af52-1c2e50daf214" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (approved,True)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="77f8230a-c4ec-9e27-47fe-698dfd071b5e">
+      <Execution id="316e57de-9890-4178-accd-a6099d61f3da" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (wrong-path,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="f2ed0a2a-50b1-8f91-2dc6-1ce8a1186663">
+      <Execution id="3bc7df4b-ea1d-49df-bbe6-76258d8b249e" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (http,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="8d6ebbf5-18b4-9778-269b-453310c52df2">
+      <Execution id="418661c0-1cdc-453e-b9cd-fdf37ffd8cba" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (failed-page,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="b3c1dbee-9c8e-b404-9b66-765d1a59c617">
+      <Execution id="2844c5d5-aca8-44cb-847e-2a6a4490510e" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (missing-subject,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="8429b873-7932-0a67-5942-8371b35537bf">
+      <Execution id="f1bfd53f-ff22-4f2e-a71e-1bbd51c4d541" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (other-account,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="9e693e83-48f2-bb6d-5fc5-4ff0398b42ab">
+      <Execution id="e861fc76-b4df-47ec-b1aa-86735ecaa356" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (host-lookalike,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="343ea9e0-2efb-6e90-fe4d-c5e6e94e1f9a">
+      <Execution id="91c600b3-589c-4000-80fe-7b3117742214" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (disabled,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="17975588-c466-6991-090e-792cc1945024">
+      <Execution id="54f76ed3-fb5a-4c95-aeab-29524245986c" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (conflicting-oid,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="cdcd5726-36a0-f5d4-c1df-021172ea2885">
+      <Execution id="ed947441-9ddd-487e-aeef-c935e7cfefb4" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (wrong-site,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="ebd27f4e-fff3-fe26-e2c9-541d7a0ee548">
+      <Execution id="0da349d8-7bd2-4ad7-ae31-40f22baf06fd" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (different-request-principal,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="db74c757-611c-12e0-7749-eed7ffacf7ee">
+      <Execution id="35016e2f-5fd3-4854-beaa-5982d2e6332b" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (public-home,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="b0c54a96-c787-163c-59b8-fc2d08389a92">
+      <Execution id="2b206962-1a48-4928-b57f-6d4322baf61a" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (anonymous,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="4599fc1d-63d2-9eb9-5b5e-d73d8fa3376d">
+      <Execution id="c16bb501-74d3-4c86-b3a7-b3760fc73a4b" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (mapped-oid,True)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="95e99a62-9fd9-626b-57b4-81ff9eb52237">
+      <Execution id="1c36bf7d-c2e2-431f-92fc-4f2c29c21634" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (email-only,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="1e2f4d2f-371e-2a5e-4a54-eb66ddfb9502">
+      <Execution id="b1c05c96-b70b-4d97-8011-0d233917ab83" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (wrong-host,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="3100c906-d0ae-acb2-8d94-e2d6aace07d4">
+      <Execution id="01601639-ba6c-4ca9-833e-5917835e5fc6" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (absent-flag,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="7843505d-428f-92bc-15ee-f9722519ddd9">
+      <Execution id="dbfdf9a6-4b4d-424b-aecd-ebd551f5497f" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+    <UnitTest name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord (wrong-environment,False)" storage="c:\users\ggall\source\repos\garagesaas\garagesaas.unittests\bin\release\net10.0\garagesaas.unittests.dll" id="892ab6a1-f887-663c-1503-d2b292cbd5b1">
+      <Execution id="0e6683d2-a58e-4843-99bd-6270f4eae715" />
+      <TestMethod codeBase="C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll" adapterTypeName="executor://mstestadapter/v2" className="GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests" name="OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="7843505d-428f-92bc-15ee-f9722519ddd9" executionId="dbfdf9a6-4b4d-424b-aecd-ebd551f5497f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3bb8f81e-174c-a7b7-dbcc-d6398c71978a" executionId="d42adca7-a5e8-446c-af52-1c2e50daf214" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b0c54a96-c787-163c-59b8-fc2d08389a92" executionId="2b206962-1a48-4928-b57f-6d4322baf61a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1e2f4d2f-371e-2a5e-4a54-eb66ddfb9502" executionId="b1c05c96-b70b-4d97-8011-0d233917ab83" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3100c906-d0ae-acb2-8d94-e2d6aace07d4" executionId="01601639-ba6c-4ca9-833e-5917835e5fc6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8d6ebbf5-18b4-9778-269b-453310c52df2" executionId="418661c0-1cdc-453e-b9cd-fdf37ffd8cba" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="17975588-c466-6991-090e-792cc1945024" executionId="54f76ed3-fb5a-4c95-aeab-29524245986c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="db74c757-611c-12e0-7749-eed7ffacf7ee" executionId="35016e2f-5fd3-4854-beaa-5982d2e6332b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="892ab6a1-f887-663c-1503-d2b292cbd5b1" executionId="0e6683d2-a58e-4843-99bd-6270f4eae715" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ebd27f4e-fff3-fe26-e2c9-541d7a0ee548" executionId="0da349d8-7bd2-4ad7-ae31-40f22baf06fd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="343ea9e0-2efb-6e90-fe4d-c5e6e94e1f9a" executionId="91c600b3-589c-4000-80fe-7b3117742214" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b3c1dbee-9c8e-b404-9b66-765d1a59c617" executionId="2844c5d5-aca8-44cb-847e-2a6a4490510e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="77f8230a-c4ec-9e27-47fe-698dfd071b5e" executionId="316e57de-9890-4178-accd-a6099d61f3da" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f2ed0a2a-50b1-8f91-2dc6-1ce8a1186663" executionId="3bc7df4b-ea1d-49df-bbe6-76258d8b249e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cdcd5726-36a0-f5d4-c1df-021172ea2885" executionId="ed947441-9ddd-487e-aeef-c935e7cfefb4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9e693e83-48f2-bb6d-5fc5-4ff0398b42ab" executionId="e861fc76-b4df-47ec-b1aa-86735ecaa356" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4599fc1d-63d2-9eb9-5b5e-d73d8fa3376d" executionId="c16bb501-74d3-4c86-b3a7-b3760fc73a4b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8429b873-7932-0a67-5942-8371b35537bf" executionId="f1bfd53f-ff22-4f2e-a71e-1bbd51c4d541" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="95e99a62-9fd9-626b-57b4-81ff9eb52237" executionId="1c36bf7d-c2e2-431f-92fc-4f2c29c21634" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="19" executed="19" passed="0" failed="19" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <RunInfos>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8304691+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] Unable to load types from the test source 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll'. Some or all of the tests in this source may not be discovered.&#xD;
+Error: System.IO.FileLoadException: Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7)&#xD;
+</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8312270+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.Tests.Services.CustomerVehicleServiceTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8312832+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.UnitTests.Services.CustomerVehicleServiceTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8313961+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.UnitTests.Services.GarageCustomersServiceTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8314309+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.UnitTests.Services.InvoiceUpdateSqlTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8314541+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.UnitTests.Services.OwnershipIntegritySqlTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8314659+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.UnitTests.Services.QuoteConversionSqlTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8315298+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.UnitTests.Services.QuoteSuggestionIsolationTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8315627+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.UnitTests.Services.QuoteSuggestionServiceTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8315751+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.UnitTests.Services.WorkItemQuoteLinkRaceSqlTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8315898+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.UnitTests.Controllers.PlatformGarageStatusTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8316037+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.UnitTests.Controllers.RegistrationConcurrencyTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+      <RunInfo computerName="GARVAN_ASUS" outcome="Warning" timestamp="2026-10-27T07:39:59.8316150+00:00">
+        <Text>[MSTest][Discovery][C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll] MSTestAdapter failed to discover tests in class 'GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests' of assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.UnitTests.dll' because Could not load file or assembly 'C:\Users\ggall\source\repos\GarageSaas\GarageSaas.UnitTests\bin\Release\net10.0\GarageSaas.dll'. An Application Control policy has blocked this file. (0x800711C7).</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

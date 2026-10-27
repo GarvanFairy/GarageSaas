@@ -1,0 +1,12 @@
+{
+  "AzureAdB2C__Instance": "https://fairycastlews.b2clogin.com/",
+  "AzureAdB2C__Domain": "fairycastlews.onmicrosoft.com",
+  "AzureAdB2C__ClientId": "6a6b59d3-6db1-4124-86b1-d43c457dd17e",
+  "AzureAdB2C__SignUpSignInPolicyId": "B2C_1_webapp3susi1",
+  "AzureAdB2C__CallbackPath": "/signin-oidc",
+  "AzureAdB2C__SignedOutCallbackPath": "/signout-callback-oidc",
+  "AzureAdB2C__ResponseType": null,
+  "secretIsExpectedVaultReference": true,
+  "smtpLoopbackOnly": true,
+  "openAiKeyEmpty": true
+}

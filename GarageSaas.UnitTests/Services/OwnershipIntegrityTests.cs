@@ -38,7 +38,7 @@ internal static class OwnershipCases
 {
     internal static VehicleAndCustomers Input(int vehicle, string owner) => new()
     {
-        Vehicle = new CustomerVehicle { Id = vehicle, VehicleRegistration = "LOCAL EDIT", VehicleMileageDate = DateTime.UtcNow },
+        Vehicle = new CustomerVehicle { GarageOwned = false,  Id = vehicle, VehicleRegistration = "LOCAL EDIT", VehicleMileageDate = DateTime.UtcNow },
         GarageVehicleOwnerListItem = new SelectListItem { Value = owner }
     };
     internal static string Snapshot(SignupContext db) => JsonSerializer.Serialize(new

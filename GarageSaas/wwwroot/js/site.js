@@ -2,21 +2,27 @@
 // context to another origin, and preserve all existing payloads/antiforgery headers.
 (function () {
     var meta = document.querySelector('meta[name="garage-context"]');
-    if (meta && window.jQuery) {
+    var antiforgery = document.querySelector('meta[name="request-verification-token"]');
+    function unsafe(method) { return !/^(GET|HEAD|OPTIONS|TRACE)$/i.test(method || 'GET'); }
+    if ((meta || antiforgery) && window.jQuery) {
         $.ajaxPrefilter(function (options, original, xhr) {
             var url = new URL(options.url, window.location.href);
             if (url.origin === window.location.origin) {
-                xhr.setRequestHeader('X-Garage-Context', meta.content);
+                if (meta) xhr.setRequestHeader('X-Garage-Context', meta.content);
+                if (antiforgery && unsafe(options.type || options.method))
+                    xhr.setRequestHeader('RequestVerificationToken', antiforgery.content);
             }
         });
     }
-    if (meta && window.fetch) {
+    if ((meta || antiforgery) && window.fetch) {
         var originalFetch = window.fetch.bind(window);
         window.fetch = function (input, init) {
             var request = new Request(input, init);
             if (new URL(request.url).origin === window.location.origin) {
                 var headers = new Headers(request.headers);
-                headers.set('X-Garage-Context', meta.content);
+                if (meta) headers.set('X-Garage-Context', meta.content);
+                if (antiforgery && unsafe(request.method) && !headers.has('RequestVerificationToken'))
+                    headers.set('RequestVerificationToken', antiforgery.content);
                 request = new Request(request, { headers: headers });
             }
             return originalFetch(request);

@@ -16,9 +16,9 @@ public class CustomerDocumentTests
     internal static CustomerDocumentService Documents(SignupContext db) => new(db, new WorkQuoteService(db), new VehicleInvoiceService(db));
     internal static void Seed(SignupContext db, int garage=1, int customer=101, int vehicle=10, int quote=100, int invoice=1)
     {
-        if (!db.GarageBusiness.Any(g => g.Id == garage)) db.Add(new GarageBusiness { Id=garage, Active=true });
+        if (!db.GarageBusiness.Any(g => g.Id == garage)) db.Add(new GarageBusiness { GarageBusinessName = "Test garage",  Id=garage, Active=true });
         if (!db.GarageBusinessCustomer.Any(c => c.Id == customer)) db.Add(new GarageBusinessCustomer { Id=customer, GarageBusinessId=garage, Active=true });
-        if (!db.CustomerVehicle.Any(v => v.Id == vehicle)) db.Add(new CustomerVehicle { Id=vehicle, GarageBusinessId=garage });
+        if (!db.CustomerVehicle.Any(v => v.Id == vehicle)) db.Add(new CustomerVehicle { GarageOwned = false,  Id=vehicle, GarageBusinessId=garage });
         db.SaveChanges();
         var g=db.GarageBusiness.Single(x=>x.Id==garage);g.GarageBusinessName="O'Neill Motor Services";g.GarageAddressLine1="12 Main Street";g.GarageAddressLine2="Dublin";g.Postcode="D02 AB12";g.GarageEmailAddress="garage@example.invalid";g.GaragePhoneNumber="01 555 0100";g.VatNumber="IE1234567A";
         var c=db.GarageBusinessCustomer.Single(x=>x.Id==customer);c.GarageCustomerForename="Seán";c.GarageCustomerSurname="Ó Briain";c.GarageCustomerAddressline1="4 Customer Road";c.GarageCustomerEmailAddress="customer@example.invalid";

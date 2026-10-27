@@ -1,0 +1,37 @@
+[
+  {
+    "end": "255.255.255.255",
+    "name": "development",
+    "start": "0.0.0.0"
+  },
+  {
+    "end": "64.43.142.160",
+    "name": "query-editor-f76a66",
+    "start": "64.43.142.160"
+  },
+  {
+    "end": "109.78.171.49",
+    "name": "staging-admin-initialization",
+    "start": "109.78.171.49"
+  },
+  {
+    "end": "52.174.162.123",
+    "name": "staging-egress-01",
+    "start": "52.174.162.123"
+  },
+  {
+    "end": "52.174.17.32",
+    "name": "staging-egress-02",
+    "start": "52.174.17.32"
+  },
+  {
+    "end": "52.174.18.113",
+    "name": "staging-egress-03",
+    "start": "52.174.18.113"
+  },
+  {
+    "end": "52.174.193.161",
+    "name": "staging-egress-04",
+    "start": "52.174.193.161"
+  }
+]

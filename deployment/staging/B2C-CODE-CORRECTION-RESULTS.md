@@ -1,0 +1,11 @@
+# Staging code-flow correction — 26 October 2026
+
+Applied ONLY AzureAdB2C__ResponseType=code to garagesaas-stg-d49b2f61-weu under owner approval. Before the change, no explicit ResponseType setting existed, but the actual challenge was id_token and reproduced AADB2C90057. This was an effective default, not an explicit id_token Azure setting. No PKCE setting changed.
+
+Immediately after setting persistence an old worker briefly emitted id_token while restart propagated. After warm-up the emitted request is code with code_challenge_method=S256 and a present challenge, original client 6a6b59d3-6db1-4124-86b1-d43c457dd17e and callback https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/signin-oidc. Health returns 200 Healthy. Browser navigation reaches the real local email/password B2C form instead of /Account/Error. The approved existing email ggallagher116@hotmail.com was filled; password entry/submission is handed to the user directly in the browser. No password, token, cookie or code was requested in chat or saved/output by diagnostics.
+
+Actual authorization-code callback, token redemption, authenticated session and NameIdentifier are PENDING user sign-in. No verified identity mapping is available yet. Do not use the account's directory object ID as a substitute and do not execute 05-bind-test-user.sql. No database connection/binding or other database change occurred. No B2C registration, user, policy or secret changed. Only the staging App Service setting was changed; existing applications, SQL firewall and GarageSaas_db were untouched. SMTP remains loopback-only and OpenAI key empty from prior verification.
+
+Latest available restart samples at 23:45–23:46 UTC: memory minute averages 82.33% then 81.33% (peaks 87%/86%); CPU 9% then 28.5% (peaks 27%/98%); queue zero. These are reporting-delayed short samples, not a full sign-in capacity test. No sustained memory threshold or queue growth observed. Continue monitoring after interactive login.
+
+Evidence: B2C-CODE-CORRECTION-BEFORE.json, B2C-AUTHENTICATION-ERROR-TRACE.json (pre-change), B2C-CODE-CORRECTION-CHALLENGE.json (active code/S256/health), B2C-CODE-CORRECTION-CAPACITY.json. No application package deployed or source code modified. Browser tab retained for user handoff.

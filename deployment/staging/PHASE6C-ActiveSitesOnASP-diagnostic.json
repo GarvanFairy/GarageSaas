@@ -1,0 +1,58 @@
+{
+  "columns": [
+    {
+      "columnName": "Status",
+      "columnType": null,
+      "dataType": "String"
+    },
+    {
+      "columnName": "Message",
+      "columnType": null,
+      "dataType": "String"
+    },
+    {
+      "columnName": "Data.Name",
+      "columnType": null,
+      "dataType": "String"
+    },
+    {
+      "columnName": "Data.Value",
+      "columnType": null,
+      "dataType": "String"
+    },
+    {
+      "columnName": "Expanded",
+      "columnType": null,
+      "dataType": "String"
+    },
+    {
+      "columnName": "Solutions",
+      "columnType": null,
+      "dataType": "String"
+    }
+  ],
+  "rows": [
+    [
+      "Success",
+      "Total active sites on the App Service Plan are within the recommended value",
+      "Description",
+      "<markdown>Total active sites on the App Service Plan are within the recommended value. We detected <b>2</b> active app(s) within the <b>ASP-TestSite-89a7</b> App Service Plan.</markdown>",
+      "True",
+      "null"
+    ],
+    [
+      "Success",
+      "Total active sites on the App Service Plan are within the recommended value",
+      "Additional Information",
+      "<markdown>For production applications, it is recommended that an App Service Plan does not host more than a certain number of sites. The number may actually be lower depending on how resource intensive the hosted applications are, however as a general guidance, you may refer to the table below.\r\n\r\nWorker Size | Max sites\r\n---|---\r\nSmall | 8\r\nMedium | 16\r\nLarge | 32\r\n\r\n<b>Learn More</b><br/><br/>\r\n<a target=\"_blank\" href=\"https://docs.microsoft.com/en-us/azure/app-service/azure-web-sites-web-hosting-plans-in-depth-overview\">Azure App Service plan overview</a>\r\n</markdown>",
+      "True",
+      "null"
+    ]
+  ],
+  "rendering": {
+    "description": "",
+    "isVisible": true,
+    "title": "",
+    "type": 7
+  }
+}

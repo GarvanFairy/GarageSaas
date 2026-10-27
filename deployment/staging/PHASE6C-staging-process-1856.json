@@ -1,0 +1,11 @@
+{
+  "id": 1856,
+  "isScm": null,
+  "isWebJob": null,
+  "name": "w3wp",
+  "parent": "https://garagesaas-stg-d49b2f61-weu.scm.azurewebsites.net/api/processes/-1",
+  "privateBytes": 67813376,
+  "startTime": "2026-10-27T00:09:54.2680813Z",
+  "timeStamp": "2026-10-27T07:20:03.5735525Z",
+  "workingSet": 131194880
+}

@@ -1,0 +1,29 @@
+{
+  "completedUtc": "2026-10-21T22:32:50.6097879Z",
+  "targetDatabase": "GarageSaas_Staging",
+  "adminGroupId": "098b16e1-c2c0-4152-8fec-e72fb65d2b27",
+  "sqlAuthenticationPreserved": true,
+  "initialUserTables": 0,
+  "tables": 23,
+  "columns": 319,
+  "schemaVerification": "Passed",
+  "syntheticData": "Approved fixture only",
+  "tenantReadServices": "Both garages same-ID acceptance and cross-garage rejection passed",
+  "constraints": "Passed",
+  "runtimePermissions": "EXECUTE AS checks passed; no actual runtime token login yet",
+  "sqlSidIdentity": "Managed-identity application ID b3c68adc-9f6f-4808-b049-f9947726fa38",
+  "runtimeOwnerOrDdl": false,
+  "passwordlessEncryptedAppSettingConfigured": true,
+  "narrowFirewallRulesAdded": 5,
+  "developmentFirewallUnchanged": true,
+  "existingDatabaseModified": false,
+  "applicationDeployed": false,
+  "seedTesterBound": false,
+  "remaining": [
+    "Final safe SMTP loopback configuration before startup",
+    "Deployment and live sign-in approval",
+    "Dedicated test identity and fixture binding",
+    "Post-deployment actual managed-identity SQL login/browser smoke checks",
+    "Separately approved broad SQL firewall remediation"
+  ]
+}

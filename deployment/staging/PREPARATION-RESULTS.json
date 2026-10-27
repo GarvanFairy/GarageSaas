@@ -1,0 +1,37 @@
+{
+  "PreparedDate": "2026-10-21",
+  "Application": "GarageSaas/GarageSaas.csproj",
+  "Package": "C:\\Users\\ggall\\source\\repos\\GarageSaas\\artifacts\\staging\\20261021-193425-ccdf920d\\GarageSaas-staging.zip",
+  "Bytes": 50329230,
+  "SHA256": "EACF5066F438E0FA90D9778E98B479C418DFA39068FE409FAA1AF2BE6B0554C0",
+  "ReleaseBuild": "Passed; 0 errors; 12 existing warnings",
+  "Regression": {
+    "Passed": 1075,
+    "Skipped": 244,
+    "Failed": 0
+  },
+  "Focused": {
+    "Passed": 35,
+    "Skipped": 0,
+    "Failed": 0
+  },
+  "MissingConfigurationStartup": "Verified nonzero exit before database/provider access",
+  "AzureDeploymentPerformed": false,
+  "DatabaseAccessPerformed": false,
+  "ReuseAssessment": {
+    "Date": "2026-10-21",
+    "AppResourceGroup": "GarageSaasResourceGroup",
+    "PlanResourceGroup": "TestSite",
+    "StagingApp": "garagesaas-stg-d49b2f61-weu",
+    "Region": "westeurope",
+    "RuntimeAvailability": "Azure Windows dotnet|10 verified read-only",
+    "CapacityGate": "Pending explicit shared-memory-risk decision",
+    "IncrementalMonthlyAllowanceEUR": "7-10 conditional on existing S1 capacity; excludes VAT/providers",
+    "RegressionPassed": 1075,
+    "RegressionFailed": 0,
+    "RegressionSkipped": 244,
+    "OfflinePackageAndCommandsValidation": "Passed",
+    "AzureWritesPerformed": false,
+    "DatabaseContentsAccessed": false
+  }
+}

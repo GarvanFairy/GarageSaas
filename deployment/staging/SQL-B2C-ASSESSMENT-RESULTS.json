@@ -1,0 +1,37 @@
+{
+  "assessedUtc": "2026-10-21T22:02:19.8529517Z",
+  "AzureWrites": false,
+  "SQLExecuted": false,
+  "SecretValuesRetrieved": false,
+  "SqlEntraAdminPresent": false,
+  "AdminCandidate": {
+    "id": "cff2fd16-e987-48c1-951a-33de9bc80b36",
+    "approval": "Pending; dedicated approved security group preferred",
+    "name": "Garvan Gallagher"
+  },
+  "RelevantAdminGroupFound": false,
+  "Firewall": {
+    "end": "255.255.255.255",
+    "dependencyConclusion": "Existing app and administrator dependence cannot be excluded; no safe-removal claim",
+    "rule": "development",
+    "currentSharedOutbound": [
+      "52.174.193.161",
+      "52.174.18.113",
+      "52.174.162.123",
+      "52.174.17.32"
+    ],
+    "auditing": "Disabled",
+    "start": "0.0.0.0"
+  },
+  "B2C": {
+    "stagingCallbackPresent": false,
+    "clientSecretRequiredByCurrentApplication": true,
+    "policyMetadataVerification": "Blocked: CLI lacks IdentityUserFlow.Read.All; owner portal confirmation requested",
+    "existingRegistration": "webapp3",
+    "existingClientId": "f92ce15d-019c-449e-bff2-ab5af18cbe40",
+    "newStagingRegistrationRecommended": true
+  },
+  "OfflineGenerator": "Passed",
+  "OfflineValidation": "Passed",
+  "PermissionChanges": "Local-only: Mileage/GarageVehicleOwner SELECT-only, no unused ServiceHistory/GarageOwnedVehicles grants"
+}

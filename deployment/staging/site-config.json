@@ -1,0 +1,8 @@
+{
+  "alwaysOn": true,
+  "use32BitWorkerProcess": false,
+  "minTlsVersion": "1.2",
+  "ftpsState": "Disabled",
+  "http20Enabled": true,
+  "healthCheckPath": "/health"
+}

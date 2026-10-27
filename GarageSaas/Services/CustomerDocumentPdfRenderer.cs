@@ -11,14 +11,17 @@ using MigraDoc.Rendering;
 using PdfSharp.Fonts;
 using PdfSharp.Drawing;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using GarageSaas.Configuration;
 
 namespace GarageSaas.Services
 {
     public sealed class CustomerDocumentPdfRenderer : ICustomerDocumentPdfRenderer
     {
         private static readonly CultureInfo Irish = CultureInfo.GetCultureInfo("en-IE");
-        private readonly string _webRoot;
-        public CustomerDocumentPdfRenderer(IWebHostEnvironment environment = null) { _webRoot = environment?.WebRootPath; }
+        private readonly string _logoDirectory;
+        public CustomerDocumentPdfRenderer(IWebHostEnvironment environment = null, IConfiguration configuration = null)
+        { _logoDirectory = DeploymentStorage.LogoDirectory(environment, configuration); }
         static CustomerDocumentPdfRenderer() { GlobalFontSettings.FontResolver = new DocumentFontResolver(); }
 
         public byte[] Generate(CustomerDocumentModel model)
@@ -120,13 +123,13 @@ namespace GarageSaas.Services
 
         private Logo ReadLogo(int garageId, string imagePath)
         {
-            if (string.IsNullOrWhiteSpace(_webRoot) || string.IsNullOrWhiteSpace(imagePath)) return null;
+            if (string.IsNullOrWhiteSpace(_logoDirectory) || string.IsNullOrWhiteSpace(imagePath)) return null;
             // Only this garage's existing upload format is eligible. Never fetch URLs
             // or resolve arbitrary paths from a stored image reference.
             var pattern = @"^/uploads/garage-logos/(garage-" + garageId.ToString(CultureInfo.InvariantCulture) + @"-[a-fA-F0-9]{32}\.(?:png|jpe?g))$";
             var match = Regex.Match(imagePath, pattern, RegexOptions.IgnoreCase);
             if (!match.Success) return null;
-            var path = Path.Combine(_webRoot, "uploads", "garage-logos", match.Groups[1].Value);
+            var path = Path.Combine(_logoDirectory, match.Groups[1].Value);
             try
             {
                 if (!File.Exists(path) || new FileInfo(path).Length > 2 * 1024 * 1024) return null;

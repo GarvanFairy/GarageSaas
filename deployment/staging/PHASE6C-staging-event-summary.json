@@ -1,0 +1,162 @@
+[
+  {
+    "utc": "2026-10-26T22:16:28Z",
+    "provider": ".NET Runtime",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [],
+    "identityErrorCodes": []
+  },
+  {
+    "utc": "2026-10-26T22:16:31Z",
+    "provider": "IIS AspNetCore Module V2",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": true,
+    "exceptionTypes": [],
+    "identityErrorCodes": []
+  },
+  {
+    "utc": "2026-10-26T22:16:50Z",
+    "provider": "ZipFS",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [],
+    "identityErrorCodes": []
+  },
+  {
+    "utc": "2026-10-26T23:06:59Z",
+    "provider": ".NET Runtime",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [],
+    "identityErrorCodes": [
+      "AADB2C90057"
+    ]
+  },
+  {
+    "utc": "2026-10-26T23:22:01Z",
+    "provider": ".NET Runtime",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [],
+    "identityErrorCodes": [
+      "AADB2C90057"
+    ]
+  },
+  {
+    "utc": "2026-10-26T23:45:50Z",
+    "provider": "IIS AspNetCore Module V2",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": true,
+    "exceptionTypes": [],
+    "identityErrorCodes": []
+  },
+  {
+    "utc": "2026-10-26T23:45:52Z",
+    "provider": "IIS AspNetCore Module V2",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [],
+    "identityErrorCodes": []
+  },
+  {
+    "utc": "2026-10-26T23:58:36Z",
+    "provider": ".NET Runtime",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [],
+    "identityErrorCodes": [
+      "IDX21336"
+    ]
+  },
+  {
+    "utc": "2026-10-26T23:58:36Z",
+    "provider": ".NET Runtime",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [
+      "Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectProtocolException"
+    ],
+    "identityErrorCodes": [
+      "IDX21336"
+    ]
+  },
+  {
+    "utc": "2026-10-27T00:00:42Z",
+    "provider": ".NET Runtime",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [],
+    "identityErrorCodes": [
+      "IDX21336"
+    ]
+  },
+  {
+    "utc": "2026-10-27T00:00:42Z",
+    "provider": ".NET Runtime",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [
+      "Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectProtocolException"
+    ],
+    "identityErrorCodes": [
+      "IDX21336"
+    ]
+  },
+  {
+    "utc": "2026-10-27T00:10:05Z",
+    "provider": "IIS AspNetCore Module V2",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": true,
+    "exceptionTypes": [],
+    "identityErrorCodes": []
+  },
+  {
+    "utc": "2026-10-27T00:10:07Z",
+    "provider": "IIS AspNetCore Module V2",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [],
+    "identityErrorCodes": []
+  },
+  {
+    "utc": "2026-10-27T00:11:01Z",
+    "provider": ".NET Runtime",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [],
+    "identityErrorCodes": []
+  },
+  {
+    "utc": "2026-10-27T00:11:01Z",
+    "provider": ".NET Runtime",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [],
+    "identityErrorCodes": []
+  },
+  {
+    "utc": "2026-10-27T00:11:07Z",
+    "provider": ".NET Runtime",
+    "eventId": null,
+    "outOfMemory": false,
+    "startup": false,
+    "exceptionTypes": [],
+    "identityErrorCodes": []
+  }
+]

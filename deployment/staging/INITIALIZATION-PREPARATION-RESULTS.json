@@ -1,0 +1,32 @@
+{
+  "preparedUtc": "2026-10-21T21:48:25.6107823Z",
+  "AzureWritesPerformed": false,
+  "DatabaseConnectionsOpened": false,
+  "SchemaExecuted": false,
+  "ApplicationDeployed": false,
+  "SchemaEntityCount": 23,
+  "SchemaGenerator": "Current SignupContext / EF Core 10.0.13 GenerateCreateScript, offline",
+  "ReleasePublish": "Passed, six pre-existing NU1510 warnings",
+  "PackageComparedFiles": 408,
+  "PackageDifferences": 0,
+  "PackageSHA256": "EACF5066F438E0FA90D9778E98B479C418DFA39068FE409FAA1AF2BE6B0554C0",
+  "OfflinePreparationValidation": "Passed",
+  "ProductionConfigurationTests": {
+    "skipped": 0,
+    "runner": "Existing Release assembly / dotnet vstest with local IPC access",
+    "passed": 21,
+    "failed": 0
+  },
+  "SqlEntraAdministratorPresent": false,
+  "ManagedIdentityPrincipal": "b4c6c684-75bd-42f7-b2d1-3085cb64c335",
+  "VaultRole": "Key Vault Secrets User, staging vault scope only",
+  "SecretRetrievalTestPerformed": false,
+  "SharedSqlFirewallConcern": "Existing development rule covers all IPv4; left unchanged",
+  "OutstandingInputs": [
+    "B2C metadata and approved test subject",
+    "Secure B2C secret population",
+    "SQL identity choice and Entra administrator approval if using MI",
+    "Schema, synthetic seed, binding, configuration and deployment execution approval",
+    "Separate shared firewall remediation decision"
+  ]
+}

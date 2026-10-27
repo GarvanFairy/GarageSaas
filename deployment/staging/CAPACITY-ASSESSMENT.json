@@ -1,0 +1,34 @@
+{
+  "ObservedUtc": "2026-10-21T20:46:04Z",
+  "StartUtc": "2026-10-14T20:46:04Z",
+  "PlanId": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/TestSite/providers/Microsoft.Web/serverfarms/ASP-TestSite-89a7",
+  "Metrics": [
+    {
+      "Metric": "CpuPercentage",
+      "Samples": 168,
+      "Average": 4.974996405567058,
+      "P95HourlyAverage": 7.425,
+      "Peak": 100.0,
+      "HoursAverageAtLeast85": 0,
+      "HoursWithPeakAtLeast90": 56
+    },
+    {
+      "Metric": "MemoryPercentage",
+      "Samples": 168,
+      "Average": 73.60463322406261,
+      "P95HourlyAverage": 75.57777777777778,
+      "Peak": 98.0,
+      "HoursAverageAtLeast85": 0,
+      "HoursWithPeakAtLeast90": 13
+    },
+    {
+      "Metric": "HttpQueueLength",
+      "Samples": 168,
+      "Average": 0.0,
+      "P95HourlyAverage": 0.0,
+      "Peak": 0.0,
+      "HoursAverageAtLeast85": 0,
+      "HoursWithPeakAtLeast90": 0
+    }
+  ]
+}

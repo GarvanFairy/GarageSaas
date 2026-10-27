@@ -1,0 +1,33 @@
+{
+  "ObservedUtc": "2026-10-21T21:16:17Z",
+  "Period": "Last hour, 5-minute buckets",
+  "Plan": [
+    {
+      "Metric": "MemoryPercentage",
+      "Samples": 12,
+      "Average": 75.19999999999999,
+      "Peak": 83.0,
+      "LatestAverage": 74.2
+    },
+    {
+      "Metric": "CpuPercentage",
+      "Samples": 12,
+      "Average": 5.058333333333333,
+      "Peak": 89.0,
+      "LatestAverage": 9.866666666666667
+    },
+    {
+      "Metric": "HttpQueueLength",
+      "Samples": 12,
+      "Average": 0.0,
+      "Peak": 0.0,
+      "LatestAverage": 0.0
+    }
+  ],
+  "RetiredAppState": "Running",
+  "RetiredAppSevenDayRequests": 0,
+  "RetiredAppAverageWorkingSetMiB": 32.3593,
+  "RetiredAppPeakWorkingSetMiB": 62.109375,
+  "RetiredAppSevenDayCpuSeconds": 734.739,
+  "AzureWritesPerformed": false
+}

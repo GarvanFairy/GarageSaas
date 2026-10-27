@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -47,8 +47,7 @@ namespace SignupAPI.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer("Server=DESKTOP-C821FRH\\SQLEXPRESS;Database=Garagesaas;Trusted_Connection=True;");
+                throw new InvalidOperationException("Configure SignupContext with ConnectionStrings:GarageSaasDBConnection.");
             }
         }
 
@@ -59,11 +58,11 @@ namespace SignupAPI.Models
     entity =>
     {
         entity.HasIndex(e => e.ContactEmail)
-            .HasName(
+            .HasDatabaseName(
                 "IX_GarageRegistrationRequest_ContactEmail");
 
         entity.HasIndex(e => e.Status)
-            .HasName(
+            .HasDatabaseName(
                 "IX_GarageRegistrationRequest_Status");
 
         entity.Property(e => e.GarageBusinessName)
@@ -137,7 +136,7 @@ namespace SignupAPI.Models
             modelBuilder.Entity<GarageUserInvitation>(entity =>
             {
                 entity.HasIndex(e => e.InvitationTokenHash)
-                    .HasName("UX_GarageUserInvitation_TokenHash")
+                    .HasDatabaseName("UX_GarageUserInvitation_TokenHash")
                     .IsUnique();
 
                 entity.Property(e => e.EmailAddress)
@@ -187,7 +186,7 @@ namespace SignupAPI.Models
                         e.GarageBusinessId,
                         e.UserId
                     })
-                    .HasName(
+                    .HasDatabaseName(
                         "UX_GarageBusinessUser_Garage_User")
                     .IsUnique();
 
@@ -326,7 +325,7 @@ namespace SignupAPI.Models
 
                 entity.Property(e => e.ExternalUserId).HasMaxLength(100);
 
-                entity.HasIndex(e => e.ExternalUserId).HasName("UX_Users_ExternalUserId")
+                entity.HasIndex(e => e.ExternalUserId).HasDatabaseName("UX_Users_ExternalUserId")
                     .IsUnique()
                     .HasFilter("[ExternalUserId] IS NOT NULL");
 

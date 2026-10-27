@@ -1,0 +1,1 @@
+{"ConnectionStrings__GarageSaasDBConnection":"Server=tcp:garagesaasdbserver.database.windows.net,1433;Database=GarageSaas_Staging;Authentication=Active Directory Managed Identity;Encrypt=True;TrustServerCertificate=False;Persist Security Info=False;Connection Timeout=30;"}

@@ -1,0 +1,63 @@
+{
+  "CheckedDate": "2026-10-21",
+  "Source": "https://prices.azure.com/api/retail/prices",
+  "Region": "westeurope",
+  "Currency": "EUR",
+  "Notes": "Public retail rates; not a subscription quote; taxes, benefit eligibility, free allowances and actual metering affect bills.",
+  "Rates": [
+    {
+      "productName": "SQL Database Single Basic",
+      "skuName": "B",
+      "meterName": "B DTU",
+      "retailPrice": 0.1417,
+      "unitOfMeasure": "1/Day",
+      "currencyCode": "EUR",
+      "type": "Consumption"
+    },
+    {
+      "productName": "Key Vault",
+      "skuName": "Standard",
+      "meterName": "Operations",
+      "retailPrice": 0.0264,
+      "unitOfMeasure": "10K",
+      "currencyCode": "EUR",
+      "type": "Consumption"
+    },
+    {
+      "productName": "Log Analytics",
+      "skuName": "Analytics Logs",
+      "meterName": "Analytics Logs Data Ingestion",
+      "retailPrice": 0.0,
+      "unitOfMeasure": "1 GB",
+      "currencyCode": "EUR",
+      "type": "Consumption"
+    },
+    {
+      "productName": "Log Analytics",
+      "skuName": "Analytics Logs",
+      "meterName": "Analytics Logs Data Ingestion",
+      "retailPrice": 2.6311,
+      "unitOfMeasure": "1 GB",
+      "currencyCode": "EUR",
+      "type": "Consumption"
+    },
+    {
+      "productName": "Azure App Service Basic Plan",
+      "skuName": "B1",
+      "meterName": "B1 App",
+      "retailPrice": 0.066,
+      "unitOfMeasure": "1 Hour",
+      "currencyCode": "EUR",
+      "type": "Consumption"
+    },
+    {
+      "productName": "Azure App Service Basic Plan",
+      "skuName": "B1",
+      "meterName": "B1 App",
+      "retailPrice": 0.0387,
+      "unitOfMeasure": "1 Hour",
+      "currencyCode": "EUR",
+      "type": "DevTestConsumption"
+    }
+  ]
+}

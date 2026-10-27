@@ -364,3 +364,13 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Sanitized production templates and SignupAPI defaults contain no secrets.
+!GarageSaas/appsettings.Production.json
+!SignupAPI/signupappsettings.json
+
+# Locally produced deployment packages (never include in source control).
+artifacts/
+
+/deployment/staging/appsettings.local.json
+!deployment/staging/appsettings.template.json

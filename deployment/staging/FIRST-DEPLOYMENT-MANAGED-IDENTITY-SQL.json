@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "database": "GarageSaas_Staging",
+  "identity": "garagesaas-stg-d49b2f61-weu",
+  "garages": 2,
+  "quotes": 4,
+  "invoices": 2,
+  "authentication": "Active Directory Managed Identity",
+  "tlsCertificateValidation": true
+}

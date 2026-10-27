@@ -27,10 +27,7 @@ namespace GarageSaas.Middleware
             catch (GarageAccessException ex)
             {
 
-                _logger.LogWarning(
-    ex,
-    "Garage access denied for request {Path}",
-    context.Request.Path);
+                _logger.LogWarning("Garage access denied.");
 
                 if (context.Response.HasStarted)
                 {

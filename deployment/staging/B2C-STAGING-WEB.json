@@ -1,0 +1,1 @@
+{"web":{"redirectUris":["https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/signin-oidc","https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/signout-callback-oidc"],"logoutUrl":"https://garagesaas-stg-d49b2f61-weu.azurewebsites.net/signout-oidc","implicitGrantSettings":{"enableIdTokenIssuance":true,"enableAccessTokenIssuance":false}}}

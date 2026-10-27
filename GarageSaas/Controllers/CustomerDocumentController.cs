@@ -33,7 +33,7 @@ namespace GarageSaas.Controllers
             try { return File(Generate(result.Data), "application/pdf", result.Data.FileName); }
             catch (Exception error)
             {
-                _logger.LogError(error, "PDF generation failed for {Kind} {DocumentId} in garage {GarageId}", kind, id, user.GarageBusinessId);
+                _logger.LogError("PDF generation failed for {Kind} {DocumentId} in garage {GarageId} ({FailureType})", kind, id, user.GarageBusinessId, error.GetType().Name);
                 TempData["Error"] = "The PDF could not be generated. Please try again or contact support.";
                 return Back(kind, id);
             }
@@ -75,7 +75,7 @@ namespace GarageSaas.Controllers
             try { bytes = Generate(document); }
             catch (Exception error)
             {
-                _logger.LogError(error, "PDF generation failed before email for {Kind} {DocumentId}", kind, id);
+                _logger.LogError("PDF generation failed before email for {Kind} {DocumentId} ({FailureType})", kind, id, error.GetType().Name);
                 TempData["Error"] = "The PDF could not be generated. No email was sent.";
                 return Back(kind, id);
             }
@@ -88,7 +88,7 @@ namespace GarageSaas.Controllers
             }
             catch (Exception error)
             {
-                _logger.LogError(error, "Document email delivery could not be confirmed for {Kind} {DocumentId}", kind, id);
+                _logger.LogError("Document email delivery could not be confirmed for {Kind} {DocumentId} ({FailureType})", kind, id, error.GetType().Name);
                 TempData["Error"] = "Email delivery could not be confirmed. Check with the customer before sending again; the provider may have accepted it.";
             }
             return Back(kind, id);

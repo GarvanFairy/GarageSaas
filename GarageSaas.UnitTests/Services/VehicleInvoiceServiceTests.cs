@@ -26,7 +26,7 @@ public class VehicleInvoiceServiceTests
             new GarageBusinessCustomer { Id = 201, GarageBusinessId = 2, GarageCustomerForename = "SECRET CUSTOMER", GarageCustomerEmailAddress = "secret@example.com" });
         db.CustomerVehicle.AddRange(new CustomerVehicle { Id = 10, GarageBusinessId = 1, VehicleRegistration = "LOCAL", GarageOwned = false },
             new CustomerVehicle { Id = 11, GarageBusinessId = 1, VehicleRegistration = "GARAGE OWNED", GarageOwned = true },
-            new CustomerVehicle { Id = 20, GarageBusinessId = 2, VehicleRegistration = "SECRET VEHICLE" });
+            new CustomerVehicle { GarageOwned = false,  Id = 20, GarageBusinessId = 2, VehicleRegistration = "SECRET VEHICLE" });
         db.CustomerOwnedVehicles.Add(new CustomerOwnedVehicles { GarageBusinessId = 1, VehicleId = 10, GarageBusinessCustomerId = 101 });
         db.WorkItem.AddRange(new WorkItem { Id = 1000, GarageBusinessCustomerId = 1, VehicleId = 10, CustomerId = 101, RepairInstructions = "Local work" },
             new WorkItem { Id = 1001, GarageBusinessCustomerId = 1, VehicleId = null, CustomerId = null, RepairInstructions = "History" },

@@ -1,0 +1,106 @@
+[
+  {
+    "time": "2026-10-26T22:16:28Z",
+    "provider": ".NET Runtime",
+    "eventId": "1000",
+    "codes": [],
+    "exceptionTypes": [],
+    "markers": null
+  },
+  {
+    "time": "2026-10-26T22:16:31Z",
+    "provider": "IIS AspNetCore Module V2",
+    "eventId": "1032",
+    "codes": [],
+    "exceptionTypes": [],
+    "markers": null
+  },
+  {
+    "time": "2026-10-26T22:16:50Z",
+    "provider": "ZipFS",
+    "eventId": "0",
+    "codes": [],
+    "exceptionTypes": [],
+    "markers": null
+  },
+  {
+    "time": "2026-10-26T23:06:59Z",
+    "provider": ".NET Runtime",
+    "eventId": "1000",
+    "codes": [
+      "AADB2C90057"
+    ],
+    "exceptionTypes": [],
+    "markers": "OAuth"
+  },
+  {
+    "time": "2026-10-26T23:22:01Z",
+    "provider": ".NET Runtime",
+    "eventId": "1000",
+    "codes": [
+      "AADB2C90057"
+    ],
+    "exceptionTypes": [],
+    "markers": "OAuth"
+  },
+  {
+    "time": "2026-10-26T23:45:50Z",
+    "provider": "IIS AspNetCore Module V2",
+    "eventId": "1032",
+    "codes": [],
+    "exceptionTypes": [],
+    "markers": null
+  },
+  {
+    "time": "2026-10-26T23:45:52Z",
+    "provider": "IIS AspNetCore Module V2",
+    "eventId": "1033",
+    "codes": [],
+    "exceptionTypes": [],
+    "markers": null
+  },
+  {
+    "time": "2026-10-26T23:58:36Z",
+    "provider": ".NET Runtime",
+    "eventId": "1000",
+    "codes": [
+      "IDX21336"
+    ],
+    "exceptionTypes": [],
+    "markers": "IDX"
+  },
+  {
+    "time": "2026-10-26T23:58:36Z",
+    "provider": ".NET Runtime",
+    "eventId": "1000",
+    "codes": [
+      "IDX21336"
+    ],
+    "exceptionTypes": [
+      "Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectProtocolException"
+    ],
+    "markers": "IDX"
+  },
+  {
+    "time": "2026-10-27T00:00:42Z",
+    "provider": ".NET Runtime",
+    "eventId": "1000",
+    "codes": [
+      "IDX21336"
+    ],
+    "exceptionTypes": [],
+    "markers": "IDX"
+  },
+  {
+    "time": "2026-10-27T00:00:42Z",
+    "provider": ".NET Runtime",
+    "eventId": "1000",
+    "codes": [
+      "IDX21336"
+    ],
+    "exceptionTypes": [
+      "Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectProtocolException"
+    ],
+    "markers": "IDX"
+  }
+]

@@ -1,0 +1,5 @@
+{
+  "id": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.KeyVault/vaults/gss-stg-d49b2f61-weu/providers/Microsoft.Authorization/roleAssignments/3448b82a-9b18-45a0-bb99-88d65cc96b2e",
+  "principalId": "cff2fd16-e987-48c1-951a-33de9bc80b36",
+  "scope": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.KeyVault/vaults/gss-stg-d49b2f61-weu"
+}

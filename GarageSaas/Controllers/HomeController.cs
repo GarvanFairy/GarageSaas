@@ -1,4 +1,4 @@
-﻿using GarageSaas.Models;
+using GarageSaas.Models;
 using GarageSaas.Services.Interfaces;
 using GarageSaas.ViewModels;
 using Microsoft.AspNetCore.Http;
@@ -86,10 +86,9 @@ namespace GarageSaas.Controllers
                     .Sum(i =>
                         i.Total ?? 0);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _logger.LogWarning(
-                    ex,
                     "Unable to load dashboard counts for garage {GarageBusinessId}.",
                     garageBusinessId);
             }
@@ -103,6 +102,8 @@ namespace GarageSaas.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

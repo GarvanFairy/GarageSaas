@@ -1,0 +1,32 @@
+[
+  {
+    "file": "GarageSaas.UnitTests/bin/Release/net10.0/GarageSaas.dll",
+    "status": "NotSigned",
+    "signer": null,
+    "sha256": "FA84DD8F043FFC98F3A772B1D7D409484ECA26A438141D32C4FC9155784C0F4B"
+  },
+  {
+    "file": "GarageSaas.UnitTests/bin/Release/net10.0/GarageSaas.UnitTests.dll",
+    "status": "NotSigned",
+    "signer": null,
+    "sha256": "3FB2415F107B5DBCD9B87AC6994D680533BBA4A3D32DC64214E222C727B70A02"
+  },
+  {
+    "file": "GarageSaas.UnitTests/bin/Release/net10.0/SignupAPI.dll",
+    "status": "NotSigned",
+    "signer": null,
+    "sha256": "336C318748F5FED849C7960B42C45FA4FA04F8CAF8DBE39FD086748C361A80E8"
+  },
+  {
+    "file": "GarageSaas.UnitTests/bin/Release/net10.0/testhost.exe",
+    "status": "Valid",
+    "signer": "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "sha256": "85B055BBDCE1511E87DE5E4C44BD5861A1D836A85F6BF112E95DD936AB005CE7"
+  },
+  {
+    "file": "C:\\Program Files\\dotnet\\dotnet.exe",
+    "status": "Valid",
+    "signer": "CN=.NET, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "sha256": "A5CCDC3A41D5E5C6014FF64509AED176DB39F4F14CAFFFF3DD1997F8907E94D7"
+  }
+]

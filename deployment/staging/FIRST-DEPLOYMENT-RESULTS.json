@@ -1,0 +1,21 @@
+{
+  "reportedDate": "2026-10-26",
+  "deployment": "Succeeded",
+  "deploymentId": "4b4367727dbe4d6b9a5e9fe0bd87568d",
+  "zipSHA256": "EACF5066F438E0FA90D9778E98B479C418DFA39068FE409FAA1AF2BE6B0554C0",
+  "currentPublishFilesMatched": 408,
+  "health": "200 Healthy",
+  "httpsRedirect": 301,
+  "homeStatus": 200,
+  "b2cInitiation": 302,
+  "actualManagedIdentitySql": "Passed, fixed staging database and expected seed counts",
+  "temporaryDiagnosticRemoved": true,
+  "vaultReference": "Resolved / SystemAssigned",
+  "existingGarageApp": "Running",
+  "SMTP": "127.0.0.1:1, empty credentials",
+  "OpenAI": "Empty key",
+  "schemaOrSeedChanged": false,
+  "capacity": "Startup pressure recovered: latest two minute averages memory 83.33%; CPU 20.5% then 16.5%; queue zero. Modest memory headroom; monitor during acceptance.",
+  "fullBrowserAcceptancePerformed": false,
+  "testAccountBindingPerformed": false
+}

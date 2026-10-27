@@ -435,9 +435,7 @@ namespace GarageSaas.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "Unable to send garage invitation email.");
+                _logger.LogError("Unable to send garage invitation email. ({FailureType})", ex.GetType().Name);
 
                 TempData["ErrorMessage"] =
                     "The invitation was created, but the email could not be sent.";
@@ -501,9 +499,7 @@ namespace GarageSaas.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "Unable to resend garage invitation.");
+                _logger.LogError("Unable to resend garage invitation. ({FailureType})", ex.GetType().Name);
 
                 TempData["Error"] =
                     "The invitation was updated, but " +

@@ -1,0 +1,5 @@
+{
+  "name": "AzureAdB2C__ClientSecret",
+  "status": "Resolved",
+  "identityType": "SystemAssigned"
+}

@@ -18,13 +18,13 @@ public class CoreGarageWorkflowTests
     {
         var options = VehicleInvoiceServiceTests.Options();
         using var db = new SignupContext(options);
-        db.GarageBusiness.AddRange(new GarageBusiness { Id = 1, Active = true }, new GarageBusiness { Id = 2, Active = true });
+        db.GarageBusiness.AddRange(new GarageBusiness { GarageBusinessName = "Test garage",  Id = 1, Active = true }, new GarageBusiness { GarageBusinessName = "Test garage",  Id = 2, Active = true });
         db.SaveChanges();
         var customer = new GarageBusinessCustomer { GarageCustomerForename = "Pat", GarageCustomerSurname = "Driver" };
         var customers = new GarageCustomersService(db, null);
         Assert.IsTrue(customers.AddOrUpdateGarageCustomer(customer, 1, "mechanic").Success);
         var customerId = db.GarageBusinessCustomer.Single().Id;
-        var vm = new VehicleAndCustomers { Vehicle = new CustomerVehicle { VehicleRegistration = "261-D-123", VehicleMileageDate = DateTime.Today },
+        var vm = new VehicleAndCustomers { Vehicle = new CustomerVehicle { GarageOwned = false,  VehicleRegistration = "261-D-123", VehicleMileageDate = DateTime.Today },
             GarageVehicleOwnerListItem = new SelectListItem { Value = customerId.ToString() } };
         Assert.IsTrue(new CustomerVehicleService(db, null).AddOrUpdateCustomerVehicle(vm, 1, "mechanic").Success);
         var vehicleId = db.CustomerVehicle.Single().Id;

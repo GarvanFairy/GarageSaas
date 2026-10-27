@@ -18,7 +18,7 @@ namespace GarageSaas.Tests.Services
             context.CustomerVehicle.AddRange(
                 new CustomerVehicle { Id = 100, GarageBusinessId = 5, VehicleRegistration = "A100", GarageOwned = false },
                 new CustomerVehicle { Id = 200, GarageBusinessId = 5, VehicleRegistration = "A200", GarageOwned = true },
-                new CustomerVehicle { Id = 900, GarageBusinessId = 99, VehicleRegistration = "B900" });
+                new CustomerVehicle { GarageOwned = false,  Id = 900, GarageBusinessId = 99, VehicleRegistration = "B900" });
             context.GarageBusinessCustomer.AddRange(
                 new GarageBusinessCustomer { Id = 10, GarageBusinessId = 5 },
                 new GarageBusinessCustomer { Id = 20, GarageBusinessId = 5 },
