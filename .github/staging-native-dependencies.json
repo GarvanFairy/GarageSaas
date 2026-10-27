@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "package": "Microsoft.Identity.Client.NativeInterop/0.20.6",
+  "packageSha512": "sha512-noyfdMfVxyWpM6xUDmlW6gUvZ5ci24z7Qoy15JvynTQfZV5vTD2NEdsnT5Gy4ngViwgdIp5iRjRy10jAKXFAgw==",
+  "reason": "Only broad credential-assignment scans are exempted for these six exact package assets. Package/asset identity, diagnostic and private-key checks remain enabled; any byte change fails the hash gate.",
+  "files": [
+    {
+      "path": "runtimes/linux-x64/native/libmsalruntime.so",
+      "sha256": "74b3915898f387982de19677c157e6dff45f6e116b7fa9026e4a491bdf51d023"
+    },
+    {
+      "path": "runtimes/osx-arm64/native/msalruntime_arm64.dylib",
+      "sha256": "1e36b7bc708c467a259b7a33df8fd1c150027953dd8a7f550b8da241622d2deb"
+    },
+    {
+      "path": "runtimes/osx-x64/native/msalruntime.dylib",
+      "sha256": "aa57c18b28eba92ccac0d18c8ebe2f782b90f84abc7c47b1b7951a548b72d34f"
+    },
+    {
+      "path": "runtimes/win-arm64/native/msalruntime_arm64.dll",
+      "sha256": "75a9174e5f6fde56d113f920110dc718d651c8f3dfcdb47c0956a938330836c2"
+    },
+    {
+      "path": "runtimes/win-x64/native/msalruntime.dll",
+      "sha256": "060ff9a4d78ed94498618b0b5255f0cc17693cd4a436a23de759dfc79daed21d"
+    },
+    {
+      "path": "runtimes/win-x86/native/msalruntime_x86.dll",
+      "sha256": "549dba086f8ba3d25b9d2a4784f4880c6d6e6aa353b29234ce62d95122ca28aa"
+    }
+  ],
+  "archiveSha512": "sha512-yjtyfN04jZDUHGoKUki1pqVHq2mxV+cr/Df7ExeD51zfhNDJ7oBfa3OgZ5uPWyxyoBqgCXGcyh4DDwF0tznLEA==",
+  "reviewedNamedLibrary": {
+    "package": "Azure.Security.KeyVault.Secrets/4.1.0",
+    "reason": "Secrets in the name identifies the Azure client library, not a secret file. Only this exact graph-declared hash may bypass that filename keyword; all content checks still apply.",
+    "packageSha512": "sha512-SK4XTPEaXI5UTdtSkr8TN4ZKnvazNHhybnnkxHgOyRAhV9ObcIjbrNlhS4ZeR8XtI+HidL+v/WIIVfR1+jKB8Q==",
+    "asset": "lib/netstandard2.0/Azure.Security.KeyVault.Secrets.dll",
+    "sha256": "0fcdcd4b78955ffcbfa34ef181322c1fcfd983ce8612c335f10dced61452213e",
+    "path": "Azure.Security.KeyVault.Secrets.dll"
+  }
+}
