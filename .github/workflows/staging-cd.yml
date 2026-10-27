@@ -1,0 +1,173 @@
+name: Prepare staging release (deployment disabled)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Full SHA of a reviewed master commit with successful master-push full CI
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: garagesaas-staging-release
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  prerequisite:
+    if: ${{ github.repository == 'GarvanFairy/GarageSaas' && github.ref == 'refs/heads/master' }}
+    runs-on: windows-2025
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      commit: ${{ steps.check.outputs.commit }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - id: check
+        name: Require exact successful master-push full CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_COMMIT: ${{ inputs.commit }}
+        run: ./.github/scripts/Resolve-StagingRelease.ps1 -Commit $env:RELEASE_COMMIT
+
+  release:
+    needs: prerequisite
+    runs-on: windows-2025
+    timeout-minutes: 45
+    env:
+      OpenAI__ApiKey: ''
+      EmailSettings__SmtpHost: '127.0.0.1'
+      EmailSettings__SmtpPort: '1'
+      EmailSettings__Username: ''
+      EmailSettings__Password: ''
+      RELEASE_COMMIT: ${{ needs.prerequisite.outputs.commit }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ needs.prerequisite.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
+        with:
+          dotnet-version: '10.0.301'
+      - name: Build the release once
+        run: |
+          dotnet restore GarageSaas.sln
+          if ($LASTEXITCODE -ne 0) { throw 'Restore failed.' }
+          dotnet build GarageSaas.sln -c Release --no-restore -p:ContinuousIntegrationBuild=true
+          if ($LASTEXITCODE -ne 0) { throw 'Release build failed.' }
+      # Re-test these build outputs before publish --no-build. No alternate
+      # diagnostic-stripping compilation is allowed between test and publish.
+      - name: Require full unit and identity inventories
+        run: |
+          ./.github/scripts/Invoke-CiTests.ps1 -Suite unit
+          ./.github/scripts/Invoke-CiTests.ps1 -Suite identity
+      - name: Require all JavaScript suites
+        run: |
+          foreach ($suite in @('CoreWorkflowClient','GarageContextClient','QuoteSuggestionsClient')) {
+            node "GarageSaas.UnitTests/TestHelpers/$suite.test.cjs"
+            if ($LASTEXITCODE -ne 0) { throw 'Required JavaScript suite failed.' }
+          }
+      - name: Prepare isolated LocalDB
+        run: ./.github/scripts/Start-CiLocalDb.ps1
+      - name: Require full disposable SQL inventory
+        env:
+          GARAGESAAS_TEST_SQLSERVER: '(localdb)\GarageSaasIntegrationTests'
+          GARAGESAAS_RUN_REGISTRATION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_INVOICE_ATOMIC_SQL_TESTS: '1'
+          GARAGESAAS_RUN_QUOTE_CONVERSION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_QUOTE_ATOMIC_SQL_TESTS: '1'
+          GARAGESAAS_RUN_QUOTE_COORDINATION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_CUSTOMER_VEHICLE_READ_SQL_TESTS: '1'
+          GARAGESAAS_RUN_CUSTOMER_VEHICLE_MUTATION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_CUSTOMER_DELETION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_OWNERSHIP_INTEGRITY_SQL_TESTS: '1'
+          GARAGESAAS_RUN_STAFF_INVITATION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_INVOICE_DELETION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_INVOICE_UPDATE_SQL_TESTS: '1'
+          GARAGESAAS_RUN_MANUAL_QUOTE_ATTACHMENT_SQL_TESTS: '1'
+          GARAGESAAS_RUN_WORKITEM_QUOTE_RACE_SQL_TESTS: '1'
+          GARAGESAAS_RUN_EF_UPGRADE_SQL_TESTS: '1'
+        run: ./.github/scripts/Invoke-CiTests.ps1 -Suite sql
+      - name: Publish tested build and validate actual ZIP
+        run: |
+          dotnet publish GarageSaas/GarageSaas.csproj -c Release --no-build --no-restore --self-contained false -p:ContinuousIntegrationBuild=true -o artifacts/staging-release/publish
+          if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
+          ./.github/scripts/New-StagingReleaseArtifact.ps1 -PublishPath artifacts/staging-release/publish -OutputDirectory artifacts/staging-release/package -Commit $env:RELEASE_COMMIT
+      - name: Require artifact security regression checks
+        run: ./.github/scripts/Test-StagingReleaseArtifactChecks.ps1 -Path "artifacts/staging-release/package/GarageSaas-$env:RELEASE_COMMIT.zip"
+      - name: Upload validated immutable candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: staging-release-${{ needs.prerequisite.outputs.commit }}-${{ github.run_id }}
+          path: |
+            artifacts/staging-release/package/GarageSaas-*.zip
+            artifacts/staging-release/package/release.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload sanitized test evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: staging-release-tests-${{ github.run_id }}
+          path: |
+            artifacts/test-results/unit.trx
+            artifacts/test-results/identity.trx
+            artifacts/test-results/sql.trx
+            artifacts/test-results/unit-status.json
+            artifacts/test-results/identity-status.json
+            artifacts/test-results/sql-status.json
+          retention-days: 7
+
+  deploy:
+    # HARD STOP. Only a reviewed workflow commit may remove this condition after
+    # the diagnostic-free release, target, recovery and OIDC approvals. No input
+    # or repository/environment variable can enable deployment in this version.
+    if: ${{ false }}
+    needs: [prerequisite, release]
+    runs-on: windows-2025
+    timeout-minutes: 15
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RELEASE_COMMIT: ${{ needs.prerequisite.outputs.commit }}
+      TARGET_RESOURCE_ID: ${{ vars.AZURE_STAGING_RESOURCE_ID }}
+      EXPECTED_SHA256: ${{ vars.STAGING_APPROVED_ARTIFACT_SHA256 }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: staging-release-${{ needs.prerequisite.outputs.commit }}-${{ github.run_id }}
+          path: candidate
+      - name: Revalidate approved archive and target before Azure login
+        run: |
+          $manifest = Get-Content candidate/release.json -Raw | ConvertFrom-Json
+          $name = "GarageSaas-$env:RELEASE_COMMIT.zip"
+          $hash = (Get-FileHash "candidate/$name" -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($manifest.commit -ne $env:RELEASE_COMMIT -or $manifest.package -ne $name -or $manifest.sha256 -ne $hash -or $env:EXPECTED_SHA256 -cne $hash) { throw 'Approved artifact identity/hash mismatch.' }
+          if ($env:TARGET_RESOURCE_ID -notmatch '^/subscriptions/[0-9a-f-]{36}/resourceGroups/[^/]+/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu$') { throw 'Unapproved staging target.' }
+          ./.github/scripts/Test-StagingReleaseArtifact.ps1 -Path "candidate/$name"
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac
+        with:
+          client-id: ${{ vars.AZURE_STAGING_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_STAGING_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_STAGING_SUBSCRIPTION_ID }}
+      - name: Deploy only the approved package to the existing staging app
+        run: |
+          az webapp deploy --ids $env:TARGET_RESOURCE_ID --src-path "candidate/GarageSaas-$env:RELEASE_COMMIT.zip" --type zip --clean true --restart true --only-show-errors --output none
+          if ($LASTEXITCODE -ne 0) { throw 'Deployment failed or is uncertain; do not automatically retry.' }
+      - name: Validate staging liveness (manual authenticated acceptance still required)
+        run: ./.github/scripts/Test-StagingReleaseHealth.ps1

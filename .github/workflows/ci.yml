@@ -21,6 +21,8 @@ defaults:
 jobs:
   build-test:
     name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/codex/workitem-quote-race-verification' && 'Focused WorkItem quote race verification' || 'Windows build and tests' }}
+    outputs:
+      runtime_fingerprint: ${{ steps.runtime_identity.outputs.fingerprint }}
     runs-on: windows-2025
     timeout-minutes: 45
     env:
@@ -56,6 +58,13 @@ jobs:
       - name: Build Release
         id: build
         run: dotnet build GarageSaas.sln --configuration Release --no-restore -p:ContinuousIntegrationBuild=true
+
+      - name: Record runtime identity before tests
+        id: runtime_identity
+        if: ${{ env.CI_SQL_FOCUS == '' }}
+        run: |
+          $fingerprint = ./.github/scripts/Get-CiRuntimeFingerprint.ps1 -Path GarageSaas/bin/Release/net10.0
+          "fingerprint=$fingerprint" >> $env:GITHUB_OUTPUT
 
       - name: Unit and in-process HTTP tests (no SQL)
         if: ${{ env.CI_SQL_FOCUS == '' }}
@@ -132,3 +141,54 @@ jobs:
             artifacts/test-results/sql-status.json
           if-no-files-found: warn
           retention-days: 7
+
+  artifact-validation:
+    name: Artifact security validation (no deployment)
+    needs: build-test
+    if: ${{ needs.build-test.result == 'success' && (github.event_name == 'push' || github.event_name == 'pull_request') && !(github.event_name == 'push' && github.ref == 'refs/heads/codex/workitem-quote-race-verification') }}
+    runs-on: windows-2025
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      EXPECTED_COMMIT: ${{ github.sha }}
+      SOURCE_HEAD_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      VALIDATION_EVENT: ${{ github.event_name }}
+      TESTED_RUNTIME_FINGERPRINT: ${{ needs.build-test.outputs.runtime_fingerprint }}
+      DOTNET_NOLOGO: 'true'
+      DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+    steps:
+      - name: Checkout exact CI validation commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify and report artifact source identity
+        run: |
+          $commit = git rev-parse HEAD
+          if ($LASTEXITCODE -ne 0 -or $commit -cnotmatch '^[0-9a-f]{40}$' -or $commit -cne $env:EXPECTED_COMMIT -or $commit -eq ('0'*40)) { throw 'Checkout identity does not match the CI commit.' }
+          if ($env:SOURCE_HEAD_COMMIT -cnotmatch '^[0-9a-f]{40}$') { throw 'Invalid source head identity.' }
+          "Validation checkout: $commit; feature/source head: $env:SOURCE_HEAD_COMMIT; event: $env:VALIDATION_EVENT. PR checkouts are merge-preview commits. This artifact is not an approved master release." >> $env:GITHUB_STEP_SUMMARY
+      - name: Install .NET 10 SDK
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore and build Release application
+        run: |
+          dotnet restore GarageSaas/GarageSaas.csproj
+          if ($LASTEXITCODE -ne 0) { throw 'Artifact validation restore failed.' }
+          dotnet build GarageSaas/GarageSaas.csproj -c Release --no-restore -p:ContinuousIntegrationBuild=true
+          if ($LASTEXITCODE -ne 0) { throw 'Artifact validation build failed.' }
+          ./.github/scripts/Get-CiRuntimeFingerprint.ps1 -Path GarageSaas/bin/Release/net10.0 -Expected $env:TESTED_RUNTIME_FINGERPRINT | Out-Null
+      - name: Publish without rebuilding and validate package
+        run: |
+          dotnet publish GarageSaas/GarageSaas.csproj -c Release --no-build --no-restore --self-contained false -p:ContinuousIntegrationBuild=true -o artifacts/ci-package-validation/publish
+          if ($LASTEXITCODE -ne 0) { throw 'Artifact validation publish failed.' }
+          ./.github/scripts/Get-CiRuntimeFingerprint.ps1 -Path artifacts/ci-package-validation/publish -Expected $env:TESTED_RUNTIME_FINGERPRINT | Out-Null
+          ./.github/scripts/New-StagingReleaseArtifact.ps1 -PublishPath artifacts/ci-package-validation/publish -OutputDirectory artifacts/ci-package-validation/package -Commit $env:EXPECTED_COMMIT
+      - name: Require all 37 artifact security mutation cases
+        run: ./.github/scripts/Test-StagingReleaseArtifactChecks.ps1 -Path "artifacts/ci-package-validation/package/GarageSaas-$env:EXPECTED_COMMIT.zip"
+      - name: Verify complete ZIP inventory and independent SHA-256
+        run: ./.github/scripts/Assert-StagingValidationArtifact.ps1 -PublishPath artifacts/ci-package-validation/publish -OutputDirectory artifacts/ci-package-validation/package -Commit $env:EXPECTED_COMMIT
+      # Deliberately no upload, Azure login, OIDC, environment or deployment step.
+      # The ZIP and binaries remain on this disposable runner only.

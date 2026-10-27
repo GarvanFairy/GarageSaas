@@ -222,7 +222,6 @@ namespace GarageSaas
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseMiddleware<StagingSubjectVerificationMiddleware>();
             app.UseMiddleware<GarageAccessMiddleware>();
 
             app.UseEndpoints(endpoints =>
