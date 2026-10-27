@@ -374,3 +374,6 @@ artifacts/
 
 /deployment/staging/appsettings.local.json
 !deployment/staging/appsettings.template.json
+
+# Local CI validation evidence; hosted runs upload their own TRX artifacts.
+/.test-results/ci-local-*.trx

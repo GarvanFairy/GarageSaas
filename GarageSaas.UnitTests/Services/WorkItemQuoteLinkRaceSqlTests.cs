@@ -84,14 +84,13 @@ public class WorkItemQuoteLinkRaceSqlTests
             };
             if (quoteValidatesFirst)
                 return (ServiceResult)new WorkQuoteService(db).AddOrUpdateWorkQuote(Input(quoteId), _a.GarageId, "quote-first");
-            using var tx = db.Database.BeginTransaction();
             var result = new WorkItemService(db).AddOrUpdateWorkItem(Replacement(), _a.GarageId, "retarget-first");
-            tx.Commit(); return (ServiceResult)result;
+            return (ServiceResult)result;
         }));
         int? invoiceId = null;
         try
         {
-            Assert.IsTrue(reached.Wait(TimeSpan.FromSeconds(10)), "First service did not reach its post-validation gate");
+            await WaitForSaveGate(first, reached);
             // Proves independent Garage B work progresses while A's operation is paused.
             var otherGarage = _database.Track(Task.Run(() =>
             {
@@ -174,17 +173,24 @@ public class WorkItemQuoteLinkRaceSqlTests
         {
             using var db = new GateContext(_database.Options()) { GateSave = 1, FailAfterSave = 1,
                 BeforeSave = () => { reached.Set(); if (!release.Wait(TimeSpan.FromSeconds(15))) throw new TimeoutException("Retarget rollback gate"); } };
-            using var tx = db.Database.BeginTransaction();
             try
             {
                 new WorkItemService(db).AddOrUpdateWorkItem(Replacement(), _a.GarageId, "failed-retarget");
                 Assert.Fail("Expected injected failure");
             }
-            catch (DbUpdateException) { tx.Rollback(); }
+            catch (DbUpdateException)
+            {
+                // The service owns rollback, including detaching the saved target.
+                Assert.IsNull(db.Database.CurrentTransaction);
+                Assert.IsFalse(db.ChangeTracker.HasChanges());
+                Assert.AreEqual(0, db.ChangeTracker.Entries<WorkItem>().Count());
+                db.FailAfterSave = 0;
+                db.SaveChanges(); // A later save must not resurrect the retarget.
+            }
         }));
         try
         {
-            Assert.IsTrue(reached.Wait(TimeSpan.FromSeconds(10)));
+            await WaitForSaveGate(worker, reached);
             var quoteWorker = _database.Track(Task.Run(() =>
             {
                 using var db = new SignupContext(_database.Options());
@@ -217,6 +223,24 @@ public class WorkItemQuoteLinkRaceSqlTests
         using var check = new SignupContext(_database.Options());
         Assert.AreEqual(0, check.WorkQuote.Count()); Assert.AreEqual(0, check.WorkQuoteWorkItem.Count());
         Assert.IsTrue(new WorkItemService(check).AddOrUpdateWorkItem(Replacement(), _a.GarageId, "valid").Success);
+    }
+
+    private static async Task WaitForSaveGate(Task worker, ManualResetEventSlim reached)
+    {
+        var signal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var registration = ThreadPool.RegisterWaitForSingleObject(reached.WaitHandle,
+            (_, timedOut) => signal.TrySetResult(!timedOut), null, TimeSpan.FromSeconds(10), true);
+        try
+        {
+            await Task.WhenAny(worker, signal.Task);
+            if (worker.IsCompleted)
+            {
+                await worker; // Preserve the original exception/cancellation immediately.
+                Assert.Fail("First service completed before the paused save gate was observed.");
+            }
+            Assert.IsTrue(await signal.Task, "First service did not reach its post-validation gate");
+        }
+        finally { registration.Unregister(null); }
     }
 
     private sealed class GateContext : SignupContext
