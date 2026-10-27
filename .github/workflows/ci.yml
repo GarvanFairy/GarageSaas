@@ -1,0 +1,124 @@
+name: GarageSaas CI
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master, 'codex/**', 'feature/**', 'fix/**', 'upgrade_*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  build-test:
+    name: Windows build and tests
+    runs-on: windows-2025
+    timeout-minutes: 45
+    env:
+      DOTNET_NOLOGO: 'true'
+      DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+      OpenAI__ApiKey: ''
+      EmailSettings__SmtpHost: '127.0.0.1'
+      EmailSettings__SmtpPort: '1'
+      EmailSettings__Username: ''
+      EmailSettings__Password: ''
+    steps:
+      - name: Checkout reviewed source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Install .NET 10 SDK
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Record tool versions
+        run: |
+          dotnet --version
+          node --version
+
+      - name: Restore
+        run: dotnet restore GarageSaas.sln
+
+      - name: Build Release
+        id: build
+        run: dotnet build GarageSaas.sln --configuration Release --no-restore -p:ContinuousIntegrationBuild=true
+
+      - name: Unit and in-process HTTP tests (no SQL)
+        run: ./.github/scripts/Invoke-CiTests.ps1 -Suite unit
+
+      # Run even if the preceding suite failed, provided the build succeeded.
+      - name: Identity diagnostic safety tests (exactly 19 required)
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: ./.github/scripts/Invoke-CiTests.ps1 -Suite identity
+
+      - name: JavaScript client regression checks
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          foreach ($name in @('CoreWorkflowClient','GarageContextClient','QuoteSuggestionsClient')) {
+            $path = "GarageSaas.UnitTests/TestHelpers/$name.test.cjs"
+            if (!(Test-Path -LiteralPath $path)) { throw "Required client suite missing: $name" }
+            node $path
+            if ($LASTEXITCODE -ne 0) { throw "Client checks failed: $name" }
+          }
+
+      - name: Create isolated runner-only LocalDB instance
+        id: localdb
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: ./.github/scripts/Start-CiLocalDb.ps1
+
+      - name: Disposable SQL integration tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.localdb.outcome == 'success' }}
+        env:
+          GARAGESAAS_TEST_SQLSERVER: '(localdb)\GarageSaasIntegrationTests'
+          GARAGESAAS_RUN_REGISTRATION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_INVOICE_ATOMIC_SQL_TESTS: '1'
+          GARAGESAAS_RUN_QUOTE_CONVERSION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_QUOTE_ATOMIC_SQL_TESTS: '1'
+          GARAGESAAS_RUN_QUOTE_COORDINATION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_CUSTOMER_VEHICLE_READ_SQL_TESTS: '1'
+          GARAGESAAS_RUN_CUSTOMER_VEHICLE_MUTATION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_CUSTOMER_DELETION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_OWNERSHIP_INTEGRITY_SQL_TESTS: '1'
+          GARAGESAAS_RUN_STAFF_INVITATION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_INVOICE_DELETION_SQL_TESTS: '1'
+          GARAGESAAS_RUN_INVOICE_UPDATE_SQL_TESTS: '1'
+          GARAGESAAS_RUN_MANUAL_QUOTE_ATTACHMENT_SQL_TESTS: '1'
+          GARAGESAAS_RUN_WORKITEM_QUOTE_RACE_SQL_TESTS: '1'
+          GARAGESAAS_RUN_EF_UPGRADE_SQL_TESTS: '1'
+        run: ./.github/scripts/Invoke-CiTests.ps1 -Suite sql
+
+      - name: Write test count summary
+        if: ${{ always() }}
+        run: |
+          foreach ($suite in @('unit','identity','sql')) {
+            $path = "artifacts/test-results/$suite.trx"
+            if (Test-Path -LiteralPath $path) {
+              ./.github/scripts/Assert-TestResults.ps1 -Path $path -Suite $suite -SummaryOnly
+            } else { "$suite`: no TRX produced; inspect build/setup and sanitized status file." >> $env:GITHUB_STEP_SUMMARY }
+          }
+
+      - name: Upload sanitized test evidence on success or failure
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/test-results/unit.trx
+            artifacts/test-results/identity.trx
+            artifacts/test-results/sql.trx
+            artifacts/test-results/unit-status.json
+            artifacts/test-results/identity-status.json
+            artifacts/test-results/sql-status.json
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,2385 @@
+{
+  "sourceCommit": "5dc52ff480682f76ff52c49c8cfa6305894c58a3",
+  "suites": {
+    "unit": [
+      {
+        "className": "GarageSaas.UnitTests.Controllers.CustomerDocumentHttpTests",
+        "methodName": "DownloadReturnsPdfAndConfirmationSendsAttachmentOnce",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/CustomerDocumentHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.CustomerDocumentHttpTests",
+        "methodName": "MissingAndForeignDocumentsNeverGenerateOrSend",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/CustomerDocumentHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.CustomerDocumentHttpTests",
+        "methodName": "GenerationFailureNeverEmailsAndProviderFailureIsReportedWithoutRetry",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/CustomerDocumentHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.CustomerDocumentHttpTests",
+        "methodName": "InvalidAndChangedRecipientCannotSend",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/CustomerDocumentHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.CustomerDocumentHttpTests",
+        "methodName": "AntiforgeryAndGarageSwitchingProtectSending",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/CustomerDocumentHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.CustomerDocumentHttpTests",
+        "methodName": "AuthenticationAndEligibleGarageAreRequired",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/CustomerDocumentHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.CustomerVehicleAntiforgeryHttpTests",
+        "methodName": "MvcAntiforgeryRunsBeforeServiceMutationAndPreservesValidEnvelope",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/CustomerVehicleAntiforgeryHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests",
+        "methodName": "RenderedWorkFormsSubmitOneContextTokenAndRejectStaleEdits",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/GarageSwitchingHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests",
+        "methodName": "CoreWorkflowRendersHistoryAndRejectsStaleGarageWork",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/GarageSwitchingHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests",
+        "methodName": "WorkflowScreensRequireAuthenticationAndGarage",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/GarageSwitchingHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests",
+        "methodName": "SwitchRememberRolesAndTenantReadsUseSelectedGarage",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/GarageSwitchingHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests",
+        "methodName": "UnauthorisedOrUnavailableSelectionDoesNotReplacePreference",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/GarageSwitchingHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests",
+        "methodName": "SelectionRequiresAuthenticationAndAntiforgery",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/GarageSwitchingHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests",
+        "methodName": "RememberedGarageBecomingUnavailableRequiresAnotherExplicitChoice",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/GarageSwitchingHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests",
+        "methodName": "StaleFormsAndAjaxCannotMutateNewGarage",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/GarageSwitchingHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests",
+        "methodName": "SingleGarageLoginAndInvitationRoutesRemainUsable",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/GarageSwitchingHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.GarageSwitchingHttpTests",
+        "methodName": "SecondGarageInvitationReturnReachesChooserThenSelectedDashboard",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/GarageSwitchingHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformAdminControllerTests",
+        "methodName": "List_AllowlistsAndAppliesStatus",
+        "cases": 9,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformAdminControllerTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformAdminControllerTests",
+        "methodName": "Details_ProjectsMetadataAndPreservesFilter",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformAdminControllerTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformAdminControllerTests",
+        "methodName": "Details_DescribesInvitationState",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformAdminControllerTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformAdministratorAttributeTests",
+        "methodName": "AdministratorActions_KeepPolicyAndAntiforgeryProtection",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformAdministratorAttributeTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageDirectoryTests",
+        "methodName": "DirectoryActions_InheritPlatformPolicyAndAreReadOnly",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageDirectoryTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageDirectoryTests",
+        "methodName": "Policy_RequiresAuthenticatedActiveUnblockedPlatformAdmin",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageDirectoryTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageDirectoryTests",
+        "methodName": "Search_IsCaseInsensitiveTrimmedAndIncludesAllStatuses",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageDirectoryTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageDirectoryTests",
+        "methodName": "Pagination_IsBoundedStableAndAppliedAfterSearch",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageDirectoryTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageDirectoryTests",
+        "methodName": "Details_ProjectsOnlyRequestedGarageMembershipsAndUsesIsOwner",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageDirectoryTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageDirectoryTests",
+        "methodName": "Details_HandlesMissingGarageAndZeroOwners",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageDirectoryTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageStatusHttpTests",
+        "methodName": "RealPolicyDeniesNonPlatformStatusAccess",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageStatusHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageStatusHttpTests",
+        "methodName": "AntiforgeryRejectsBothMutationsBeforeWrites",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageStatusHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageStatusHttpTests",
+        "methodName": "ConfirmationCancelAndPlatformOnlyActivationPreserveDisabledState",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageStatusHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageStatusHttpTests",
+        "methodName": "DeactivationDeniesNextTenantRequestAndStalePostReturns409",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageStatusHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageStatusTests",
+        "methodName": "ToggleChangesOnlyGarageActiveAndAudit",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageStatusTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageStatusTests",
+        "methodName": "StaleConfirmationReturnsConflictWithoutWrites",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageStatusTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageStatusTests",
+        "methodName": "StatusCycleCannotReuseOldConfirmation",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageStatusTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageStatusTests",
+        "methodName": "DeactivationDeniesFreshTenantRequestWithoutLosingPlatformAccess",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageStatusTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageStatusTests",
+        "methodName": "MissingAndInvalidConfirmationAreSafe",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageStatusTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.PlatformGarageStatusTests",
+        "methodName": "UncertainCommitDoesNotRetryAndReturnsSafeResult",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/PlatformGarageStatusTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.ProductionSecurityHttpTests",
+        "methodName": "ProductionPipelineProtectsCookiesMutationsAndErrorsWithoutLiveServices",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/ProductionSecurityHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "GarageLimitUsesServerSelectionAndDoesNotSpendAnotherGaragesAllowance",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "SelectedGarageControlsUsageAndResponsesDespiteSpoofedClientIds",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "UnexpectedProviderExceptionsAreSanitizedAndFailureUsageIsTenantScoped",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "MissingRealServiceKeyLeavesEditorAvailableWithoutAnyOutboundCall",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "NewAndExistingQuotesReturnSuggestionWithoutPersistence",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "ForeignMissingOrInvalidQuotesNeverReachProvider",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "AuthenticationAndEligibleMembershipAreRequired",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "MissingSelectionOrUnavailableGarageCannotRequestSuggestions",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "AntiforgeryIsRequired",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "SwitchingGaragesRejectsStaleAjaxAndForeignQuoteIds",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "InvalidDraftAndKnownCustomerNameAreRejected",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "RequestLimitPreventsAdditionalProviderCalls",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.QuoteSuggestionHttpTests",
+        "methodName": "UnavailableAiReturnsSafeFeedbackAndManualEditorStillRenders",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/QuoteSuggestionHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RetiredTenantEndpointTests",
+        "methodName": "Http_EnforcesAuthenticationAndMembershipBeforeGone",
+        "cases": 98,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RetiredTenantEndpointTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RetiredTenantEndpointTests",
+        "methodName": "Http_MutationsIgnoreForgedPayloadEvenWithValidAntiforgery",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RetiredTenantEndpointTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RetiredTenantEndpointTests",
+        "methodName": "Http_PreservesVerbMappings",
+        "cases": 11,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RetiredTenantEndpointTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RetiredTenantEndpointTests",
+        "methodName": "HtmlNavigationDenialReachesRecoveryPageWithoutLoop",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RetiredTenantEndpointTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RetiredTenantEndpointTests",
+        "methodName": "FetchAndUnsafeDenialsReturnJsonWithoutRedirect",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RetiredTenantEndpointTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RetiredTenantEndpointTests",
+        "methodName": "ExistingPagesRenderWithoutTenantPolicyChanges",
+        "cases": 9,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RetiredTenantEndpointTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RetiredTenantEndpointTests",
+        "methodName": "PlatformOnlyAdministratorIsDeniedTenantDataAndStaffCannotEditProfile",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RetiredTenantEndpointTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RetiredTenantEndpointTests",
+        "methodName": "RegistrationAndInvitationPostsDoNotRequireExistingMembership",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RetiredTenantEndpointTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationCreationTests",
+        "methodName": "CreationPreservesLifecycleAndNormalizesRecipient",
+        "cases": 7,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationCreationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationCreationTests",
+        "methodName": "EmailFailureKeepsCommittedInvitationForResend",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationCreationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationHttpTests",
+        "methodName": "AvailabilityAndNewUserAcceptanceThroughRealMvc",
+        "cases": 12,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationHttpTests",
+        "methodName": "GarageBecomingUnavailableAfterIssueCannotConsumeOrCreateUser",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationHttpTests",
+        "methodName": "LowercaseAdministratorAndTrustedAuthorityWorkForCreateAndResend",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationHttpTests",
+        "methodName": "InvalidOriginFailsWithoutWritesOrEmail",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationHttpTests",
+        "methodName": "InvalidInvitationStatesCannotBeConsumedThroughHttp",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationHttpTests",
+        "methodName": "ExistingUserRestrictionsAreHttpForbiddenWithoutWrites",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationHttpTests",
+        "methodName": "MultipleMembershipAcceptanceStillHasSelectionRequiredOnNextTenantRequest",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationHttpTests",
+        "methodName": "AuthenticationAuthorizationAndAntiforgeryRemainInForce",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationHttpTests",
+        "methodName": "MutationFiltersRejectBeforeWrites",
+        "cases": 8,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationHttpTests",
+        "methodName": "ConsumedInvitationCannotBeResentRevokedOrAcceptedAgain",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationHttpTests",
+        "methodName": "PersistenceFailureReturnsSafeUnavailablePage",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationTests",
+        "methodName": "GarageAvailabilityAppliesWithoutExistingInviteeMembership",
+        "cases": 12,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationTests",
+        "methodName": "InvalidTokenStatesRemainRejected",
+        "cases": 12,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationTests",
+        "methodName": "ExistingUserAndMembershipRestrictionsRemainUnchanged",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationTests",
+        "methodName": "NewB2CUserCanJoinAndSecondMembershipStillRequiresExplicitSelection",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationTests",
+        "methodName": "TeamWritesRevalidateAfterCachedB21Success",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationTests",
+        "methodName": "InvalidOriginNeverCreatesOrRotatesInvitation",
+        "cases": 12,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationTests",
+        "methodName": "IssuerRoleUsesExistingAuthorizationSemantics",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.VehicleInvoiceTenantHttpTests",
+        "methodName": "JsonMutationsRejectForeignAndMissingReferencesWithoutWrites",
+        "cases": 7,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/VehicleInvoiceTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.VehicleInvoiceTenantHttpTests",
+        "methodName": "JsonReadsCannotExposeForeignData",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/VehicleInvoiceTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.VehicleInvoiceTenantHttpTests",
+        "methodName": "JsonCreationAndDetailsKeepExistingShapes",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/VehicleInvoiceTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.VehicleInvoiceTenantHttpTests",
+        "methodName": "B21MembershipAuthorizationRemainsRequired",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/VehicleInvoiceTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.VehicleInvoiceTenantHttpTests",
+        "methodName": "ConversionRetainsFormRequestAndJsonResponseContract",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/VehicleInvoiceTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.VehicleInvoiceTenantHttpTests",
+        "methodName": "MvcFormEditAndPaymentKeepRedirectContractsWithAntiforgery",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/VehicleInvoiceTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.VehicleInvoiceTenantHttpTests",
+        "methodName": "DeleteApiPreservesEnvelopeAndProtectsAssociations",
+        "cases": 7,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/VehicleInvoiceTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.VehicleInvoiceTenantHttpTests",
+        "methodName": "DeleteApiRetainsAuthenticationAndMembershipBoundaries",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/VehicleInvoiceTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.VehicleInvoiceTenantHttpTests",
+        "methodName": "DeleteApiCannotDeleteForeignInvoice",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/VehicleInvoiceTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.VehicleInvoiceTenantHttpTests",
+        "methodName": "ManualQuoteAttachmentRetainsSuccessAndDuplicateErrorEnvelopes",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/VehicleInvoiceTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.VehicleInvoiceTenantHttpTests",
+        "methodName": "UpdateAttachmentKeepsMvcAndJsonContractsAndRejectsOmittedRemoval",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/VehicleInvoiceTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkItemTenantHttpTests",
+        "methodName": "JsonCreatesRejectForgedRelationshipsWithoutWrites",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkItemTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkItemTenantHttpTests",
+        "methodName": "RealJsonCallersRetainSuccessShapeAndTrustedTenant",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkItemTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkItemTenantHttpTests",
+        "methodName": "UnsafePrimaryOrRelatedRecordsAreNotReturned",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkItemTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkItemTenantHttpTests",
+        "methodName": "B21MembershipAuthorizationStillApplies",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkItemTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkItemTenantHttpTests",
+        "methodName": "QuoteModalDescriptionEditIgnoresReplacementIds",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkItemTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkQuoteTenantHttpTests",
+        "methodName": "ExistingAuthenticationAndMembershipBoundariesApplyToQuoteActions",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkQuoteTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkQuoteTenantHttpTests",
+        "methodName": "SingleQuoteReadsReturnSafeExistingErrorEnvelope",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkQuoteTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkQuoteTenantHttpTests",
+        "methodName": "ListsKeepVehicleEnvelopeAndWorkItemArrayWithoutForeignData",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkQuoteTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkQuoteTenantHttpTests",
+        "methodName": "ValidDirectOnlyInvoiceStateUsesExistingDtoFields",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkQuoteTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkQuoteTenantHttpTests",
+        "methodName": "ForeignLookupRootsKeepSafeErrorContracts",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkQuoteTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkQuoteTenantHttpTests",
+        "methodName": "JsonWritesRejectForeignOrMissingIdsWithoutChanges",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkQuoteTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkQuoteTenantHttpTests",
+        "methodName": "StaffCanCreateEditAndDeleteAndLegacySingleItemContractStillWorks",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkQuoteTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkQuoteTenantHttpTests",
+        "methodName": "LinkedLegacyQuoteRejectsRetargetingAndDeletionWithExistingErrorEnvelope",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkQuoteTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.WorkQuoteTenantHttpTests",
+        "methodName": "LinkedQuoteAllowsLegacySameRelationshipEditWithExistingSuccessEnvelope",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/WorkQuoteTenantHttpTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CoreGarageWorkflowTests",
+        "methodName": "CustomerVehicleWorkQuoteInvoicePaymentHistoryPersistAcrossContexts",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CoreGarageWorkflowTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CoreGarageWorkflowTests",
+        "methodName": "HistoryOrdersIssuedInvoicesExcludesDraftCancelledAndForeignGraphsAndLabelsMileage",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CoreGarageWorkflowTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CoreGarageWorkflowTests",
+        "methodName": "HistoryIncludesManualInvoicesAndOnlyTargetVehicleWorkFromMultiVehicleQuotes",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CoreGarageWorkflowTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CurrentGarageUserServiceTests",
+        "methodName": "SingleEligibleMembershipSucceedsRegardlessOfLegacyFields",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/CurrentGarageUserServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CurrentGarageUserServiceTests",
+        "methodName": "IneligibleOrMissingRelationshipsAreDenied",
+        "cases": 8,
+        "sourceFile": "GarageSaas.UnitTests/Services/CurrentGarageUserServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CurrentGarageUserServiceTests",
+        "methodName": "MultipleRecordsNeverFallBackEvenWhenOneIsEligible",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/CurrentGarageUserServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CurrentGarageUserServiceTests",
+        "methodName": "CachedSuccessIsStableAcrossInstancesAndCannotBeMutatedByConsumer",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CurrentGarageUserServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CurrentGarageUserServiceTests",
+        "methodName": "CachedDenialCannotRecoverUntilNextRequest",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CurrentGarageUserServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CurrentGarageUserServiceTests",
+        "methodName": "AuthenticationAndNameIdentifierRemainRequired",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CurrentGarageUserServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CurrentGarageUserServiceTests",
+        "methodName": "RoleSemanticsRemainMembershipBased",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Services/CurrentGarageUserServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDeletionCoordinationTests",
+        "methodName": "PendingReferencesCannotBypassCustomerCoordination",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDeletionCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDeletionCoordinationTests",
+        "methodName": "WorkItemTransactionCleanupAndUncertainCommit",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDeletionCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDocumentEmailTests",
+        "methodName": "MailKitSendsPdfMimeAttachmentUsingExistingSmtpSettings",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDocumentEmailTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDocumentLogoTests",
+        "methodName": "ExistingGarageLogoIsEmbeddedAndDocumentRemainsReadable",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDocumentLogoTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDocumentLogoTests",
+        "methodName": "MissingInvalidOrForeignLogoDoesNotBlockOrReadOtherImages",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDocumentLogoTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDocumentTests",
+        "methodName": "DocumentUsesValidatedGarageCustomerVehicleAndExistingAmounts",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDocumentTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDocumentTests",
+        "methodName": "QuoteRetainsStoredAmountsAndNullsWithoutInventingInvoiceCalculations",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDocumentTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDocumentTests",
+        "methodName": "MissingForeignAndInvalidDocumentsFailClosed",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDocumentTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDocumentTests",
+        "methodName": "UnsafeRelatedCustomerIsNeverReturned",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDocumentTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDocumentTests",
+        "methodName": "LongDescriptionsAndNotesPaginateOnA4",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDocumentTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDocumentTests",
+        "methodName": "InvalidRecipientsAreRejected",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDocumentTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDocumentTests",
+        "methodName": "SendTokensBindIdentityGarageDocumentRecipientAndAreSingleUse",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDocumentTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerVehicleMutationTests",
+        "methodName": "MutationOrderingAndCleanup",
+        "cases": 36,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleMutationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerVehicleServiceTests",
+        "methodName": "BuildAddCustomerVehicleVmAsync_Returns_Lookup_Lists",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerVehicleServiceTests",
+        "methodName": "AddOrUpdateCustomerVehicle_Adds_Vehicle_With_Existing_Customer",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerVehicleServiceTests",
+        "methodName": "AddOrUpdateCustomerVehicle_Adds_GarageOwned_Vehicle",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerVehicleServiceTests",
+        "methodName": "AddOrUpdateCustomerVehicle_Adds_NewCustomer_And_Vehicle",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerVehicleServiceTests",
+        "methodName": "AddCustomer_Should_Save_To_Database",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerVehicleServiceTests",
+        "methodName": "BuildAddCustomerVehicleVmAsync_Returns_Lookups",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.CustomerVehicleServiceTests",
+        "methodName": "BuildAddCustomerVehicleVmAsync_Returns_Lookups_And_Owners",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests2.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.CustomerVehicleServiceTests",
+        "methodName": "AddOrUpdateCustomerVehicle_Adds_Vehicle_With_Existing_Customer",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests2.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.CustomerVehicleServiceTests",
+        "methodName": "AddOrUpdateCustomerVehicle_Adds_GarageOwned_Vehicle",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests2.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.CustomerVehicleServiceTests",
+        "methodName": "AddOrUpdateCustomerVehicle_Adds_NewCustomer_And_Vehicle",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests2.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.CustomerVehicleServiceTests",
+        "methodName": "AddOrUpdateCustomerVehicle_Updates_Existing_Vehicle",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests2.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.CustomerVehicleServiceTests",
+        "methodName": "AddOrUpdateCustomerVehicle_Changes_To_GarageOwned_Removes_Ownership",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests2.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.CustomerVehicleServiceTests",
+        "methodName": "GetCustomerVehicleForEditAsync_Returns_Preselected_Owner_And_Lookups",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleServiceTests2.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerVehicleTenantReadTests",
+        "methodName": "ReadsValidateAllOwnershipEndpointsWithoutWrites",
+        "cases": 13,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleTenantReadTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.DeploymentStorageTests",
+        "methodName": "KeyRingSurvivesNewProviderAndRemainsIsolatedByApplicationName",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/DeploymentStorageTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.DeploymentStorageTests",
+        "methodName": "PersistentDirectoriesRejectRelativeAndUnresolvedPaths",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/DeploymentStorageTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.DeploymentStorageTests",
+        "methodName": "KeysCannotBePlacedInPublicLogoOrWebRootDirectories",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/DeploymentStorageTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.EfUpgradeAuthenticationTests",
+        "methodName": "ExistingIdentityRegistrationAndTokenValidationLoadWithSqlClientDependencies",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/EfUpgradeAuthenticationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageBusinessServiceTests",
+        "methodName": "MissingUserIsDenied",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageBusinessServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageBusinessServiceTests",
+        "methodName": "MembershipAllowsProfileDespiteDifferentLegacyGarage",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageBusinessServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageBusinessServiceTests",
+        "methodName": "UpdateUsesTrustedGarageAndDoesNotChangeStatusOrLegacyFields",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageBusinessServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageBusinessServiceTests",
+        "methodName": "NonOwnersMayReadButCannotEditEvenIfLegacyOwner",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageBusinessServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageBusinessServiceTests",
+        "methodName": "UnavailableGarageIsDeniedForEveryProfileOperation",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageBusinessServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageCustomersServiceTests",
+        "methodName": "AddOrUpdateGarageCustomer_Adds_New_Customer",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageCustomersServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageCustomersServiceTests",
+        "methodName": "AddOrUpdateGarageCustomer_Updates_Existing_Customer",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageCustomersServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageCustomersServiceTests",
+        "methodName": "GetGarageCustomerForEdit_Returns_Customer_And_Vehicles",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageCustomersServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageCustomersServiceTests",
+        "methodName": "BuildAddCustomerWithVehicleVmAsync_Returns_Lookups",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageCustomersServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageSelectionTests",
+        "methodName": "SingleGaragePreservedAndPreferenceIsSecureAndRestorable",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageSelectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageSelectionTests",
+        "methodName": "MultipleMembershipsWithoutPreferenceRequireSelection",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageSelectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageSelectionTests",
+        "methodName": "RememberedUnavailableGarageNeverFallsBack",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageSelectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageSelectionTests",
+        "methodName": "RolesFollowSelectionAndIdentityIsCachedOnlyForRequest",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageSelectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageSelectionTests",
+        "methodName": "InvalidRememberedPreferenceRequiresSelection",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageSelectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageSelectionTests",
+        "methodName": "FormContextsAreBoundToBothUserAndGarage",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageSelectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.GarageSelectionTests",
+        "methodName": "DifferentAccountDoesNotInheritPreferenceOrLoseSingleGarageAccess",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/GarageSelectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceDeletionProtectionTests",
+        "methodName": "EveryAssociationBlocksDeletionWithoutChangingAnyData",
+        "cases": 39,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceDeletionProtectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceDeletionProtectionTests",
+        "methodName": "UnlinkedInvoiceDeletionPreservesExistingPaidAndUnpaidBehavior",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceDeletionProtectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceDeletionProtectionTests",
+        "methodName": "ForeignAndMissingTargetsAreDeniedAndStaleTrackedDirectReferenceCannotBypassGuard",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceDeletionProtectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceLinkedQuoteProtectionTests",
+        "methodName": "LinkedDeletionIsRejectedForEveryInvoiceStatus",
+        "cases": 9,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceLinkedQuoteProtectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceLinkedQuoteProtectionTests",
+        "methodName": "RetargetingIsRejectedBeforeAnyQuoteAuditOrLinkMutation",
+        "cases": 15,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceLinkedQuoteProtectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceLinkedQuoteProtectionTests",
+        "methodName": "NormalizedSelectionsAllowAmountAndTextEditsWithoutChangingLinksOrInvoice",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceLinkedQuoteProtectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceLinkedQuoteProtectionTests",
+        "methodName": "LegacySingleItemInputRemainsValidForLinkedQuote",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceLinkedQuoteProtectionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateCoordinationTests",
+        "methodName": "OrdinaryHistoricalEditsRemainSupportedWithoutRewritingAssociations",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateCoordinationTests",
+        "methodName": "UnlinkedCustomerVehicleChangesAndNewEligibleAttachmentRemainSupported",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateCoordinationTests",
+        "methodName": "NewAttachmentRejectsDuplicatesAndMalformedEndpointsWithoutMutations",
+        "cases": 9,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateCoordinationTests",
+        "methodName": "LinkedRemovalReplacementAndZeroStayRejected",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateCoordinationTests",
+        "methodName": "ZeroOnUnlinkedInvoiceRetainsInvalidRelationshipFailure",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateCoordinationTests",
+        "methodName": "StaleNullRequestAndStaleTrackedInvoiceCannotClearNewAssociation",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateCoordinationTests",
+        "methodName": "ClassificationChangeRequiringLateQuoteLockReturnsRefreshFailure",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateCoordinationTests",
+        "methodName": "PendingEditsAreNotDiscardedOrSaved",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateCoordinationTests",
+        "methodName": "SaveFailureRollsBackAndDetachesAffectedInvoice",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateCoordinationTests",
+        "methodName": "CommitUncertaintyDoesNotRetry",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateCoordinationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualInvoiceTransactionTests",
+        "methodName": "TwoSavesPrecedeOneCommitAndKeepExistingNumberFormat",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualInvoiceTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualInvoiceTransactionTests",
+        "methodName": "SaveFailureRollsBackCleansTrackerAndReturnsNoGeneratedIdentity",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualInvoiceTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualInvoiceTransactionTests",
+        "methodName": "ValidationRunsAfterBeginAndKeepsExistingErrorWithoutSaving",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualInvoiceTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualInvoiceTransactionTests",
+        "methodName": "CommitAcknowledgementFailureIsUncertainAndNeverRetries",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualInvoiceTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualInvoiceTransactionTests",
+        "methodName": "FailedRollbackIsUncertainAndDoesNotRetryOrLeakTheFailure",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualInvoiceTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualInvoiceTransactionTests",
+        "methodName": "BeginningTransactionFailureDoesNotSaveOrRetry",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualInvoiceTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualQuoteAttachmentTests",
+        "methodName": "UnassociatedAndNullableHistoricalQuotesKeepDirectOnlyStorageAndNumberFormat",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualQuoteAttachmentTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualQuoteAttachmentTests",
+        "methodName": "ExistingAndMalformedAssociationsRejectWithoutInvoiceNumberOrAnyMutation",
+        "cases": 12,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualQuoteAttachmentTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualQuoteAttachmentTests",
+        "methodName": "InvalidOrForeignQuotesNeverCreateAnInvoice",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualQuoteAttachmentTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.OnboardingInvitationServiceTests",
+        "methodName": "CreateUrl_RejectsUntrustedOriginConfiguration",
+        "cases": 8,
+        "sourceFile": "GarageSaas.UnitTests/Services/OnboardingInvitationServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.OnboardingInvitationServiceTests",
+        "methodName": "CreateUrl_UsesOnlyConfiguredHttpsOriginAndEscapesToken",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/OnboardingInvitationServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.OnboardingInvitationServiceTests",
+        "methodName": "Send_EncodesContentAndReturnsMailServerFailureWithoutLoggingSecrets",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/OnboardingInvitationServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.OwnershipIntegrityTests",
+        "methodName": "OwnershipAndDeletionRules",
+        "cases": 26,
+        "sourceFile": "GarageSaas.UnitTests/Services/OwnershipIntegrityTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ProductionConfigurationTests",
+        "methodName": "ProductionStartupRejectsMissingEssentialConfigurationWithoutSecretValues",
+        "cases": 8,
+        "sourceFile": "GarageSaas.UnitTests/Services/ProductionConfigurationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ProductionConfigurationTests",
+        "methodName": "UnsafeConfigurationFailsWithSanitizedErrors",
+        "cases": 12,
+        "sourceFile": "GarageSaas.UnitTests/Services/ProductionConfigurationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ProductionConfigurationTests",
+        "methodName": "ValidProductionAllowsOptionalAiAndDevelopmentDoesNotRequireProductionSecrets",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/ProductionConfigurationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteConversionTransactionTests",
+        "methodName": "ConversionUsesThreeSavesThenCommitAndDuplicateDoesNotSave",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteConversionTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteConversionTransactionTests",
+        "methodName": "LegacyDirectOnlyAssociationPreventsReconversion",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteConversionTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteConversionTransactionTests",
+        "methodName": "MalformedAssociationsAreRejectedWithoutSaves",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteConversionTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteConversionTransactionTests",
+        "methodName": "ForeignAndMissingQuotesHaveSameSafeResponse",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteConversionTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteConversionTransactionTests",
+        "methodName": "ConversionReadsFreshQuoteDespitePreviouslyTrackedValue",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteConversionTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteConversionTransactionTests",
+        "methodName": "MultipleQuotesOnOneInvoiceStillProduceSafeDuplicate",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteConversionTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteConversionTransactionTests",
+        "methodName": "FailedSaveRollsBackDetachesAndClearsGeneratedState",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteConversionTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteConversionTransactionTests",
+        "methodName": "FailedCommitIsUncertainAndNeverRetried",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteConversionTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionIsolationTests",
+        "methodName": "GarageCapacityIsSharedByItsUsersAndIndependentOfOtherGarages",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionIsolationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionIsolationTests",
+        "methodName": "PerUserLimitIsRetainedAlongsideGarageLimit",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionIsolationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionIsolationTests",
+        "methodName": "UsageSnapshotsContainOnlyIndependentNumericCountersAndCannotModifyStoredMetrics",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionIsolationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionIsolationTests",
+        "methodName": "ReusedSharedKeyClientSendsOnlyCurrentDraftWithoutConversationOrSuggestionCache",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionIsolationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionIsolationTests",
+        "methodName": "IncompleteResponseRetainsReportedUsageWithoutReturningItsText",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionIsolationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionServiceTests",
+        "methodName": "ServerConfigurationBindsKeyAndLunaModelWithoutSendingKeyInPayload",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionServiceTests",
+        "methodName": "ValidDraftUsesResponsesApiWithMinimalPayloadAndConfiguredLimits",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionServiceTests",
+        "methodName": "InvalidInputNeverCallsProvider",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionServiceTests",
+        "methodName": "LikelyIdentifyingInformationIsRejectedBeforeTransmission",
+        "cases": 9,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionServiceTests",
+        "methodName": "MissingOrInvalidConfigurationIsSafeAndDoesNotRequireStartupKey",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionServiceTests",
+        "methodName": "ProviderErrorsAreSafeAndNeverRetried",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionServiceTests",
+        "methodName": "NetworkAndTimeoutFailuresRemainSafe",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionServiceTests",
+        "methodName": "OnlyCompletedBoundedTextCanBecomeASuggestion",
+        "cases": 7,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteSuggestionServiceTests",
+        "methodName": "OversizedProviderResponsesAreRejected",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteSuggestionServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "SameGarageCreationAndEditingRetainContractsAndServerTenant",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "InvalidReferencesCannotCreateOrUpdateAndLeaveAllValuesUnchanged",
+        "cases": 16,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "CustomerAliasesMustAgreeAndForeignMissingErrorsAreEquivalent",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "UnsafeInvoicesDoNotAppearInDetailsOrLists",
+        "cases": 16,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "InconsistentGraphsAreHiddenAndCannotBeMutated",
+        "cases": 9,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "DirectFallbackMultipleQuotesAndNullHistoryRemainSupportedWithoutTrackedReadChanges",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "LinkedInvoicesRejectRetargetingButNotOrdinaryEdits",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "NullHistoryAndGarageOwnedVehiclesDoNotRequireCurrentOwnershipOrActivity",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "DropdownFiltersOwnershipTenancyAndIncludesGarageOwnedWithoutSyntheticCustomer",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "ConversionRejectsUnsafeQuoteGraphBeforeAnyWrites",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "ConversionAndMarkPaidRetainExistingBehavior",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.VehicleInvoiceServiceTests",
+        "methodName": "InvalidGarageRejectedByAllDatabaseMethods",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehicleInvoiceServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.VehiclePartServiceTests",
+        "methodName": "GetVehiclePart_Returns_Fail_When_Not_Found",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehiclePartServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.VehiclePartServiceTests",
+        "methodName": "GetVehiclePart_Returns_Part_When_Found",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehiclePartServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.VehiclePartServiceTests",
+        "methodName": "GetVehicleParts_Returns_All_Parts_Ordered_By_Name",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehiclePartServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.VehiclePartServiceTests",
+        "methodName": "AddOrUpdateVehiclePart_Returns_Fail_When_Model_Is_Null",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehiclePartServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.VehiclePartServiceTests",
+        "methodName": "AddOrUpdateVehiclePart_Returns_Fail_When_Name_Is_Missing",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehiclePartServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.VehiclePartServiceTests",
+        "methodName": "AddOrUpdateVehiclePart_Adds_New_Part",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehiclePartServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.VehiclePartServiceTests",
+        "methodName": "AddOrUpdateVehiclePart_Updates_Existing_Part",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehiclePartServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.VehiclePartServiceTests",
+        "methodName": "AddOrUpdateVehiclePart_Returns_Fail_When_Update_Part_Not_Found",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehiclePartServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.VehiclePartServiceTests",
+        "methodName": "DeleteVehiclePart_Removes_Part",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehiclePartServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.VehiclePartServiceTests",
+        "methodName": "DeleteVehiclePart_Returns_Fail_When_Not_Found",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/VehiclePartServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkItemQuoteLinkInterleavingTests",
+        "methodName": "GarageConsistentRetargetAndLinkBothPassWhenValidationIsInterleaved",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemQuoteLinkInterleavingTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemServiceTests",
+        "methodName": "GetWorkItem_Returns_Fail_When_Not_Found",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemServiceTests",
+        "methodName": "GetWorkItem_Returns_WorkItem_When_Found",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemServiceTests",
+        "methodName": "GetWorkItem_Returns_Fail_When_GarageBusiness_Does_Not_Match",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemServiceTests",
+        "methodName": "GetWorkItemsForVehicle_Returns_Only_WorkItems_For_Vehicle_And_Garage",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemServiceTests",
+        "methodName": "AddOrUpdateWorkItem_Returns_Fail_When_Model_Is_Null",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemServiceTests",
+        "methodName": "AddOrUpdateWorkItem_Returns_Fail_When_VehicleId_Is_Missing",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemServiceTests",
+        "methodName": "AddOrUpdateWorkItem_Adds_New_WorkItem",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemServiceTests",
+        "methodName": "AddOrUpdateWorkItem_Updates_Existing_WorkItem",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemServiceTests",
+        "methodName": "AddOrUpdateWorkItem_Returns_Fail_When_Update_Target_Not_Found",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "InvalidGarageRejectedByEveryMethod",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "CreationRejectsMissingForeignAndInvalidReferences",
+        "cases": 7,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "ForeignAndMissingReferencesHaveSameSafeError",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "GeneralUpdateRejectsReplacementWithoutChangingTrackedValues",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "ForeignPrimaryUpdateDeniedOnBothPaths",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "GeneralCreationSupportsGarageOwnedVehicleAndNullCustomerWithoutNewMapping",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "QuoteDescriptionUpdateIgnoresSubmittedRelationships",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "HistoricalNullReferencesRemainReadableAndDescriptionEditable",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "UnsafeHistoricalReferencesDeniedWithoutRepair",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "LinkedItemsCannotBeRetargetedButDescriptionsRemainEditable",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "ReadsFilterInconsistentReferencesAndDoNotTrackEntities",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "HistoricalCustomerNeedNotBeCurrentVehicleOwnerOrActive",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkItemTenantValidationTests",
+        "methodName": "SameGarageWorkItemQuoteAndInvoiceFlowStillWorks",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteModificationTests",
+        "methodName": "SaveFailureRollsBackAndDetachesOnlyTarget",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteModificationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteModificationTests",
+        "methodName": "CommitUncertaintyDoesNotRetry",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteModificationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteModificationTests",
+        "methodName": "StaleUnchangedQuoteAndLinksCannotOverwriteFreshState",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteModificationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteModificationTests",
+        "methodName": "PendingEditsAreRejectedWithoutDiscardingThem",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteModificationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteModificationTests",
+        "methodName": "RejectedReplacementNeverChangesAuditOrLinks",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteModificationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteModificationTests",
+        "methodName": "HistoricalGarageOwnedAndLegacyUpdateInputsRemainSupported",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteModificationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteModificationTests",
+        "methodName": "FreshMalformedGraphIsRejectedDespiteStaleTrackedEntries",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteModificationTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "GetWorkQuote_Returns_Fail_When_Not_Found",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "GetWorkQuote_Returns_Combined_Model_When_Found",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "GetWorkQuote_Returns_Fail_When_GarageBusiness_Does_Not_Match",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "GetWorkQuotesForVehicle_Returns_Only_Quotes_For_Vehicle_And_Garage",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "GetWorkQuotesForWorkItem_Returns_Only_Quotes_For_WorkItem_And_Garage",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "AddOrUpdateWorkQuote_Returns_Fail_When_Model_Is_Null",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "AddOrUpdateWorkQuote_Returns_Fail_When_WorkItemId_Is_Missing",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "AddOrUpdateWorkQuote_Returns_Fail_When_VehicleId_Is_Missing",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "AddOrUpdateWorkQuote_Adds_New_WorkQuote_And_Link",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "AddOrUpdateWorkQuote_Updates_Existing_WorkQuote_And_Replaces_Changed_Link",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "AddOrUpdateWorkQuote_Returns_Fail_When_Update_Target_Not_Found",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "DeleteWorkQuote_Removes_Quote_And_Links",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.Tests.Services.WorkQuoteServiceTests",
+        "methodName": "DeleteWorkQuote_Returns_Fail_When_Not_Found",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteServiceTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "MalformedStoredGraphsCannotBeReadEditedOrDeleted",
+        "cases": 23,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "ForeignMissingAndInvalidSubmissionsNeverMutate",
+        "cases": 14,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "NewlySelectedWorkItemsMustHaveValidNullableRelationships",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "MultipleSameGarageItemsCanHaveDifferentCustomersVehiclesAndNullHistory",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "LegacySingleItemAndGarageOwnedVehicleArePreserved",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "ZeroReferencesAreNotConvertedToNullOrSilentlyDropped",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "OwnershipLookupRejectsMislabelledRowsAndDropdownsStayScoped",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "LegacyCreatorRetainsNullCustomerAndNormalSameGarageBehavior",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "NullableHistoricalGraphIsReadableWithoutTrackingOrRepair",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "DirectOnlyAndMultipleQuoteAssociationsProtectRelationshipsButAllowTextEdits",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "EveryPublicDatabaseMethodRejectsInvalidGarage",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTenantValidationTests",
+        "methodName": "ForeignOrMissingRequestedRootsAndLegacyVehicleCreationAreRejected",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTenantValidationTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTransactionTests",
+        "methodName": "BothSavesAndResponsePreparationPrecedeCommitAndPublication",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTransactionTests",
+        "methodName": "SaveFailuresRollbackDetachAndNeverPublishGeneratedIds",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTransactionTests",
+        "methodName": "ResponsePreparationFailureRollsBackAndLeavesRequestUnchanged",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTransactionTests",
+        "methodName": "ValidationIsAuthoritativeInsideTransactionWithoutWrites",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTransactionTests",
+        "methodName": "InvalidGarageIsCheckedAfterBegin",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTransactionTests",
+        "methodName": "CommitAcknowledgementFailureIsUncertainWithoutRetryOrPublishedIdentity",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTransactionTests",
+        "methodName": "BeginFailurePropagatesWithoutSavingOrRetry",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteTransactionTests",
+        "methodName": "ExistingUpdateAndDeleteUseSeparateTransactions",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "OnlyExactExplicitOptInEnablesFixture",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "ArbitraryServersAndConnectionStringsAreRejected",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "DedicatedInstanceIsAllowed",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "SharedServerNeedsItsOwnExactOptIn",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "SharedOptInNeverAllowsAliasesProtocolsOrConnectionStrings",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "ApprovedSharedMemoryDefaultInstancePassesIdentityGuard",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "SharedServerOptInCannotBypassResolvedIdentity",
+        "cases": 9,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "NonTestCatalogsCannotBeCreatedOrDeleted",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "OnlyMasterIsAllowedForMetadataAndGeneratedNameForTestData",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "SharedDdlSideEffectsOrInvisibleMetadataPreventDatabaseOperations",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "VisibleSharedMetadataWithoutDdlHooksPassesGuard",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "ResolvedLocalPipeAndServerIdentityMustAgree",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "MismatchedResolvedIdentityIsRejected",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "UnverifiedDatabaseCannotBeDeleted",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "ExactOwnedDatabasePassesGuard",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "QuotePrefixesStillRequireExactCreationAndOwnership",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "DrainWaitsForWorkersWithoutRequiringSql",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "TimedOutWorkerRemainsRegisteredAndMustFinishBeforeDrainSucceeds",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "InstanceWithApplicationDatabaseIsRejected",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.DisposableSqlDatabaseTests",
+        "methodName": "InstanceWithOnlyTestDatabasesPassesInventoryGuard",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabaseTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.UnitTest1",
+        "methodName": "TestMethod1",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/UnitTest1.cs"
+      }
+    ],
+    "identity": [
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests",
+        "methodName": "OnlyApprovedValidatedCookieCanCreatePrivateSubjectRecord",
+        "cases": 19,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StagingSubjectVerificationTests.cs"
+      }
+    ],
+    "sql": [
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RegistrationConcurrencyTests",
+        "methodName": "RowLock_BlocksCompetingMutationAndLoadsFreshState",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RegistrationConcurrencyTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RegistrationConcurrencyTests",
+        "methodName": "ConcurrentOwnerCompletion_CreatesExactlyOneGarageAndMembership",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RegistrationConcurrencyTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RegistrationConcurrencyTests",
+        "methodName": "ConcurrentResends_RotateOncePreserveAuditAndSendOnce",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RegistrationConcurrencyTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RegistrationConcurrencyTests",
+        "methodName": "ResendAfterCompletionCannotReviveInvitation",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RegistrationConcurrencyTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RegistrationConcurrencyTests",
+        "methodName": "OwnerCompletion_RechecksTokenAfterConcurrentRotation",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RegistrationConcurrencyTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RegistrationConcurrencyTests",
+        "methodName": "EmailFailure_HappensAfterCommitAndLeavesApprovedRequestRecoverable",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RegistrationConcurrencyTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RegistrationConcurrencyTests",
+        "methodName": "Resend_RejectsIneligibleRequests",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RegistrationConcurrencyTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RegistrationConcurrencyTests",
+        "methodName": "InvalidOrigin_DoesNotApproveOrRotate",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RegistrationConcurrencyTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RegistrationConcurrencyTests",
+        "methodName": "ConcurrentApprovalAndRejection_CommitOnlyOneDecision",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RegistrationConcurrencyTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.RegistrationConcurrencyTests",
+        "methodName": "FailedMutation_RollsBackPartialSavesAndClearsTrackedState",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/RegistrationConcurrencyTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "AcceptanceVersusMutation",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "AcceptanceVersusGarageStatus",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "SimultaneousAcceptanceCreatesOneMembership",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "SaveFailureRollsBackNewUserAndMembership",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "InactiveMembershipNotReactivated",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "SecondMembershipPreservesExplicitSelection",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "UnrelatedGarageAcceptanceContinues",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "ForeignInvitationIdsAreNotMutable",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "SeparateInvitationsForSameIdentityCreateOneMembership",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "CommitAcknowledgementLossIsNotRetried",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "StaleTrackedInvitationCannotAcceptRevokedState",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "PendingUnrelatedChangesArePreservedAndNotSaved",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "MutationSaveFailureRollsBack",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "ExistingActiveMembershipPreservesRoleAndOwnership",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "ExpirationCommittedFirstIsRevalidatedAfterWait",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "ConcurrentCreationForNormalizedRecipientCreatesOnePending",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "CreationForSameRecipientInDifferentGaragesContinues",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "CreationFailureAfterSaveRollsBackAndSendsNoEmail",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "CreationCommitUncertaintyDoesNotRetryOrSendEmail",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "PlatformStatusConcurrentAdministratorsRejectStaleConfirmation",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests",
+        "methodName": "PlatformStatusDeactivationVersusAcceptance",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Controllers/StaffInvitationConcurrencySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDeletionCoordinationSqlTests",
+        "methodName": "WorkItemRollbackAndCommitUncertainty",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDeletionCoordinationSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDeletionCoordinationSqlTests",
+        "methodName": "PendingReferencesCannotBypassCoordination",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDeletionCoordinationSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDeletionCoordinationSqlTests",
+        "methodName": "CustomerKeyOrdersDeletionAndEveryReferenceWriter",
+        "cases": 19,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDeletionCoordinationSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDeletionCoordinationSqlTests",
+        "methodName": "OwnershipReassignmentAndOldCustomerDeletionHaveNoReverseKeyWait",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDeletionCoordinationSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerDeletionCoordinationSqlTests",
+        "methodName": "ExistingQuoteAndModalReferencesPreventDeletionWithoutBreakingEdits",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerDeletionCoordinationSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerVehicleMutationSqlTests",
+        "methodName": "AtomicMutationsAndRollback",
+        "cases": 36,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleMutationSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.CustomerVehicleTenantReadSqlTests",
+        "methodName": "RelationalReadsValidateAllOwnershipEndpointsWithoutWrites",
+        "cases": 13,
+        "sourceFile": "GarageSaas.UnitTests/Services/CustomerVehicleTenantReadSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.EfUpgradeWorkflowSqlTests",
+        "methodName": "CustomerThroughPaidInvoiceAndHistoryUsesSqlServerWithoutSchemaChanges",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/EfUpgradeWorkflowSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceDeletionSqlTests",
+        "methodName": "DirectAttachmentAndDeletionSerializeInEitherOrder",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceDeletionSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateSqlTests",
+        "methodName": "SameQuoteCompetingWritersSerializeAndOnlyOneAttaches",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateSqlTests",
+        "methodName": "StaleNullRequestAndTrackedInvoiceCannotOverwriteCommittedAttachment",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateSqlTests",
+        "methodName": "ConcurrentScalarUpdatesToSameInvoiceSerializeWithoutQuoteLocks",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateSqlTests",
+        "methodName": "TwoGaragesWithInvoiceOrJoinWritesUnderway",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateSqlTests",
+        "methodName": "FailedSaveRollsBackValuesAttachmentAndLaterSave",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.InvoiceUpdateSqlTests",
+        "methodName": "ActualCommitThenAcknowledgementLossNeverRetries",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/InvoiceUpdateSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualInvoiceSqlTransactionTests",
+        "methodName": "BothSavesUseOneRealTransactionAndCommitNumberTogether",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualInvoiceSqlTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualInvoiceSqlTransactionTests",
+        "methodName": "FailureBeforeOrAfterEitherSaveLeavesNoInvoiceInSqlServer",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualInvoiceSqlTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualInvoiceSqlTransactionTests",
+        "methodName": "InvalidReferencesPerformNoSavesAndLeaveSqlDatabaseUnchanged",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualInvoiceSqlTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualQuoteAttachmentSqlTests",
+        "methodName": "SameQuoteSerializesAndDifferentQuotesProceed",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualQuoteAttachmentSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualQuoteAttachmentSqlTests",
+        "methodName": "SaveFailureRollsBackManualAttachmentAndAllowsLaterConversion",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualQuoteAttachmentSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.ManualQuoteAttachmentSqlTests",
+        "methodName": "LostCommitAcknowledgementNeverRetriesOrCreatesAnotherInvoice",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/ManualQuoteAttachmentSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.OwnershipIntegritySqlTests",
+        "methodName": "RelationalOwnershipRulesAndRollback",
+        "cases": 26,
+        "sourceFile": "GarageSaas.UnitTests/Services/OwnershipIntegritySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.OwnershipIntegritySqlTests",
+        "methodName": "CompetingReassignmentsRefreshAfterVehicleLock",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/OwnershipIntegritySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.OwnershipIntegritySqlTests",
+        "methodName": "ReproducesPreD3MissingOwnershipLinkRace",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/OwnershipIntegritySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.OwnershipIntegritySqlTests",
+        "methodName": "DeletionFirstNowRejectsPreviouslyRacingFinancialWriter",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/OwnershipIntegritySqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteConversionSqlTests",
+        "methodName": "SameQuoteSecondConnectionWaitsThenReturnsDuplicate",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteConversionSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteConversionSqlTests",
+        "methodName": "DifferentQuotesCanConvertWhileFirstQuoteLockIsHeld",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteConversionSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.QuoteConversionSqlTests",
+        "methodName": "FailureAfterEachSaveRollsBackInvoiceNumberAndLink",
+        "cases": 3,
+        "sourceFile": "GarageSaas.UnitTests/Services/QuoteConversionSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkItemQuoteLinkRaceSqlTests",
+        "methodName": "UnlinkedItemAndQuoteCanBothCommitAfterStaleValidation",
+        "cases": 6,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemQuoteLinkRaceSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkItemQuoteLinkRaceSqlTests",
+        "methodName": "CommittedQuoteLinkAlreadyBlocksRetargetingForEveryInvoiceRepresentation",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemQuoteLinkRaceSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkItemQuoteLinkRaceSqlTests",
+        "methodName": "RetargetSaveFailureRollsBackWithoutRemovingTheCommittedQuote",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemQuoteLinkRaceSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkItemQuoteLinkRaceSqlTests",
+        "methodName": "ForeignReplacementFailsAndQuoteFailureRollsBackBeforeRetarget",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkItemQuoteLinkRaceSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteCoordinationSqlTests",
+        "methodName": "ConversionAndModificationSerializeWithLinkedRelationshipProtection",
+        "cases": 5,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteCoordinationSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteCoordinationSqlTests",
+        "methodName": "FailedSaveRestoresStoredGraphAndLaterSaveCannotResurrectChanges",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteCoordinationSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteCoordinationSqlTests",
+        "methodName": "StaleTrackedGraphIsRefreshedAndMissingReplacementDoesNotWrite",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteCoordinationSqlTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteSqlTransactionTests",
+        "methodName": "BothSavesAndResponseCommitTogetherWithExistingIdentifiers",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteSqlTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteSqlTransactionTests",
+        "methodName": "FailureAroundEitherSaveLeavesNoQuoteOrLinks",
+        "cases": 4,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteSqlTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteSqlTransactionTests",
+        "methodName": "ResponsePreparationFailureRollsBackBothSaves",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteSqlTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteSqlTransactionTests",
+        "methodName": "InvalidReferencesPerformNoWrites",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteSqlTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteSqlTransactionTests",
+        "methodName": "ConversionWaitsForUncommittedCreationThenSeesCompleteGraphOrNoQuote",
+        "cases": 2,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteSqlTransactionTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.Services.WorkQuoteSqlTransactionTests",
+        "methodName": "LostAcknowledgementAfterActualCommitDoesNotRetryOrClaimRollback",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/Services/WorkQuoteSqlTransactionTests.cs"
+      }
+    ]
+  },
+  "excludedSqlClasses": [
+    "AssociationIndexExperimentSqlTests",
+    "IndexPackageRehearsalSqlTests"
+  ]
+}
