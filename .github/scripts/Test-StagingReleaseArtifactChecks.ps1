@@ -59,6 +59,34 @@ $cases=@(
     @{name='case-collision';change={param($z) WriteText $z 'APPSETTINGS.JSON' '{}'}},
     @{name='changed-package';change={param($z) $e=$z.GetEntry('GarageSaas.deps.json');$r=[IO.StreamReader]::new($e.Open());try{$v=$r.ReadToEnd()|ConvertFrom-Json -AsHashtable}finally{$r.Dispose()};$v.libraries['Microsoft.Identity.Client.NativeInterop/0.20.6'].sha512='unreviewed';WriteText $z 'GarageSaas.deps.json' ($v|ConvertTo-Json -Depth 100)}}
 )
+$expectedNames=@(
+    'legitimate-policy','output-token-limit','empty-password','password','numeric-password',
+    'sql-credential','api-key','client-secret','access-token','refresh-token','private-key-property',
+    'policy-lookalike','policy-wrong-location','policy-invalid-value','private-key-file','private-key-content',
+    'development-json','local-json','hidden-file','uploads','unknown-settings','diagnostic-ascii','diagnostic-utf16',
+    'application-embedded-password','application-embedded-api-key','native-tamper','named-library-tamper',
+    'unrelated-binary','disguised-binary','secret-text','secret-extra-json','secret-xml','traversal',
+    'missing-application','duplicate-entry','case-collision','changed-package'
+)
+if($cases.Count -ne 37 -or $expectedNames.Count -ne 37 -or
+    @($cases.name|Sort-Object -Unique).Count -ne 37 -or
+    (Compare-Object $expectedNames @($cases.name))){throw 'Required 37-case artifact security inventory is missing or changed.'}
+foreach($case in $cases){
+    if($case.change -isnot [scriptblock] -or $case.ContainsKey('skip')){
+        throw 'Artifact security cases must have executable assertions and cannot be skipped.'
+    }
+    if([bool]$case.accept -ne ($case.name -in @('legitimate-policy','output-token-limit','empty-password'))){
+        throw 'Artifact security case acceptance differs from the reviewed expectations.'
+    }
+}
+$expectedNativePaths=@(
+    'runtimes/linux-x64/native/libmsalruntime.so','runtimes/osx-arm64/native/msalruntime_arm64.dylib',
+    'runtimes/osx-x64/native/msalruntime.dylib','runtimes/win-arm64/native/msalruntime_arm64.dll',
+    'runtimes/win-x64/native/msalruntime.dll','runtimes/win-x86/native/msalruntime_x86.dll'
+)
+if(@($inventory.files).Count -ne 6 -or (Compare-Object $expectedNativePaths @($inventory.files.path))){
+    throw 'Required six native-security assertions are missing or changed.'
+}
 $count=0
 foreach($case in $cases){
     $candidate=Join-Path $directory ($case.name+'.zip');Copy-Item -LiteralPath $base -Destination $candidate
@@ -81,4 +109,5 @@ try{foreach($item in $inventory.files){
     if($hash -cne $item.sha256){throw 'Native regression input hash mismatch'}
     if([Text.Encoding]::UTF8.GetString($bytes) -notmatch '(?i)(?:Password|Pwd)\s*=\s*[^;\s"<>]+'){throw 'Expected native formatting marker absent'}
 }}finally{$z.Dispose()}
+if($count -ne 37){throw 'Not all 37 required artifact security cases executed.'}
 Write-Output "PASS: $count mutation fixtures, baseline acceptance, and six exact native-format/hash checks. No Azure or application execution."
