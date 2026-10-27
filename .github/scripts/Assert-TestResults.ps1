@@ -3,6 +3,7 @@ param(
     [Parameter(Mandatory)][string]$Suite,
     [int]$ExpectedCount = 0,
     [ValidateSet('unit','identity','sql')][string]$InventorySuite,
+    [ValidateSet('WorkItemQuoteLinkRaceSqlTests')][string]$InventoryClass,
     [switch]$SummaryOnly
 )
 $ErrorActionPreference = 'Stop'
@@ -28,6 +29,10 @@ if (!$SummaryOnly) {
     if ($InventorySuite) {
         $inventory = Get-Content (Join-Path $PSScriptRoot '../test-inventory.json') -Raw | ConvertFrom-Json
         $expected = @($inventory.suites.$InventorySuite)
+        if ($InventoryClass) {
+            if ($InventorySuite -ne 'sql') { throw 'Focused class requires the SQL inventory.' }
+            $expected = @($expected | Where-Object { $_.className -eq "GarageSaas.UnitTests.Services.$InventoryClass" })
+        }
         if (!$expected.Count) { throw 'Reviewed test inventory is missing.' }
         $definitions = @{}
         foreach ($definition in @($trx.TestRun.TestDefinitions.UnitTest)) {

@@ -1,4 +1,7 @@
-param([Parameter(Mandatory)][ValidateSet('unit','identity','sql')][string]$Suite)
+param(
+    [Parameter(Mandatory)][ValidateSet('unit','identity','sql')][string]$Suite,
+    [switch]$FocusWorkItemQuoteRace
+)
 $ErrorActionPreference = 'Stop'
 if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted') {
     throw 'Hosted test execution wrapper refuses the developer workstation.'
@@ -7,6 +10,10 @@ $filters = @{
     unit = 'TestCategory!=SqlServer&FullyQualifiedName!~StagingSubjectVerificationTests'
     identity = 'FullyQualifiedName~GarageSaas.UnitTests.Controllers.StagingSubjectVerificationTests'
     sql = 'TestCategory=SqlServer&TestCategory!=SqlIndexExperiment&TestCategory!=SqlIndexPackageRehearsal'
+}
+if ($FocusWorkItemQuoteRace) {
+    if ($Suite -ne 'sql') { throw 'Focused verification requires the SQL suite.' }
+    $filters.sql = 'FullyQualifiedName~GarageSaas.UnitTests.Services.WorkItemQuoteLinkRaceSqlTests'
 }
 $rawDirectory = Join-Path $env:RUNNER_TEMP "GarageSaas-ci-tests-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT/$Suite"
 if (Test-Path -LiteralPath $rawDirectory) { throw 'Unexpected pre-existing raw results; refusing stale TRX reuse.' }
@@ -32,6 +39,10 @@ try {
         try {
             $parameters = @{ Path = $raw; Suite = $Suite; InventorySuite = $Suite }
             if ($Suite -eq 'identity') { $parameters.ExpectedCount = 19 }
+            if ($FocusWorkItemQuoteRace) {
+                $parameters.InventoryClass = 'WorkItemQuoteLinkRaceSqlTests'
+                $parameters.ExpectedCount = 12
+            }
             & (Join-Path $PSScriptRoot 'Assert-TestResults.ps1') @parameters
             $gatePassed = $true
         } finally {
