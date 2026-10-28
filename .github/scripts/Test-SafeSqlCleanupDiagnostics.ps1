@@ -161,3 +161,77 @@ Case 'snapshot-failure-unavailable-sessions' {
 }
 if ($executed.Count -ne 60) { throw 'Required diagnostic regression inventory did not execute.' }
 Write-Output "PASS: $($executed.Count) synthetic cleanup-reporting and existing sanitized-result regressions; no SQL/network access."
+
+# Additive guard-observation checks; the original exact 60-case gate above stays intact.
+$guardStart = $executed.Count
+function New-GuardRecord {
+    $record=New-Record
+    $record['guardSessionDetails']=@{availability='available';truncated=$false;sessions=@(@{
+        userProcess=$true;status='sleeping';hasActiveRequest=$false;openTransactions=0;fixtureRole='OwnershipVerification'
+    })}
+    return $record
+}
+function Reject-Guard([scriptblock]$Change) {
+    $record=New-GuardRecord; & $Change $record
+    $r=Export-Fixture (Marker $record)
+    Assert-Check ($r.diagnostic.availability -ceq 'unavailable' -and $r.diagnostic.reason -ceq 'invalid')
+}
+foreach ($status in @('running','sleeping','dormant','preconnect','unknown')) {
+    $value=$status
+    Case "guard-status-$status" {
+        $record=New-GuardRecord;$record.guardSessionDetails.sessions[0].status=$value
+        $r=Export-Fixture (Marker $record)
+        Assert-Check ($r.diagnostic.record.guardSessionDetails.sessions[0].status -ceq $value)
+    }
+}
+foreach ($role in @('SetupMaster','SetupOwnership','OwnershipVerification','OwnedFixture','GuardMaster','DiagnosticMaster','Unmatched','Unavailable')) {
+    $value=$role
+    Case "guard-role-$role" {
+        $record=New-GuardRecord;$record.guardSessionDetails.sessions[0].fixtureRole=$value
+        $r=Export-Fixture (Marker $record)
+        Assert-Check ($r.diagnostic.record.guardSessionDetails.sessions[0].fixtureRole -ceq $value)
+    }
+}
+Case 'guard-approved-row-projection' {
+    $record=New-GuardRecord;$row=$record.guardSessionDetails.sessions[0];$row.userProcess=$false;$row.hasActiveRequest=$true;$row.openTransactions=2
+    $r=Export-Fixture (Marker $record);$row=$r.diagnostic.record.guardSessionDetails.sessions[0]
+    Assert-Check (!$row.userProcess -and $row.hasActiveRequest -and $row.openTransactions -eq 2 -and @($row.PSObject.Properties).Count -eq 5)
+}
+Case 'guard-legacy-missing-is-unavailable' { $r=Export-Fixture (Marker (New-Record));Assert-Check ($r.diagnostic.record.guardSessionDetails.availability -ceq 'unavailable' -and $null -eq $r.diagnostic.record.guardSessionDetails.sessions) }
+Case 'guard-explicit-unavailable' {
+    $record=New-GuardRecord;$record.guardSessionDetails=@{availability='unavailable';truncated=$null;sessions=$null}
+    $r=Export-Fixture (Marker $record);Assert-Check ($r.diagnostic.record.guardSessionDetails.availability -ceq 'unavailable' -and $null -eq $r.diagnostic.record.guardSessionDetails.sessions)
+}
+Case 'guard-zero-is-observed-empty' {
+    $record=New-GuardRecord;$record.guardSessions=0;$record.guardSessionDetails.sessions=@()
+    $r=Export-Fixture (Marker $record);Assert-Check ($r.diagnostic.record.guardSessionDetails.availability -ceq 'available' -and $r.diagnostic.record.guardSessionDetails.sessions.Count -eq 0)
+}
+Case 'guard-truncated-count-not-capped' {
+    $record=New-GuardRecord;$record.guardSessions=23;$record.guardSessionDetails.truncated=$true;$row=$record.guardSessionDetails.sessions[0];$record.guardSessionDetails.sessions=@(1..16|ForEach-Object{$row})
+    $r=Export-Fixture (Marker $record);Assert-Check ($r.diagnostic.record.activeSessionsAtGuard -eq 23 -and $r.diagnostic.record.guardSessionDetails.sessions.Count -eq 16 -and $r.diagnostic.record.guardSessionDetails.truncated)
+}
+Case 'guard-row-unknown-property' { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0]['connectionString']=$canary} }
+Case 'guard-row-unknown-status' { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0].status=$canary} }
+Case 'guard-row-unknown-role' { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0].fixtureRole=$canary} }
+Case 'guard-row-nonboolean' { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0].hasActiveRequest='false'} }
+Case 'guard-row-negative-transactions' { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0].openTransactions=-1} }
+Case 'guard-row-fractional-transactions' { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0].openTransactions=0.5} }
+Case 'guard-oversized-list' { Reject-Guard {param($r)$r.guardSessions=17;$r.guardSessionDetails.truncated=$true;$row=$r.guardSessionDetails.sessions[0];$r.guardSessionDetails.sessions=@(1..17|ForEach-Object{$row})} }
+Case 'guard-duplicate-conflicting-count' { Reject-Guard {param($r)$row=$r.guardSessionDetails.sessions[0];$r.guardSessionDetails.sessions=@($row,$row)} }
+Case 'guard-truncation-conflict' { Reject-Guard {param($r)$r.guardSessionDetails.truncated=$true} }
+Case 'guard-unavailable-not-zero' { Reject-Guard {param($r)$r.guardSessionDetails=@{availability='unavailable';truncated=$false;sessions=@()}} }
+Case 'guard-null-array-invalid' { Reject-Guard {param($r)$r.guardSessionDetails.sessions=$null} }
+Case 'guard-unknown-envelope-property' { Reject-Guard {param($r)$r.guardSessionDetails['token']=$canary} }
+Case 'guard-private-id-rejected' { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0]['connectionId']=$canary} }
+Case 'guard-duplicate-json-property' {
+    $json=Marker (New-GuardRecord);$json=$json.Replace('"fixtureRole":"OwnershipVerification"','"fixtureRole":"OwnershipVerification","fixtureRole":"Unmatched"')
+    $r=Export-Fixture $json;Assert-Check ($r.diagnostic.reason -ceq 'invalid')
+}
+Case 'guard-oversized-value' { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0].status='x'*17000} }
+Case 'guard-repeated-marker' {
+    $line=Marker (New-GuardRecord);$r=Export-Fixture ($line+"`n"+$line);Assert-Check ($r.diagnostic.reason -ceq 'multiple')
+}
+Case 'guard-missing-count-cannot-imply-zero' { Reject-Guard {param($r)$r.guardSessions=$null} }
+Case 'guard-untracked-ef-role-rejected' { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0].fixtureRole='EfContext'} }
+if ($executed.Count - $guardStart -ne 36) { throw 'Required guard-session diagnostic inventory did not execute.' }
+Write-Output "PASS: $($executed.Count-$guardStart) additional guard-session security regressions; original 60-case gate preserved."

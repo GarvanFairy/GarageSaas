@@ -3,6 +3,36 @@
   "suites": {
     "unit": [
       {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlGuardSessionDiagnosticsTests",
+        "methodName": "MaterializedCountIsNotCappedAndPrivateIdsAreNotEmitted",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlGuardSessionDiagnosticsTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlGuardSessionDiagnosticsTests",
+        "methodName": "RoleCorrelationIsExplicitBoundedAndOptIn",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlGuardSessionDiagnosticsTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlGuardSessionDiagnosticsTests",
+        "methodName": "UnknownStatusAndMissingIdentityCannotLeakOrImplyAMatch",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlGuardSessionDiagnosticsTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlGuardSessionDiagnosticsTests",
+        "methodName": "MetadataAndDisposalFailureRetainCountAndOriginalCleanupFailure",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlGuardSessionDiagnosticsTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlGuardSessionDiagnosticsTests",
+        "methodName": "QueryFailureIsNotReplacedByReaderDisposalFailure",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlGuardSessionDiagnosticsTests.cs"
+      },
+      {
         "className": "GarageSaas.UnitTests.TestHelpers.SqlCleanupDiagnosticsTests",
         "methodName": "DisabledByDefaultDoesNotCollectOrEmit",
         "cases": 1,
