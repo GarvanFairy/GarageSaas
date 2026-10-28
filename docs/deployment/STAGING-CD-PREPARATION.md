@@ -112,7 +112,82 @@ cases and three JavaScript suites remain required. Local follow-up validation:
 Release compilation passed with 12 existing warnings and the 103 prerequisite cases
 passed. Windows Application Control `0x800711C7` blocked the rebuilt assembly before
 discovery: zero new diagnostic tests executed, and SQL attempts were not repeated.
-New diagnostic and SQL validation therefore remain pending hosted execution.
+Hosted results for that revision and the reporting follow-up are recorded below.
+
+### Hosted cleanup reporting follow-up (local implementation only)
+
+Both recent hosted runs executed and passed all seven diagnostic regressions and
+all 12 quote-race cases, but failed in `CustomerVehicleMutationSqlTests` cleanup.
+Its safety flag then deliberately marked subsequent cases inconclusive. Separately,
+the branch run failed in staff-invitation `Seed()` / `SaveChanges()` before the
+concurrency workers started. Neither underlying cause has been established; these
+are distinct failure stages, not evidence of a common defect or LocalDB timing issue.
+
+CI now sets `GARAGESAAS_SQL_CLEANUP_DIAGNOSTICS=1` **only** on the disposable SQL
+step. The unit, identity, JavaScript, artifact and manual-release steps do not enable
+it. No C# helper, cleanup guard, connection, timeout, retry, SQL transaction, test
+assertion, inventory or execution order is changed by this follow-up.
+
+`Export-SafeTestResults.ps1` reads the existing producer marker
+`SQL-CLEANUP-DIAGNOSTIC:` only from per-test TRX stdout/stderr for reviewed SQL
+methods. It never relays that JSON or raw output. Each SQL result receives one bounded
+`SQL-CLEANUP-DIAGNOSTIC-SAFE:` JSON section in its sanitized `Output/StdOut`:
+
+- `availability`: `available` with a projected `record`, or `unavailable` with a
+  fixed `reason`: `missing`, `invalid`, `multiple` or `unmapped`.
+- A record contains a fixed cleanup-stage enum, nullable fixed exception-type enums,
+  validated signed SQL error numbers, tracked-open-connection / guard-session /
+  incomplete-worker counts, post-outcome session count and explicit lifecycle
+  booleans (cleanup success, created, marked, verified ownership, dedicated LocalDB,
+  pooling and nullable post-outcome database presence).
+- Source locations contain only reviewed filenames and bounded positive line
+  numbers. Raw methods, external filenames/paths, messages, session IDs, SQL text,
+  parameters, data, environment values and ownership markers are never published.
+  A null source stack remains null; unreviewed external frames are discarded.
+
+Accepted stage names: `DrainWorkers`, `OwnershipPrecondition`, `OpenOwnedDatabase`,
+`VerifyOwnershipMarker`, `OpenMaster`, `VerifyTarget`, `ActiveSessionGuard`,
+`DropOwnedDatabase`, `Completed`. Exception types are a fixed list of common BCL
+cleanup exceptions, SqlClient `SqlException` and EF `DbUpdateException` /
+`DbUpdateConcurrencyException`; unknown types reject the record, without logging
+their value. Missing numeric/session observations remain null, never invented zero.
+The original producer still supplies only direct SqlException numbers; wrapped
+inner SQL exceptions and the separate staff seeding failure may need later work.
+
+Unknown fields (including nested fields), duplicate JSON properties, unexpected
+types, unknown enums, inconsistent lifecycle/worker values and malformed/oversized
+records are rejected as unavailable. Duplicate or conflicting markers reject the
+whole section. Limits: 16,384 characters per JSON record; 262,144 per output node;
+JSON depth 12; 14 stack frames; 16 errors per SQL array; 64 session rows; counts
+0–1,000,000. JSON/schema parser errors are not printed because they can quote input.
+Raw native output and raw TRX remain private to the runner. Existing sanitized
+artifact paths and retention are unchanged; no new raw log/ZIP/binary upload exists.
+
+Test outcomes, counters, summary status and the original fail-closed process / exact
+223-case SQL inventory gate remain independent of reporting. A `Completed` cleanup
+record cannot turn a failed business assertion into a pass. Invalid diagnostics
+cannot hide a failed test; the existing gate still rejects failure, skips or missing
+tests. Diagnostic extraction only enriches evidence and supplies no pass decision.
+
+Offline regression entry point:
+
+```powershell
+./.github/scripts/Test-SafeSqlCleanupDiagnostics.ps1
+```
+
+Local validation: 60 deterministic exporter/security/result-compatibility cases,
+15 existing synthetic gate/sanitizer fixtures and 103 prerequisite cases passed.
+The seven existing .NET helper regressions also executed/passed without a Windows
+security change. CI invokes this suite in `Require all 60 SQL diagnostic sanitization
+regressions` before LocalDB setup and SQL testing. The script enforces 60 uniquely
+executed cases and throws on any failure or missing case. LocalDB setup, SQL tests
+and sanitized-evidence upload explicitly require that step's successful outcome;
+no evidence is uploaded if it fails or is skipped. Existing application/test gates
+remain intact. Hosted results are recorded in PR #5 after the approved push.
+
+Enabled instrumentation adds EF event tracking and post-outcome metadata queries.
+It can perturb timing and its snapshot is not atomic with the failure. No delay,
+retry or timeout increase is introduced. Deployment remains unconditionally disabled.
 
 **Passing both jobs authorizes release-candidate preparation only.** It does not
 approve a deployment, configure OIDC/environments, change Azure resources, permit
