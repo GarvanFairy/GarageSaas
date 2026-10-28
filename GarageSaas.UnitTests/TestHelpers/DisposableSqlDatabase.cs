@@ -151,7 +151,7 @@ internal sealed class DisposableSqlDatabase
     internal void Create()
     {
         ValidateCatalog(DatabaseName);
-        using (var master = Open("master"))
+        using (var master = Open("master", SqlFixtureConnectionRole.SetupMaster))
         {
             VerifyTarget(master);
             using var exists = master.CreateCommand(); exists.CommandTimeout = 8;
@@ -164,7 +164,7 @@ internal sealed class DisposableSqlDatabase
             create.CommandText = $"CREATE DATABASE [{DatabaseName}]";
             create.ExecuteNonQuery(); _created = true;
         }
-        using (var database = Open(DatabaseName))
+        using (var database = Open(DatabaseName, SqlFixtureConnectionRole.SetupOwnership))
         {
             using var marker = database.CreateCommand(); marker.CommandTimeout = 8;
             marker.CommandText = "EXEC sys.sp_addextendedproperty @name=N'GarageSaasTestOwner', @value=@owner";
@@ -184,7 +184,7 @@ internal sealed class DisposableSqlDatabase
     {
         if (!_created || !_marked) throw new InvalidOperationException("Database creation/ownership was not confirmed.");
         ValidateCatalog(DatabaseName);
-        var database = Open(DatabaseName);
+        var database = Open(DatabaseName, SqlFixtureConnectionRole.OwnedFixture);
         try
         {
             using var command = database.CreateCommand(); command.CommandTimeout = 8;
@@ -207,7 +207,7 @@ internal sealed class DisposableSqlDatabase
             if (!_created || !_marked) throw new InvalidOperationException("Database creation/ownership was not confirmed; leaving it untouched.");
             ValidateCatalog(DatabaseName);
             operation = "OpenOwnedDatabase";
-            using (var database = Open(DatabaseName))
+            using (var database = Open(DatabaseName, SqlFixtureConnectionRole.OwnershipVerification))
             {
                 operation = "VerifyOwnershipMarker";
                 using var command = database.CreateCommand(); command.CommandTimeout = 8;
@@ -216,7 +216,7 @@ internal sealed class DisposableSqlDatabase
                 ownershipVerified = true;
             }
             operation = "OpenMaster";
-            using (var master = Open("master"))
+            using (var master = Open("master", SqlFixtureConnectionRole.GuardMaster))
             {
                 operation = "VerifyTarget";
                 VerifyTarget(master);
@@ -226,7 +226,28 @@ internal sealed class DisposableSqlDatabase
                 sessions.CommandText = "SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE database_id=DB_ID(@name) AND session_id<>@@SPID";
                 sessions.Parameters.AddWithValue("@name", DatabaseName);
                 operation = "ActiveSessionGuard";
-                guardSessions = Convert.ToInt32(sessions.ExecuteScalar());
+                if (_cleanupDiagnostics.Enabled)
+                {
+                    // Same predicate, including internal/idle sessions. One DMV
+                    // observation materializes count and metadata together. Only
+                    // the returned metadata is capped; the guard count is not.
+                    sessions.CommandText = @"DECLARE @observed TABLE
+                        (session_id smallint, user_process bit, status nvarchar(30), active_request bit,
+                         open_transactions int, connection_id uniqueidentifier);
+                        INSERT @observed
+                        SELECT s.session_id, s.is_user_process, s.status,
+                            CONVERT(bit, CASE WHEN EXISTS(SELECT 1 FROM sys.dm_exec_requests r WHERE r.session_id=s.session_id) THEN 1 ELSE 0 END),
+                            s.open_transaction_count, c.connection_id
+                        FROM sys.dm_exec_sessions s
+                        OUTER APPLY (SELECT TOP(1) connection_id FROM sys.dm_exec_connections c
+                            WHERE c.session_id=s.session_id AND c.parent_connection_id IS NULL ORDER BY c.connection_id) c
+                        WHERE s.database_id=DB_ID(@name) AND s.session_id<>@@SPID;
+                        SELECT COUNT(*) FROM @observed;
+                        SELECT TOP(16) user_process, status, active_request, open_transactions, connection_id
+                        FROM @observed ORDER BY session_id;";
+                    guardSessions = _cleanupDiagnostics.InspectGuard(() => sessions.ExecuteReader());
+                }
+                else guardSessions = Convert.ToInt32(sessions.ExecuteScalar());
                 if (guardSessions != 0) throw new InvalidOperationException("Database still has active sessions; refusing deletion.");
                 // EF EnsureDeleted may force SINGLE_USER/ROLLBACK IMMEDIATE. Plain
                 // DROP instead fails/times out if a session appears after our check.
@@ -237,7 +258,7 @@ internal sealed class DisposableSqlDatabase
             }
         }, error => _cleanupDiagnostics.Record(error == null ? "Completed" : operation, error,
             _created, _marked, !_sharedServer, ownershipVerified, guardSessions,
-            DatabaseName, _workers, () => Open("master")));
+            DatabaseName, _workers, () => Open("master", SqlFixtureConnectionRole.DiagnosticMaster)));
     }
     private string Connection(string catalog)
     {
@@ -250,7 +271,7 @@ internal sealed class DisposableSqlDatabase
         }.ConnectionString;
     }
 
-    private SqlConnection Open(string catalog)
+    private SqlConnection Open(string catalog, SqlFixtureConnectionRole role)
     {
         var connection = new SqlConnection(Connection(catalog));
         try
@@ -262,6 +283,13 @@ internal sealed class DisposableSqlDatabase
                 CONVERT(nvarchar(128),SERVERPROPERTY('ComputerNamePhysicalNetBIOS')),
                 CONVERT(nvarchar(128),SERVERPROPERTY('ServerName')), CONVERT(nvarchar(128),@@SERVERNAME),
                 CONVERT(int,SERVERPROPERTY('IsClustered')), CONVERT(nvarchar(128),CONNECTIONPROPERTY('net_transport'))";
+            if (_cleanupDiagnostics.Enabled)
+                command.CommandText += @";
+                    BEGIN TRY
+                        SELECT TOP(1) connection_id FROM sys.dm_exec_connections
+                        WHERE session_id=@@SPID AND parent_connection_id IS NULL ORDER BY connection_id;
+                    END TRY
+                    BEGIN CATCH SELECT CAST(NULL AS uniqueidentifier); END CATCH";
             using var reader = command.ExecuteReader();
             if (!reader.Read()) throw new InvalidOperationException("SQL instance identity unavailable.");
             if (_sharedServer)
@@ -276,6 +304,7 @@ internal sealed class DisposableSqlDatabase
             }
             if (!string.Equals(reader.GetString(3), catalog, StringComparison.Ordinal))
                 throw new InvalidOperationException("Resolved server/catalog mismatch.");
+            _cleanupDiagnostics.TrackConnection(reader, role);
             return connection;
         }
         catch { connection.Dispose(); throw; }

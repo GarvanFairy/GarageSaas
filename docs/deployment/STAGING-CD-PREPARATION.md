@@ -189,6 +189,76 @@ Enabled instrumentation adds EF event tracking and post-outcome metadata queries
 It can perturb timing and its snapshot is not atomic with the failure. No delay,
 retry or timeout increase is introduced. Deployment remains unconditionally disabled.
 
+### Guard-time session observation (local follow-up after PR #5)
+
+The master run `40683279618` captured a cleanup refusal with one session at
+`ActiveSessionGuard`, zero tracked EF connections/workers, and zero sessions in
+the later snapshot. The source remains unknown; no connection leak, application
+defect or LocalDB timing cause has been established.
+
+With diagnostics enabled, the guard materializes its matching sessions into a
+batch-local table variable in one SELECT. The original database/session predicate
+is unchanged, including internal and idle sessions. Both the **full uncapped
+count** and up to 16 session details are read from that same materialized set.
+The exact nonzero-count refusal still runs before DROP. Disabled diagnostics retain
+the original scalar query. There are no session kills, SINGLE_USER operations,
+retries, sleeps, timeout increases or application/transaction changes.
+
+The existing record gains `guardSessionDetails`:
+
+- `availability`: fixed `available` / `unavailable`.
+- `truncated`: boolean for a complete metadata observation, otherwise null.
+- `sessions`: up to 16 rows, otherwise null. An available zero-session observation
+  is an empty list, never confused with unavailable information.
+- Each row contains only `userProcess` (boolean), `status` (`running`, `sleeping`,
+  `dormant`, `preconnect`, `unknown`), `hasActiveRequest` (boolean),
+  `openTransactions` (bounded nonnegative integer) and `fixtureRole` (fixed enum).
+
+Role tracking retains up to 64 connection-ID-to-role entries in fixture-local
+memory, including disposed connections. Raw identity checks
+register roles: `SetupMaster`, `SetupOwnership`, `OwnershipVerification`,
+`OwnedFixture`, `GuardMaster`, `DiagnosticMaster`. An additional diagnostic result
+in the existing raw identity-check batch reads that connection's server DMV ID.
+A local TRY/CATCH returns null on metadata failure; application/transaction
+handling is unchanged. Client GUIDs are not assumed to match server IDs.
+These private server IDs are compared with the guard's DMV connection IDs; IDs, session
+numbers, database names, host/application names and SQL/parameters are never
+added to the emitted guard details. This is best-effort correlation, not proof of
+causation: a missing identity, unavailable tracking or exhausted map gives
+`Unavailable`; an observed ID without a tracked match gives `Unmatched`.
+
+All role-tracking and metadata observations are bounded. Metadata errors after
+reading the full count (including reader disposal errors) mark details unavailable
+and leave that count intact for the original guard. Query/count errors remain
+cleanup failures; diagnostic disposal errors cannot replace them. A later
+observation never inherits stale details from an earlier observation.
+
+The exporter rebuilds only those new approved fields, verifies row bounds,
+count/truncation consistency, booleans, integers and enums, and rejects unknown or
+duplicate JSON properties and malformed/oversized records. Repeated top-level
+markers reject the section. Identical anonymous rows can legitimately describe
+different sessions; they are allowed only within the exact bounded count contract.
+Legacy/missing guard details remain explicitly unavailable. Outcomes, counters and
+the fail-closed test gates remain independent of diagnostic extraction.
+
+The original 60 PowerShell cases remain separately enforced; 36 additive cases
+exercise the new security rules. Five new deterministic .NET cases exercise count
+preservation, truncation, role limits/redaction, unknown statuses, metadata/disposal
+failures and original-exception preservation. The reviewed unit inventory gains
+only those five methods: 1,087 unit + 19 identity + 223 SQL = 1,329 .NET cases.
+The seven original diagnostic tests and all 223 SQL cases remain unchanged.
+
+Local validation uses synthetic readers/fixtures and runs no SQL. The SQL batch and
+live server-identity correlation still need approved hosted evidence.
+Release compilation passed with zero errors and 12 existing warnings. All seven
+existing plus five new .NET diagnostic methods passed (12 total, zero failed or
+skipped), as did the original 60 and additional 36 PowerShell security cases and
+all 103 prerequisite cases. No Windows security block occurred in these runs.
+DMVs change concurrently: materialization aligns the reported count and rows,
+but it does not make the joined session/request/connection views a transactional
+server-wide snapshot. Sessions can still be unclassified or disappear later.
+Instrumentation adds observation overhead. Deployment remains disabled.
+
 **Passing both jobs authorizes release-candidate preparation only.** It does not
 approve a deployment, configure OIDC/environments, change Azure resources, permit
 schema changes or waive independent hash/recovery/capacity/authenticated-acceptance

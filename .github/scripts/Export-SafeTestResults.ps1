@@ -52,7 +52,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
     $record = ConvertFrom-Json -InputObject $Json -AsHashtable -Depth 12
     $base = @('operation','success','created','marked','dedicatedLocalDb','ownershipVerified','pooling',
         'efOpenConnections','efOpenedEvents','efClosedEvents','workers','guardSessions','exceptionType','sanitizedMessage','sqlErrors','stack')
-    Require-Shape $record ($base + @('databasePresent','databaseState','databaseAccess','serverSessionsAfterOutcome','snapshotExceptionType','snapshotSqlErrors')) $base
+    Require-Shape $record ($base + @('databasePresent','databaseState','databaseAccess','serverSessionsAfterOutcome','snapshotExceptionType','snapshotSqlErrors','guardSessionDetails')) $base
     Require-Enum $record.operation @('DrainWorkers','OwnershipPrecondition','OpenOwnedDatabase','VerifyOwnershipMarker','OpenMaster','VerifyTarget','ActiveSessionGuard','DropOwnedDatabase','Completed')
     $types = @('System.InvalidOperationException','System.TimeoutException','System.OperationCanceledException','System.Threading.Tasks.TaskCanceledException',
         'System.IO.IOException','System.ObjectDisposedException','System.UnauthorizedAccessException','System.ArgumentException',
@@ -70,6 +70,31 @@ function Convert-CleanupRecord([string]$Json, $Method) {
     if (($record.operation -ceq 'Completed') -ne $record.success -or $record.success -ne ($null -eq $record.exceptionType)) { throw 'Conflicting diagnostic lifecycle' }
     foreach ($name in @('efOpenConnections','efOpenedEvents','efClosedEvents')) { Require-Integer $record[$name] }
     if ($null -ne $record.guardSessions) { Require-Integer $record.guardSessions }
+    $guardDetails = [ordered]@{ availability = 'unavailable'; truncated = $null; sessions = $null }
+    if ($record.Contains('guardSessionDetails')) {
+        $details = $record.guardSessionDetails
+        Require-Shape $details @('availability','truncated','sessions') @('availability','truncated','sessions')
+        Require-Enum $details.availability @('available','unavailable')
+        if ($details.availability -ceq 'unavailable') {
+            if ($null -ne $details.truncated -or $null -ne $details.sessions) { throw 'Conflicting unavailable guard metadata' }
+        } else {
+            Require-Boolean $details.truncated
+            if ($null -eq $record.guardSessions -or $details.sessions -isnot [array] -or $details.sessions.Count -gt 16) { throw 'Invalid guard metadata inventory' }
+            if ($details.sessions.Count -ne [Math]::Min([int]$record.guardSessions,16) -or $details.truncated -ne ($record.guardSessions -gt 16)) { throw 'Inconsistent guard metadata count' }
+            $safeSessions = @()
+            foreach ($session in $details.sessions) {
+                Require-Shape $session @('userProcess','status','hasActiveRequest','openTransactions','fixtureRole') @('userProcess','status','hasActiveRequest','openTransactions','fixtureRole')
+                Require-Boolean $session.userProcess; Require-Boolean $session.hasActiveRequest
+                Require-Enum $session.status @('running','sleeping','dormant','preconnect','unknown')
+                Require-Integer $session.openTransactions
+                Require-Enum $session.fixtureRole @('SetupMaster','SetupOwnership','OwnershipVerification','OwnedFixture','GuardMaster','DiagnosticMaster','Unmatched','Unavailable')
+                $safeSessions += [ordered]@{ userProcess = [bool]$session.userProcess; status = [string]$session.status
+                    hasActiveRequest = [bool]$session.hasActiveRequest; openTransactions = [int]$session.openTransactions
+                    fixtureRole = [string]$session.fixtureRole }
+            }
+            $guardDetails = [ordered]@{ availability = 'available'; truncated = [bool]$details.truncated; sessions = $safeSessions }
+        }
+    }
     Require-Shape $record.workers @('total','incomplete','faulted','canceled') @('total','incomplete','faulted','canceled')
     foreach ($name in @('total','incomplete','faulted','canceled')) { Require-Integer $record.workers[$name] }
     if ($record.workers.incomplete + $record.workers.faulted + $record.workers.canceled -gt $record.workers.total) { throw 'Conflicting worker counts' }
@@ -110,6 +135,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
     return [ordered]@{
         stage = [string]$record.operation; exceptionType = $record.exceptionType; sqlErrorNumbers = $numbers
         trackedOpenConnections = [int]$record.efOpenConnections; activeSessionsAtGuard = $record.guardSessions
+        guardSessionDetails = $guardDetails
         incompleteWorkers = [int]$record.workers.incomplete; cleanupSucceeded = [bool]$record.success
         databaseCreated = [bool]$record.created; ownershipMarked = [bool]$record.marked
         ownershipVerified = [bool]$record.ownershipVerified; dedicatedLocalDb = [bool]$record.dedicatedLocalDb

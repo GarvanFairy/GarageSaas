@@ -11,6 +11,84 @@ namespace GarageSaas.UnitTests.TestHelpers;
 // principals, query payloads or database ownership-marker values are emitted.
 internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
 {
+    internal const int MaximumGuardSessions = 16;
+    internal const int MaximumConnectionRoles = 64;
+    private readonly ConcurrentDictionary<Guid, SqlFixtureConnectionRole> _roles = new();
+    private volatile bool _roleTrackingUnavailable;
+    private object? _guardSessionDetails;
+
+    internal void TrackConnection(DbDataReader reader, SqlFixtureConnectionRole role)
+    {
+        if (!Enabled) return;
+        try
+        {
+            if (reader.NextResult() && reader.Read() && !reader.IsDBNull(0)) TrackConnection(reader.GetGuid(0), role);
+            else _roleTrackingUnavailable = true;
+        }
+        catch { _roleTrackingUnavailable = true; } // Observation must not affect Open/disposal.
+    }
+    internal void TrackConnection(Guid connectionId, SqlFixtureConnectionRole role)
+    {
+        if (!Enabled || connectionId == Guid.Empty) return;
+        if (!Enum.IsDefined(role)) { _roleTrackingUnavailable = true; return; }
+        lock (_roles)
+        {
+            if (_roles.Count >= MaximumConnectionRoles && !_roles.ContainsKey(connectionId))
+            { _roleTrackingUnavailable = true; return; }
+            _roles[connectionId] = role;
+        }
+    }
+    internal string ConnectionRole(Guid? connectionId)
+        => !Enabled || connectionId == null || connectionId == Guid.Empty ? "Unavailable"
+            : _roles.TryGetValue(connectionId.Value, out var role) ? role.ToString()
+            : _roleTrackingUnavailable ? "Unavailable" : "Unmatched";
+
+    internal int InspectGuard(Func<DbDataReader> execute)
+    {
+        _guardSessionDetails = new { availability = "unavailable", truncated = (bool?)null, sessions = (object[]?)null };
+        DbDataReader? reader = null;
+        int count;
+        try { reader = execute(); count = ReadGuardCount(reader); }
+        catch
+        {
+            try { reader?.Dispose(); } catch { /* Preserve the original query/count exception. */ }
+            throw;
+        }
+        try { reader.Dispose(); }
+        catch { _guardSessionDetails = new { availability = "unavailable", truncated = (bool?)null, sessions = (object[]?)null }; }
+        return count; // The original nonzero guard executes even if metadata/disposal failed.
+    }
+
+    // SQL has already materialized the full matching row set. Metadata failure
+    // after reading its count must never bypass the original nonzero-count guard.
+    internal int ReadGuardCount(DbDataReader reader)
+    {
+        if (!reader.Read()) throw new InvalidOperationException("Guard count unavailable.");
+        var count = reader.GetInt32(0);
+        _guardSessionDetails = new { availability = "unavailable", truncated = (bool?)null, sessions = (object[]?)null };
+        try
+        {
+            if (!reader.NextResult()) return count;
+            var details = new List<object>();
+            while (reader.Read())
+            {
+                if (details.Count >= MaximumGuardSessions) return count;
+                var status = reader.GetString(1).ToLowerInvariant();
+                details.Add(new
+                {
+                    userProcess = reader.GetBoolean(0),
+                    status = status is "running" or "sleeping" or "dormant" or "preconnect" ? status : "unknown",
+                    hasActiveRequest = reader.GetBoolean(2),
+                    openTransactions = reader.GetInt32(3),
+                    fixtureRole = ConnectionRole(reader.IsDBNull(4) ? null : reader.GetGuid(4))
+                });
+            }
+            if (details.Count == Math.Min(count, MaximumGuardSessions))
+                _guardSessionDetails = new { availability = "available", truncated = count > MaximumGuardSessions, sessions = details.ToArray() };
+        }
+        catch { /* Partial/malformed metadata is explicitly unavailable; retain count. */ }
+        return count;
+    }
     private readonly Action<string> _write;
     internal bool Enabled { get; }
     internal SqlCleanupDiagnostics() : this(Environment.GetEnvironmentVariable, Console.WriteLine) { }
@@ -36,7 +114,9 @@ internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
     private readonly ConcurrentDictionary<DbConnection, byte> _open = new();
     private int _opened, _closed;
     public override void ConnectionOpened(DbConnection connection, ConnectionEndEventData eventData)
-    { _open[connection] = 0; Interlocked.Increment(ref _opened); }
+    {
+        _open[connection] = 0; Interlocked.Increment(ref _opened);
+    }
     public override Task ConnectionOpenedAsync(DbConnection connection, ConnectionEndEventData eventData, CancellationToken cancellationToken = default)
     { ConnectionOpened(connection, eventData); return Task.CompletedTask; }
     public override void ConnectionClosed(DbConnection connection, ConnectionEndEventData eventData)
@@ -60,6 +140,7 @@ internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
             ["guardSessions"] = guardSessions, ["exceptionType"] = error?.GetType().FullName,
             ["sanitizedMessage"] = error == null ? null : SafeMessage(error),
             ["sqlErrors"] = error is SqlException sql ? SqlCodes(sql) : null,
+            ["guardSessionDetails"] = _guardSessionDetails ?? new { availability = "unavailable", truncated = (bool?)null, sessions = (object[]?)null },
             ["stack"] = error == null ? null : new StackTrace(error, true).GetFrames()?.Take(14).Select(frame => new
             {
                 method = frame.GetMethod()?.DeclaringType?.FullName + "." + frame.GetMethod()?.Name,
@@ -125,4 +206,10 @@ internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
             _ => "Message suppressed by cleanup diagnostic allowlist."
         };
     }
+}
+
+internal enum SqlFixtureConnectionRole
+{
+    SetupMaster, SetupOwnership, OwnershipVerification, OwnedFixture,
+    GuardMaster, DiagnosticMaster
 }
