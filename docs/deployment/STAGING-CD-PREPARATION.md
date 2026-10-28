@@ -50,12 +50,69 @@ GitHub's schema: they are bound through their validated parent job and attempt-s
 response, not through invented per-step fields. API snapshots cannot prevent a
 later external rerun after the final read; deployments remain separately gated.
 
-No change was necessary to either workflow. Candidate packaging still depends on
-successful prerequisite validation; the staging workflow remains manual/master-only,
-and deployment remains unconditionally disabled by `if: ${{ false }}`. GitHub/Azure
-permissions, required CI check names, 1,317 application tests, three JavaScript
-suites and artifact-security behavior are unchanged. Those application/security
-suites were **not rerun** for this prerequisite-script/documentation-only change.
+CI now runs `./.github/scripts/Test-StagingReleasePrerequisites.ps1` immediately
+after artifact-job checkout, in **Require staging release prerequisite regression
+tests**. The script has no parameters or external tooling requirements beyond
+PowerShell 7 and enforces exactly 5 positive and 98 negative executed cases.
+Synthetic fixtures and mocked HTTP require no real token or network access.
+Any regression failure or inventory mismatch fails the required artifact job.
+The existing 37 artifact cases, six native checks, runtime fingerprints and
+ZIP inventory/SHA-256 gates remain unchanged. Both required job names are unchanged.
+No ZIP, application binaries or raw diagnostic output is uploaded by this change.
+
+Candidate packaging still depends on successful prerequisite validation; the
+staging workflow is unchanged, manual/master-only, and deployment remains
+unconditionally disabled by `if: ${{ false }}`. No Azure/OIDC permissions or
+repository secrets are added to CI. The release resolver's existing required-step
+list is unchanged; the new gate runs as an unconditional normal step in the
+required artifact job. Hosted execution awaits an approved commit and push.
+
+## Opt-in disposable SQL cleanup diagnostics
+
+The historical cleanup failure in
+`ForeignReplacementFailsAndQuoteFailureRollsBackBeforeRetarget` remains unexplained.
+Before this follow-up, 30 local test executions passed; all 15 enabled diagnostic
+records showed no tracked open EF connections, incomplete workers or guard sessions,
+and successful database deletion. Passing runs do not establish a root cause.
+Diagnostics are retained disabled by default, confined to test helpers.
+
+For an isolated test, use only the dedicated disposable LocalDB instance:
+
+```powershell
+$env:GARAGESAAS_TEST_SQLSERVER='(localdb)\GarageSaasIntegrationTests'
+$env:GARAGESAAS_RUN_WORKITEM_QUOTE_RACE_SQL_TESTS='1'
+$env:GARAGESAAS_SQL_CLEANUP_DIAGNOSTICS='1'
+try {
+    dotnet test GarageSaas.UnitTests/GarageSaas.UnitTests.csproj -c Release --no-build --no-restore --settings GarageSaas.UnitTests/SqlIntegration.runsettings --filter 'FullyQualifiedName=GarageSaas.UnitTests.Services.WorkItemQuoteLinkRaceSqlTests.ForeignReplacementFailsAndQuoteFailureRollsBackBeforeRetarget'
+} finally {
+    Remove-Item Env:GARAGESAAS_SQL_CLEANUP_DIAGNOSTICS
+    Remove-Item Env:GARAGESAAS_RUN_WORKITEM_QUOTE_RACE_SQL_TESTS
+    Remove-Item Env:GARAGESAAS_TEST_SQLSERVER
+}
+```
+
+Use a fresh shell without shared-server opt-in; build Release first and start the
+dedicated instance through the existing test setup. Do not change Windows security
+if execution is blocked. Keep raw test output local.
+
+Records include stage, exception type, allowlisted message, source basenames/lines,
+EF connection counters, worker state and SQL numeric errors. After verified ownership,
+dedicated LocalDB master metadata can report database lifecycle and target sessions,
+open transactions and request counts. This snapshot occurs after cleanup's outcome;
+it is not an atomic view of the original failure. No credentials, connection strings,
+tokens, ownership markers, SQL parameters, customer/vehicle data or arbitrary exception
+messages/Data are emitted. Original cleanup exceptions and stacks are rethrown;
+secondary reporting failures cannot replace them or change successful cleanup.
+Timeouts, retries, ownership/session guards and transaction behavior are unchanged.
+
+Seven deterministic diagnostic regressions use injected environment/output delegates
+and a cleanup/report seam, without SQL. They extend the reviewed unit inventory from
+1,075 to 1,082 cases (1,324 .NET cases total); the original 19 identity and 223 SQL
+cases and three JavaScript suites remain required. Local follow-up validation:
+Release compilation passed with 12 existing warnings and the 103 prerequisite cases
+passed. Windows Application Control `0x800711C7` blocked the rebuilt assembly before
+discovery: zero new diagnostic tests executed, and SQL attempts were not repeated.
+New diagnostic and SQL validation therefore remain pending hosted execution.
 
 **Passing both jobs authorizes release-candidate preparation only.** It does not
 approve a deployment, configure OIDC/environments, change Azure resources, permit

@@ -157,4 +157,5 @@ try{
     Remove-Item Function:\Invoke-RestMethod
     Remove-Variable GarageSaasStagingPrerequisiteMock -Scope Global
 }
+if ($positive -ne 5 -or $negative -ne 98) { throw 'Required staging prerequisite inventory did not execute: expected 5 positive and 98 negative cases.' }
 Write-Output "PASS: $positive positive and $negative negative staging prerequisite regressions. Synthetic fixtures/mocked HTTP only; zero live requests or workflow executions."

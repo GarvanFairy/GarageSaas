@@ -3,6 +3,48 @@
   "suites": {
     "unit": [
       {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlCleanupDiagnosticsTests",
+        "methodName": "DisabledByDefaultDoesNotCollectOrEmit",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlCleanupDiagnosticsTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlCleanupDiagnosticsTests",
+        "methodName": "OnlyExplicitOneEnablesDiagnostics",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlCleanupDiagnosticsTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlCleanupDiagnosticsTests",
+        "methodName": "CleanupFailurePreservesOriginalAndStack",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlCleanupDiagnosticsTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlCleanupDiagnosticsTests",
+        "methodName": "DiagnosticFailureCannotReplaceCleanupFailure",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlCleanupDiagnosticsTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlCleanupDiagnosticsTests",
+        "methodName": "OutputRedactsSensitiveExceptionAndSnapshotValues",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlCleanupDiagnosticsTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlCleanupDiagnosticsTests",
+        "methodName": "SuccessfulCleanupRunsOnceAndReportsAfterCompletion",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlCleanupDiagnosticsTests.cs"
+      },
+      {
+        "className": "GarageSaas.UnitTests.TestHelpers.SqlCleanupDiagnosticsTests",
+        "methodName": "FailedDiagnosticSinkCannotChangeSuccessfulCleanup",
+        "cases": 1,
+        "sourceFile": "GarageSaas.UnitTests/TestHelpers/SqlCleanupDiagnosticsTests.cs"
+      },
+      {
         "className": "GarageSaas.UnitTests.Controllers.CustomerDocumentHttpTests",
         "methodName": "DownloadReturnsPdfAndConfirmationSendsAttachmentOnce",
         "cases": 2,

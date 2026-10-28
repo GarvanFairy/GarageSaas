@@ -163,6 +163,8 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+      - name: Require staging release prerequisite regression tests
+        run: ./.github/scripts/Test-StagingReleasePrerequisites.ps1
       - name: Verify and report artifact source identity
         run: |
           $commit = git rev-parse HEAD
