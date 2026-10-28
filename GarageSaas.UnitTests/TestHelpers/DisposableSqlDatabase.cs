@@ -22,6 +22,7 @@ internal sealed class DisposableSqlDatabase
     private readonly string _instanceIdentity;
     private readonly string _owner = Guid.NewGuid().ToString("N");
     private readonly SqlTestWorkers _workers = new();
+    private readonly SqlCleanupDiagnostics _cleanupDiagnostics = new();
     private bool _created;
     private bool _marked;
     internal string DatabaseName { get; }
@@ -139,8 +140,13 @@ internal sealed class DisposableSqlDatabase
         DatabaseName = $"GarageSaas_{category}_Test_{Guid.NewGuid():N}";
     }
 
-    internal DbContextOptions<SignupContext> Options() => new DbContextOptionsBuilder<SignupContext>()
-        .UseSqlServer(ConnectionString, sql => sql.CommandTimeout(8)).Options;
+    internal DbContextOptions<SignupContext> Options()
+    {
+        var builder = new DbContextOptionsBuilder<SignupContext>()
+            .UseSqlServer(ConnectionString, sql => sql.CommandTimeout(8));
+        if (_cleanupDiagnostics.Enabled) builder.AddInterceptors(_cleanupDiagnostics);
+        return builder.Options;
+    }
 
     internal void Create()
     {
@@ -191,32 +197,48 @@ internal sealed class DisposableSqlDatabase
 
     internal async Task DeleteAsync()
     {
-        await DrainAsync();
-        if (!_created || !_marked) throw new InvalidOperationException("Database creation/ownership was not confirmed; leaving it untouched.");
-        ValidateCatalog(DatabaseName);
-        using (var database = Open(DatabaseName))
+        var operation = "DrainWorkers";
+        int? guardSessions = null;
+        var ownershipVerified = false;
+        await SqlCleanupDiagnostics.RunCleanupAsync(async () =>
         {
-            using var command = database.CreateCommand(); command.CommandTimeout = 8;
-            command.CommandText = "SELECT CONVERT(nvarchar(128),value) FROM sys.extended_properties WHERE class=0 AND name=N'GarageSaasTestOwner'";
-            ValidateOwnership(_created, _marked, DatabaseName, database.Database, _owner, command.ExecuteScalar() as string);
-        }
-        using (var master = Open("master"))
-        {
-            VerifyTarget(master);
-            // Pooling is disabled. Any remaining session means cleanup is unsafe;
-            // never forcibly disconnect it using SINGLE_USER/ROLLBACK IMMEDIATE.
-            using var sessions = master.CreateCommand(); sessions.CommandTimeout = 8;
-            sessions.CommandText = "SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE database_id=DB_ID(@name) AND session_id<>@@SPID";
-            sessions.Parameters.AddWithValue("@name", DatabaseName);
-            if (Convert.ToInt32(sessions.ExecuteScalar()) != 0) throw new InvalidOperationException("Database still has active sessions; refusing deletion.");
-            // EF EnsureDeleted may force SINGLE_USER/ROLLBACK IMMEDIATE. Plain
-            // DROP instead fails/times out if a session appears after our check.
-            using var drop = master.CreateCommand(); drop.CommandTimeout = 8;
-            drop.CommandText = $"DROP DATABASE [{DatabaseName}]";
-            drop.ExecuteNonQuery(); _created = false;
-        }
+            await DrainAsync();
+            operation = "OwnershipPrecondition";
+            if (!_created || !_marked) throw new InvalidOperationException("Database creation/ownership was not confirmed; leaving it untouched.");
+            ValidateCatalog(DatabaseName);
+            operation = "OpenOwnedDatabase";
+            using (var database = Open(DatabaseName))
+            {
+                operation = "VerifyOwnershipMarker";
+                using var command = database.CreateCommand(); command.CommandTimeout = 8;
+                command.CommandText = "SELECT CONVERT(nvarchar(128),value) FROM sys.extended_properties WHERE class=0 AND name=N'GarageSaasTestOwner'";
+                ValidateOwnership(_created, _marked, DatabaseName, database.Database, _owner, command.ExecuteScalar() as string);
+                ownershipVerified = true;
+            }
+            operation = "OpenMaster";
+            using (var master = Open("master"))
+            {
+                operation = "VerifyTarget";
+                VerifyTarget(master);
+                // Pooling is disabled. Any remaining session means cleanup is unsafe;
+                // never forcibly disconnect it using SINGLE_USER/ROLLBACK IMMEDIATE.
+                using var sessions = master.CreateCommand(); sessions.CommandTimeout = 8;
+                sessions.CommandText = "SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE database_id=DB_ID(@name) AND session_id<>@@SPID";
+                sessions.Parameters.AddWithValue("@name", DatabaseName);
+                operation = "ActiveSessionGuard";
+                guardSessions = Convert.ToInt32(sessions.ExecuteScalar());
+                if (guardSessions != 0) throw new InvalidOperationException("Database still has active sessions; refusing deletion.");
+                // EF EnsureDeleted may force SINGLE_USER/ROLLBACK IMMEDIATE. Plain
+                // DROP instead fails/times out if a session appears after our check.
+                using var drop = master.CreateCommand(); drop.CommandTimeout = 8;
+                drop.CommandText = $"DROP DATABASE [{DatabaseName}]";
+                operation = "DropOwnedDatabase";
+                drop.ExecuteNonQuery(); _created = false;
+            }
+        }, error => _cleanupDiagnostics.Record(error == null ? "Completed" : operation, error,
+            _created, _marked, !_sharedServer, ownershipVerified, guardSessions,
+            DatabaseName, _workers, () => Open("master")));
     }
-
     private string Connection(string catalog)
     {
         ValidateCatalog(catalog, allowMaster: true);

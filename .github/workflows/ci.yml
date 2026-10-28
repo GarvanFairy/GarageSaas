@@ -85,14 +85,20 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "Client checks failed: $name" }
           }
 
+      - name: Require all 60 SQL diagnostic sanitization regressions
+        id: sql_diagnostic_security
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: ./.github/scripts/Test-SafeSqlCleanupDiagnostics.ps1
+
       - name: Create isolated runner-only LocalDB instance
         id: localdb
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.sql_diagnostic_security.outcome == 'success' }}
         run: ./.github/scripts/Start-CiLocalDb.ps1
 
       - name: Disposable SQL integration tests
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.localdb.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.localdb.outcome == 'success' && steps.sql_diagnostic_security.outcome == 'success' }}
         env:
+          GARAGESAAS_SQL_CLEANUP_DIAGNOSTICS: '1'
           GARAGESAAS_TEST_SQLSERVER: '(localdb)\GarageSaasIntegrationTests'
           GARAGESAAS_RUN_REGISTRATION_SQL_TESTS: '1'
           GARAGESAAS_RUN_INVOICE_ATOMIC_SQL_TESTS: '1'
@@ -128,7 +134,7 @@ jobs:
           }
 
       - name: Upload sanitized test evidence on success or failure
-        if: ${{ always() }}
+        if: ${{ always() && steps.sql_diagnostic_security.outcome == 'success' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: test-results-${{ github.run_id }}-${{ github.run_attempt }}
@@ -163,6 +169,8 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+      - name: Require staging release prerequisite regression tests
+        run: ./.github/scripts/Test-StagingReleasePrerequisites.ps1
       - name: Verify and report artifact source identity
         run: |
           $commit = git rev-parse HEAD

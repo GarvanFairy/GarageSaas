@@ -1,5 +1,200 @@
 # Staging CD preparation — deployment disabled
 
+## Release prerequisite hardening after merged baseline 60be91e
+
+The manual candidate-preparation checker now requires **both** exact jobs from the
+same eligible `.github/workflows/ci.yml` **master-push run and run attempt**:
+
+- `Windows build and tests`
+- `Artifact security validation (no deployment)`
+
+The selected full lowercase SHA must be master or an ancestor of master. The run
+must be completed/successful for that exact SHA and master push, not a PR merge
+preview, feature/focused run or different workflow. Overall workflow success alone
+is insufficient. Each required job must appear exactly once, have a distinct job
+ID, matching run ID/attempt/head SHA, and completed/successful status/conclusion.
+All existing full-test steps (plus the tested-runtime fingerprint) and every current
+artifact-validation step are required by exact name, completed and successful.
+The artifact requirements explicitly include restore/build, no-rebuild publish and
+package validation, all 37 security cases, and independent inventory/SHA-256 checks.
+Missing, renamed, duplicate, skipped, cancelled, running, failed or inconsistent
+required evidence fails closed. Optional unrelated jobs cannot substitute for either
+required job.
+
+Collection uses GitHub's attempt-specific jobs endpoint, verifies the reported
+total job count against the received records, and re-reads the workflow run before
+acceptance to reject an attempt/state change during inspection. A truncated jobs
+page fails closed; there is no fallback to the Windows job alone or to jobs from a
+different run/attempt. Run selection retains the existing bounded first-page lookup
+of eligible successful runs. If eligible evidence is outside that page, unavailable
+or incomplete, preparation is refused rather than inferred. This does not download
+or promote an artifact from an unapproved branch.
+
+Repository offline regression entry point:
+
+```powershell
+./.github/scripts/Test-StagingReleasePrerequisites.ps1
+```
+
+Validated locally: **5 positive and 98 negative cases, all passed**. The original
+nine prerequisite cases were retained with complete metadata representing GitHub's
+real job schema. New fixtures cover both jobs, all critical artifact steps, mixed
+run/attempt/SHA evidence, duplicates, incomplete metadata and invalid/non-ancestor
+commits. Mocked HTTP boundary tests cover manual master/repository restrictions,
+the attempt-specific route, unavailable/truncated responses and run changes during
+inspection. No real token, HTTP request, workflow dispatch, Azure operation or SQL
+access occurs in these tests. Fixture mode does not claim to test live authorization
+or GitHub availability; collection/context checks are tested separately with a
+fail-closed HTTP mock. Step rows have no independent commit/attempt identifiers in
+GitHub's schema: they are bound through their validated parent job and attempt-specific
+response, not through invented per-step fields. API snapshots cannot prevent a
+later external rerun after the final read; deployments remain separately gated.
+
+CI now runs `./.github/scripts/Test-StagingReleasePrerequisites.ps1` immediately
+after artifact-job checkout, in **Require staging release prerequisite regression
+tests**. The script has no parameters or external tooling requirements beyond
+PowerShell 7 and enforces exactly 5 positive and 98 negative executed cases.
+Synthetic fixtures and mocked HTTP require no real token or network access.
+Any regression failure or inventory mismatch fails the required artifact job.
+The existing 37 artifact cases, six native checks, runtime fingerprints and
+ZIP inventory/SHA-256 gates remain unchanged. Both required job names are unchanged.
+No ZIP, application binaries or raw diagnostic output is uploaded by this change.
+
+Candidate packaging still depends on successful prerequisite validation; the
+staging workflow is unchanged, manual/master-only, and deployment remains
+unconditionally disabled by `if: ${{ false }}`. No Azure/OIDC permissions or
+repository secrets are added to CI. The release resolver's existing required-step
+list is unchanged; the new gate runs as an unconditional normal step in the
+required artifact job. Hosted execution awaits an approved commit and push.
+
+## Opt-in disposable SQL cleanup diagnostics
+
+The historical cleanup failure in
+`ForeignReplacementFailsAndQuoteFailureRollsBackBeforeRetarget` remains unexplained.
+Before this follow-up, 30 local test executions passed; all 15 enabled diagnostic
+records showed no tracked open EF connections, incomplete workers or guard sessions,
+and successful database deletion. Passing runs do not establish a root cause.
+Diagnostics are retained disabled by default, confined to test helpers.
+
+For an isolated test, use only the dedicated disposable LocalDB instance:
+
+```powershell
+$env:GARAGESAAS_TEST_SQLSERVER='(localdb)\GarageSaasIntegrationTests'
+$env:GARAGESAAS_RUN_WORKITEM_QUOTE_RACE_SQL_TESTS='1'
+$env:GARAGESAAS_SQL_CLEANUP_DIAGNOSTICS='1'
+try {
+    dotnet test GarageSaas.UnitTests/GarageSaas.UnitTests.csproj -c Release --no-build --no-restore --settings GarageSaas.UnitTests/SqlIntegration.runsettings --filter 'FullyQualifiedName=GarageSaas.UnitTests.Services.WorkItemQuoteLinkRaceSqlTests.ForeignReplacementFailsAndQuoteFailureRollsBackBeforeRetarget'
+} finally {
+    Remove-Item Env:GARAGESAAS_SQL_CLEANUP_DIAGNOSTICS
+    Remove-Item Env:GARAGESAAS_RUN_WORKITEM_QUOTE_RACE_SQL_TESTS
+    Remove-Item Env:GARAGESAAS_TEST_SQLSERVER
+}
+```
+
+Use a fresh shell without shared-server opt-in; build Release first and start the
+dedicated instance through the existing test setup. Do not change Windows security
+if execution is blocked. Keep raw test output local.
+
+Records include stage, exception type, allowlisted message, source basenames/lines,
+EF connection counters, worker state and SQL numeric errors. After verified ownership,
+dedicated LocalDB master metadata can report database lifecycle and target sessions,
+open transactions and request counts. This snapshot occurs after cleanup's outcome;
+it is not an atomic view of the original failure. No credentials, connection strings,
+tokens, ownership markers, SQL parameters, customer/vehicle data or arbitrary exception
+messages/Data are emitted. Original cleanup exceptions and stacks are rethrown;
+secondary reporting failures cannot replace them or change successful cleanup.
+Timeouts, retries, ownership/session guards and transaction behavior are unchanged.
+
+Seven deterministic diagnostic regressions use injected environment/output delegates
+and a cleanup/report seam, without SQL. They extend the reviewed unit inventory from
+1,075 to 1,082 cases (1,324 .NET cases total); the original 19 identity and 223 SQL
+cases and three JavaScript suites remain required. Local follow-up validation:
+Release compilation passed with 12 existing warnings and the 103 prerequisite cases
+passed. Windows Application Control `0x800711C7` blocked the rebuilt assembly before
+discovery: zero new diagnostic tests executed, and SQL attempts were not repeated.
+Hosted results for that revision and the reporting follow-up are recorded below.
+
+### Hosted cleanup reporting follow-up (local implementation only)
+
+Both recent hosted runs executed and passed all seven diagnostic regressions and
+all 12 quote-race cases, but failed in `CustomerVehicleMutationSqlTests` cleanup.
+Its safety flag then deliberately marked subsequent cases inconclusive. Separately,
+the branch run failed in staff-invitation `Seed()` / `SaveChanges()` before the
+concurrency workers started. Neither underlying cause has been established; these
+are distinct failure stages, not evidence of a common defect or LocalDB timing issue.
+
+CI now sets `GARAGESAAS_SQL_CLEANUP_DIAGNOSTICS=1` **only** on the disposable SQL
+step. The unit, identity, JavaScript, artifact and manual-release steps do not enable
+it. No C# helper, cleanup guard, connection, timeout, retry, SQL transaction, test
+assertion, inventory or execution order is changed by this follow-up.
+
+`Export-SafeTestResults.ps1` reads the existing producer marker
+`SQL-CLEANUP-DIAGNOSTIC:` only from per-test TRX stdout/stderr for reviewed SQL
+methods. It never relays that JSON or raw output. Each SQL result receives one bounded
+`SQL-CLEANUP-DIAGNOSTIC-SAFE:` JSON section in its sanitized `Output/StdOut`:
+
+- `availability`: `available` with a projected `record`, or `unavailable` with a
+  fixed `reason`: `missing`, `invalid`, `multiple` or `unmapped`.
+- A record contains a fixed cleanup-stage enum, nullable fixed exception-type enums,
+  validated signed SQL error numbers, tracked-open-connection / guard-session /
+  incomplete-worker counts, post-outcome session count and explicit lifecycle
+  booleans (cleanup success, created, marked, verified ownership, dedicated LocalDB,
+  pooling and nullable post-outcome database presence).
+- Source locations contain only reviewed filenames and bounded positive line
+  numbers. Raw methods, external filenames/paths, messages, session IDs, SQL text,
+  parameters, data, environment values and ownership markers are never published.
+  A null source stack remains null; unreviewed external frames are discarded.
+
+Accepted stage names: `DrainWorkers`, `OwnershipPrecondition`, `OpenOwnedDatabase`,
+`VerifyOwnershipMarker`, `OpenMaster`, `VerifyTarget`, `ActiveSessionGuard`,
+`DropOwnedDatabase`, `Completed`. Exception types are a fixed list of common BCL
+cleanup exceptions, SqlClient `SqlException` and EF `DbUpdateException` /
+`DbUpdateConcurrencyException`; unknown types reject the record, without logging
+their value. Missing numeric/session observations remain null, never invented zero.
+The original producer still supplies only direct SqlException numbers; wrapped
+inner SQL exceptions and the separate staff seeding failure may need later work.
+
+Unknown fields (including nested fields), duplicate JSON properties, unexpected
+types, unknown enums, inconsistent lifecycle/worker values and malformed/oversized
+records are rejected as unavailable. Duplicate or conflicting markers reject the
+whole section. Limits: 16,384 characters per JSON record; 262,144 per output node;
+JSON depth 12; 14 stack frames; 16 errors per SQL array; 64 session rows; counts
+0–1,000,000. JSON/schema parser errors are not printed because they can quote input.
+Raw native output and raw TRX remain private to the runner. Existing sanitized
+artifact paths and retention are unchanged; no new raw log/ZIP/binary upload exists.
+
+Test outcomes, counters, summary status and the original fail-closed process / exact
+223-case SQL inventory gate remain independent of reporting. A `Completed` cleanup
+record cannot turn a failed business assertion into a pass. Invalid diagnostics
+cannot hide a failed test; the existing gate still rejects failure, skips or missing
+tests. Diagnostic extraction only enriches evidence and supplies no pass decision.
+
+Offline regression entry point:
+
+```powershell
+./.github/scripts/Test-SafeSqlCleanupDiagnostics.ps1
+```
+
+Local validation: 60 deterministic exporter/security/result-compatibility cases,
+15 existing synthetic gate/sanitizer fixtures and 103 prerequisite cases passed.
+The seven existing .NET helper regressions also executed/passed without a Windows
+security change. CI invokes this suite in `Require all 60 SQL diagnostic sanitization
+regressions` before LocalDB setup and SQL testing. The script enforces 60 uniquely
+executed cases and throws on any failure or missing case. LocalDB setup, SQL tests
+and sanitized-evidence upload explicitly require that step's successful outcome;
+no evidence is uploaded if it fails or is skipped. Existing application/test gates
+remain intact. Hosted results are recorded in PR #5 after the approved push.
+
+Enabled instrumentation adds EF event tracking and post-outcome metadata queries.
+It can perturb timing and its snapshot is not atomic with the failure. No delay,
+retry or timeout increase is introduced. Deployment remains unconditionally disabled.
+
+**Passing both jobs authorizes release-candidate preparation only.** It does not
+approve a deployment, configure OIDC/environments, change Azure resources, permit
+schema changes or waive independent hash/recovery/capacity/authenticated-acceptance
+approvals. This follow-up is prepared on a feature branch for review, with no
+commit/push or deployment performed.
+
 > Artifact-checker follow-up: the narrowly scoped false-positive corrections are
 > now implemented locally; the actual 408-entry ZIP is accepted and independently
 > hash/inventory-verified. See [STAGING-ARTIFACT-CHECKER.md](STAGING-ARTIFACT-CHECKER.md).

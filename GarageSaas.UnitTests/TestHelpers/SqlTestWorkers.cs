@@ -3,6 +3,14 @@ namespace GarageSaas.UnitTests.TestHelpers;
 internal sealed class SqlTestWorkers
 {
     private readonly List<Task> _workers = new();
+    internal object DiagnosticSnapshot()
+    {
+        lock (_workers) return new
+        {
+            total = _workers.Count, incomplete = _workers.Count(x => !x.IsCompleted),
+            faulted = _workers.Count(x => x.IsFaulted), canceled = _workers.Count(x => x.IsCanceled)
+        };
+    }
     internal T Track<T>(T task) where T : Task
     {
         lock (_workers) _workers.Add(task);
