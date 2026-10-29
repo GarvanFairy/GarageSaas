@@ -73,6 +73,16 @@ public class WorkItemQuoteLinkRaceSqlTests
     public async Task UnlinkedItemAndQuoteCanBothCommitAfterStaleValidation(
         bool update, bool quoteValidatesFirst, string invoiceMode)
     {
+        SqlCleanupDiagnostics.Scenario? scenario = (update, quoteValidatesFirst, invoiceMode) switch {
+            (false, false, "none") => SqlCleanupDiagnostics.Scenario.NewRetargetNone,
+            (true, false, "none") => SqlCleanupDiagnostics.Scenario.UpdateRetargetNone,
+            (false, true, "none") => SqlCleanupDiagnostics.Scenario.NewQuoteNone,
+            (true, true, "none") => SqlCleanupDiagnostics.Scenario.UpdateQuoteNone,
+            (false, false, "direct") => SqlCleanupDiagnostics.Scenario.NewRetargetDirect,
+            (false, false, "mixed") => SqlCleanupDiagnostics.Scenario.NewRetargetMixed,
+            _ => null
+        };
+        if (scenario.HasValue) _database!.RegisterScenario(scenario.Value);
         var quoteId = ExistingQuote(update);
         using var reached = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
         var first = _database!.Track(Task.Run(() =>
@@ -123,19 +133,22 @@ public class WorkItemQuoteLinkRaceSqlTests
         }
         finally { release.Set(); await _database.DrainAsync(); }
         Assert.IsTrue((await first).Success);
-        using var check = new SignupContext(_database.Options());
-        var item = check.WorkItem.AsNoTracking().Single(x => x.Id == _a.WorkItemId);
-        Assert.AreEqual(_vehicle, item.VehicleId); Assert.AreEqual(_customer, item.CustomerId);
-        Assert.AreEqual(_a.GarageId, item.GarageBusinessCustomerId, "Forged garage label must not retarget tenant");
-        var link = check.WorkQuoteWorkItem.AsNoTracking().Single(x => x.WorkItemId == _a.WorkItemId);
-        var quote = check.WorkQuote.AsNoTracking().Single(x => x.Id == link.WorkQuoteId);
-        Assert.AreEqual(_a.VehicleId, quote.VehicleId); Assert.AreEqual(_a.CustomerId, quote.CustomerId);
-        Assert.IsTrue(new WorkQuoteService(check).GetWorkQuote(quote.Id, _a.GarageId).Success,
-            "Current validation is garage tenancy, not equal customer/vehicle IDs");
-        if (invoiceId.HasValue)
-            Assert.IsTrue(new VehicleInvoiceService(check).GetVehicleInvoice(invoiceId.Value, _a.GarageId).Success);
-        Assert.IsFalse(new WorkItemService(check).GetWorkItem(item.Id, _b.GarageId).Success);
-        TestContext.WriteLine($"Both succeeded; quote {quote.Id} kept original customer/vehicle, item {item.Id} moved within garage A. Invoice mode={invoiceMode}.");
+        using (var check = new SignupContext(_database.Options()))
+        {
+            var item = check.WorkItem.AsNoTracking().Single(x => x.Id == _a.WorkItemId);
+            Assert.AreEqual(_vehicle, item.VehicleId); Assert.AreEqual(_customer, item.CustomerId);
+            Assert.AreEqual(_a.GarageId, item.GarageBusinessCustomerId, "Forged garage label must not retarget tenant");
+            var link = check.WorkQuoteWorkItem.AsNoTracking().Single(x => x.WorkItemId == _a.WorkItemId);
+            var quote = check.WorkQuote.AsNoTracking().Single(x => x.Id == link.WorkQuoteId);
+            Assert.AreEqual(_a.VehicleId, quote.VehicleId); Assert.AreEqual(_a.CustomerId, quote.CustomerId);
+            Assert.IsTrue(new WorkQuoteService(check).GetWorkQuote(quote.Id, _a.GarageId).Success,
+                "Current validation is garage tenancy, not equal customer/vehicle IDs");
+            if (invoiceId.HasValue)
+                Assert.IsTrue(new VehicleInvoiceService(check).GetVehicleInvoice(invoiceId.Value, _a.GarageId).Success);
+            Assert.IsFalse(new WorkItemService(check).GetWorkItem(item.Id, _b.GarageId).Success);
+            TestContext.WriteLine($"Both succeeded; quote {quote.Id} kept original customer/vehicle, item {item.Id} moved within garage A. Invoice mode={invoiceMode}.");
+        }
+        _database.BodyCompleted();
     }
 
     [DataTestMethod]

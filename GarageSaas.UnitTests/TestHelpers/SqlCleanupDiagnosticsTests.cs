@@ -7,6 +7,8 @@ namespace GarageSaas.UnitTests.TestHelpers;
 [TestClass]
 public class SqlCleanupDiagnosticsTests
 {
+    private sealed class FailingDisposal : IDisposable { public void Dispose() => throw new IOException("synthetic disposal"); }
+
     [TestMethod]
     public void DisabledByDefaultDoesNotCollectOrEmit()
     {
@@ -56,6 +58,7 @@ public class SqlCleanupDiagnosticsTests
         const string sensitive = "synthetic-private-canary";
         var lines = new List<string>();
         var diagnostics = new SqlCleanupDiagnostics(_ => "1", lines.Add);
+        diagnostics.RegisterScenario(SqlCleanupDiagnostics.Scenario.NewRetargetDirect);
         var original = new InvalidOperationException("Password=" + sensitive + ";AccessToken=" + sensitive);
         original.Data["Customer"] = sensitive;
         await Assert.ThrowsExceptionAsync<InvalidOperationException>(() =>
@@ -70,6 +73,11 @@ public class SqlCleanupDiagnosticsTests
         Assert.AreEqual(typeof(InvalidOperationException).FullName, json.RootElement.GetProperty("exceptionType").GetString());
         Assert.AreEqual(typeof(IOException).FullName, json.RootElement.GetProperty("snapshotExceptionType").GetString());
         Assert.IsTrue(json.RootElement.GetProperty("stack").GetArrayLength() > 0);
+        Assert.IsFalse(json.RootElement.GetProperty("lifecycle").GetProperty("bodyCompleted").GetBoolean());
+        diagnostics.BodyCompleted();
+        diagnostics.Record("Completed", null, false, true, false, true, 0, sensitive, new SqlTestWorkers(), () => throw new IOException());
+        using var completed = JsonDocument.Parse(lines.Last()["SQL-CLEANUP-DIAGNOSTIC:".Length..]);
+        Assert.IsTrue(completed.RootElement.GetProperty("lifecycle").GetProperty("bodyCompleted").GetBoolean());
     }
 
     [TestMethod]
@@ -85,6 +93,15 @@ public class SqlCleanupDiagnosticsTests
         });
         Assert.AreEqual(1, calls);
         Assert.AreEqual(1, reports);
+        var output = new List<string>(); var diagnostics = new SqlCleanupDiagnostics(_ => "1", output.Add);
+        diagnostics.RegisterScenario(SqlCleanupDiagnostics.Scenario.NewQuoteNone);
+        Assert.ThrowsException<IOException>(() => {
+            using (var scope = new FailingDisposal()) { }
+            diagnostics.BodyCompleted(); // Must remain unreachable after failed disposal.
+        });
+        diagnostics.Record("Completed", null, false, true, false, false, null, "unused", new SqlTestWorkers(), () => throw new IOException());
+        using var json = JsonDocument.Parse(output.Last()["SQL-CLEANUP-DIAGNOSTIC:".Length..]);
+        Assert.IsFalse(json.RootElement.GetProperty("lifecycle").GetProperty("bodyCompleted").GetBoolean());
     }
 
     [TestMethod]

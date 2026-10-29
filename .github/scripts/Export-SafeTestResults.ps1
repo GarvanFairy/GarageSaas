@@ -43,6 +43,64 @@ function Read-SqlNumbers($Errors) {
         [int]$errorItem.number
     }
 }
+function Convert-Lifecycle($value) {
+    $keys=@('availability','scenario','bodyCompleted','observations')
+    Require-Shape $value $keys $keys
+    Require-Enum $value.availability @('available','unavailable')
+    Require-Enum $value.scenario @('NewRetargetNone','UpdateRetargetNone','NewQuoteNone','UpdateQuoteNone','NewRetargetDirect','NewRetargetMixed')
+    Require-Boolean $value.bodyCompleted
+    if($value.observations -isnot [array] -or $value.observations.Count -gt 3){throw 'Invalid lifecycle phases'}
+    if($value.availability -ceq 'unavailable' -and $value.observations.Count){throw 'Unavailable lifecycle has observations'}
+    $seen=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $observations=@();$last=-1
+    foreach($phase in $value.observations){
+        $keys=@('phase','availability','errorCategory','truncated','sessions');Require-Shape $phase $keys $keys
+        $phases=@('PreOwnership','Guard','PostRefusal');Require-Enum $phase.phase $phases
+        $index=[Array]::IndexOf($phases,[string]$phase.phase)
+        if(!$seen.Add($phase.phase) -or $index -le $last){throw 'Conflicting lifecycle phase'};$last=$index
+        Require-Enum $phase.availability @('available','unavailable');Require-Boolean $phase.truncated
+        Require-Enum $phase.errorCategory @('none','metadataUnavailable')
+        if(($phase.availability -ceq 'available') -ne ($phase.errorCategory -ceq 'none')){throw 'Conflicting diagnostic category'}
+        if($phase.sessions -isnot [array] -or $phase.sessions.Count -gt 16){throw 'Invalid lifecycle session bound'}
+        if($phase.availability -ceq 'unavailable' -and ($phase.sessions.Count -or $phase.truncated)){throw 'Invalid unavailable phase'}
+        if($phase.truncated -and $phase.sessions.Count -ne 16){throw 'Conflicting session truncation'}
+        $sessions=@();$tokens=[Collections.Generic.HashSet[int]]::new()
+        foreach($session in $phase.sessions){
+            $keys=@('correlation','userProcess','sessionStatus','hasActiveRequest','requestStatus','sessionDatabaseAssociation','requestDatabaseAssociation','openTransactions','fixtureRole','transactionsAvailability','transactionsTruncated','transactions')
+            Require-Shape $session $keys $keys
+            if($null -ne $session.correlation){Require-Integer $session.correlation 1 48;if(!$tokens.Add([int]$session.correlation)){throw 'Ambiguous phase token'}}
+            foreach($k in @('userProcess','hasActiveRequest')){if($null -ne $session[$k]){Require-Boolean $session[$k]}}
+            Require-Enum $session.sessionStatus @('running','sleeping','dormant','preconnect','unavailable')
+            Require-Enum $session.requestStatus @('running','runnable','suspended','sleeping','background','unavailable')
+            foreach($k in @('sessionDatabaseAssociation','requestDatabaseAssociation')){Require-Enum $session[$k] @('target','other','unavailable')}
+            if($null -ne $session.openTransactions){Require-Integer $session.openTransactions}
+            Require-Enum $session.fixtureRole @('SetupMaster','SetupOwnership','OwnershipVerification','OwnedFixture','GuardMaster','DiagnosticMaster','Unmatched','Unavailable')
+            Require-Enum $session.transactionsAvailability @('available','unavailable');Require-Boolean $session.transactionsTruncated
+            if($session.transactions -isnot [array] -or $session.transactions.Count -gt 4){throw 'Invalid transaction bound'}
+            if($session.transactionsTruncated -and $session.transactions.Count -ne 4){throw 'Conflicting transaction truncation'}
+            if($session.transactionsAvailability -ceq 'available' -and ($null -eq $session.openTransactions -or
+                (!$session.transactionsTruncated -and $session.transactions.Count -ne $session.openTransactions) -or
+                ($session.transactionsTruncated -and $session.openTransactions -le 4))){throw 'Conflicting mapped transaction count'}
+            if($session.hasActiveRequest -eq $false -and ($session.requestStatus -cne 'unavailable' -or $session.requestDatabaseAssociation -cne 'unavailable')){throw 'Conflicting request evidence'}
+            $transactions=@()
+            foreach($transaction in $session.transactions){
+                $keys=@('userTransaction','type','state','databaseAssociation');Require-Shape $transaction $keys $keys
+                Require-Boolean $transaction.userTransaction
+                Require-Enum $transaction.type @('readWrite','readOnly','system','distributed','unavailable')
+                Require-Enum $transaction.state @('initializing','initialized','active','ended','commitInitiated','prepared','committed','rollingBack','rolledBack','unavailable')
+                Require-Enum $transaction.databaseAssociation @('target','other','unavailable')
+                $transactions+= [ordered]@{userTransaction=[bool]$transaction.userTransaction;type=[string]$transaction.type;state=[string]$transaction.state;databaseAssociation=[string]$transaction.databaseAssociation}
+            }
+            $sessions+= [ordered]@{correlation=$session.correlation;userProcess=$session.userProcess;sessionStatus=[string]$session.sessionStatus;
+                hasActiveRequest=$session.hasActiveRequest;requestStatus=[string]$session.requestStatus;
+                sessionDatabaseAssociation=[string]$session.sessionDatabaseAssociation;requestDatabaseAssociation=[string]$session.requestDatabaseAssociation;
+                openTransactions=$session.openTransactions;fixtureRole=[string]$session.fixtureRole;
+                transactionsAvailability=[string]$session.transactionsAvailability;transactionsTruncated=[bool]$session.transactionsTruncated;transactions=$transactions}
+        }
+        $observations+= [ordered]@{phase=[string]$phase.phase;availability=[string]$phase.availability;errorCategory=[string]$phase.errorCategory;truncated=[bool]$phase.truncated;sessions=$sessions}
+    }
+    return [ordered]@{availability=[string]$value.availability;scenario=[string]$value.scenario;bodyCompleted=[bool]$value.bodyCompleted;observations=$observations}
+}
 function Convert-CleanupRecord([string]$Json, $Method) {
     if ($Json.Length -gt 16384) { throw 'Oversized diagnostic record' }
     $options = [System.Text.Json.JsonDocumentOptions]::new(); $options.MaxDepth = 12
@@ -54,7 +112,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
     $record = ConvertFrom-Json -InputObject $Json -AsHashtable -Depth 12
     $base = @('operation','success','created','marked','dedicatedLocalDb','ownershipVerified','pooling',
         'efOpenConnections','efOpenedEvents','efClosedEvents','workers','guardSessions','exceptionType','sanitizedMessage','sqlErrors','stack')
-    Require-Shape $record ($base + @('databasePresent','databaseState','databaseAccess','serverSessionsAfterOutcome','snapshotExceptionType','snapshotSqlErrors','guardSessionDetails')) $base
+    Require-Shape $record ($base + @('databasePresent','databaseState','databaseAccess','serverSessionsAfterOutcome','snapshotExceptionType','snapshotSqlErrors','guardSessionDetails','lifecycle')) $base
     Require-Enum $record.operation @('DrainWorkers','OwnershipPrecondition','OpenOwnedDatabase','VerifyOwnershipMarker','OpenMaster','VerifyTarget','ActiveSessionGuard','DropOwnedDatabase','Completed')
     $types = @('System.InvalidOperationException','System.TimeoutException','System.OperationCanceledException','System.Threading.Tasks.TaskCanceledException',
         'System.IO.IOException','System.ObjectDisposedException','System.UnauthorizedAccessException','System.ArgumentException',
@@ -134,6 +192,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
         }
     }
     # Rebuild, never forward record, messages, stack text, session IDs or names.
+    $lifecycle=if($record.Contains('lifecycle')){Convert-Lifecycle $record.lifecycle}else{$null}
     return [ordered]@{
         stage = [string]$record.operation; exceptionType = $record.exceptionType; sqlErrorNumbers = $numbers
         trackedOpenConnections = [int]$record.efOpenConnections; activeSessionsAtGuard = $record.guardSessions
@@ -144,6 +203,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
         pooling = [bool]$record.pooling; databasePresentAfterOutcome = $(if ($record.Contains('databasePresent')) { $record.databasePresent } else { $null })
         sessionsAfterOutcome = $sessionCount; snapshotExceptionType = $record.snapshotExceptionType
         snapshotSqlErrorNumbers = $snapshotNumbers; locations = $locations
+        lifecycle = $lifecycle
     }
 }
 function Get-CleanupEvidence($Result, $Method) {

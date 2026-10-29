@@ -176,6 +176,14 @@ internal sealed class DisposableSqlDatabase
     }
 
     internal T Track<T>(T task) where T : Task => _workers.Track(task);
+    internal void RegisterScenario(SqlCleanupDiagnostics.Scenario scenario) { if (!_sharedServer) _cleanupDiagnostics.RegisterScenario(scenario); }
+    internal void BodyCompleted() => _cleanupDiagnostics.BodyCompleted();
+    private void ObserveLifecycle(string phase)
+    {
+        if (!_cleanupDiagnostics.LifecycleEnabled || _sharedServer || !_created || !_marked) return;
+        try { using var master = Open("master", SqlFixtureConnectionRole.DiagnosticMaster); _cleanupDiagnostics.ObserveLifecycle(phase, master, DatabaseName); }
+        catch { _cleanupDiagnostics.ObserveLifecycle(phase, () => throw new InvalidOperationException("Lifecycle connection unavailable.")); }
+    }
     internal Task DrainAsync() => _workers.DrainAsync(TimeSpan.FromSeconds(30));
 
     // Experiments may execute DDL only through a freshly verified connection to
@@ -206,6 +214,7 @@ internal sealed class DisposableSqlDatabase
             operation = "OwnershipPrecondition";
             if (!_created || !_marked) throw new InvalidOperationException("Database creation/ownership was not confirmed; leaving it untouched.");
             ValidateCatalog(DatabaseName);
+            ObserveLifecycle("PreOwnership");
             operation = "OpenOwnedDatabase";
             using (var database = Open(DatabaseName, SqlFixtureConnectionRole.OwnershipVerification))
             {
@@ -233,19 +242,20 @@ internal sealed class DisposableSqlDatabase
                     // the returned metadata is capped; the guard count is not.
                     sessions.CommandText = @"DECLARE @observed TABLE
                         (session_id smallint, user_process bit, status nvarchar(30), active_request bit,
-                         open_transactions int, connection_id uniqueidentifier);
+                         open_transactions int, connection_id uniqueidentifier, login_time datetime);
                         INSERT @observed
                         SELECT s.session_id, s.is_user_process, s.status,
                             CONVERT(bit, CASE WHEN EXISTS(SELECT 1 FROM sys.dm_exec_requests r WHERE r.session_id=s.session_id) THEN 1 ELSE 0 END),
-                            s.open_transaction_count, c.connection_id
+                            s.open_transaction_count, c.connection_id, s.login_time
                         FROM sys.dm_exec_sessions s
                         OUTER APPLY (SELECT TOP(1) connection_id FROM sys.dm_exec_connections c
                             WHERE c.session_id=s.session_id AND c.parent_connection_id IS NULL ORDER BY c.connection_id) c
                         WHERE s.database_id=DB_ID(@name) AND s.session_id<>@@SPID;
                         SELECT COUNT(*) FROM @observed;
-                        SELECT TOP(16) user_process, status, active_request, open_transactions, connection_id
+                        SELECT TOP(16) user_process, status, active_request, open_transactions, connection_id, session_id, login_time
                         FROM @observed ORDER BY session_id;";
                     guardSessions = _cleanupDiagnostics.InspectGuard(() => sessions.ExecuteReader());
+                    _cleanupDiagnostics.ObserveLifecycle("Guard", master, DatabaseName);
                 }
                 else guardSessions = Convert.ToInt32(sessions.ExecuteScalar());
                 if (guardSessions != 0) throw new InvalidOperationException("Database still has active sessions; refusing deletion.");
@@ -256,9 +266,11 @@ internal sealed class DisposableSqlDatabase
                 operation = "DropOwnedDatabase";
                 drop.ExecuteNonQuery(); _created = false;
             }
-        }, error => _cleanupDiagnostics.Record(error == null ? "Completed" : operation, error,
-            _created, _marked, !_sharedServer, ownershipVerified, guardSessions,
-            DatabaseName, _workers, () => Open("master", SqlFixtureConnectionRole.DiagnosticMaster)));
+        }, error => {
+            _cleanupDiagnostics.Record(error == null ? "Completed" : operation, error,
+                _created, _marked, !_sharedServer, ownershipVerified, guardSessions,
+                DatabaseName, _workers, () => Open("master", SqlFixtureConnectionRole.DiagnosticMaster));
+        });
     }
     private string Connection(string catalog)
     {
