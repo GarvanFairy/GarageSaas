@@ -54,7 +54,7 @@ jobs:
           [[ "$actual_tenant" == "$STAGING_TENANT_ID" ]] || { echo "Azure login tenant mismatch"; exit 1; }
           [[ "$actual_subscription" == "$STAGING_SUBSCRIPTION_ID" ]] || { echo "Azure login subscription mismatch"; exit 1; }
 
-          actual_id="$(az resource show --ids "$STAGING_RESOURCE_ID" --query id --output tsv --only-show-errors)"
+          actual_id="$(az resource show --ids "$STAGING_RESOURCE_ID" --api-version 2024-11-01 --query id --output tsv --only-show-errors)"
           [[ "$actual_id" == "$STAGING_RESOURCE_ID" ]] || { echo "Azure App Service resource mismatch"; exit 1; }
 
           echo "GitHub OIDC login and staging App Service read access verified."
