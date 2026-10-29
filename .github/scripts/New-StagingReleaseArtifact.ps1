@@ -1,6 +1,7 @@
 param([Parameter(Mandatory)][string]$PublishPath, [Parameter(Mandatory)][string]$OutputDirectory,
-    [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string]$Commit)
+    [Parameter(Mandatory)][ValidatePattern('\A[0-9a-f]{40}\z')][string]$Commit)
 $ErrorActionPreference = 'Stop'
+if($Commit -cnotmatch '\A[0-9a-f]{40}\z' -or [string]::Equals($Commit,('0'*40),[StringComparison]::Ordinal)){throw 'Packaging requires an exact non-placeholder commit.'}
 $source = [IO.Path]::GetFullPath($PublishPath)
 $output = [IO.Path]::GetFullPath($OutputDirectory)
 if ($output.StartsWith($source.TrimEnd('\','/') + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase) -or

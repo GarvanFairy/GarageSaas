@@ -9,7 +9,8 @@ $ErrorActionPreference = 'Stop'
 # reviewed enums, integers, booleans and source locations into fresh JSON.
 function Require-Shape($Value, [string[]]$Names, [string[]]$Required = @()) {
     if ($Value -isnot [Collections.IDictionary]) { throw 'Invalid diagnostic object' }
-    foreach ($key in $Value.Keys) { if ($key -cnotin $Names) { throw 'Unknown diagnostic property' } }
+    $allowed=[Collections.Generic.HashSet[string]]::new($Names,[StringComparer]::Ordinal)
+    foreach ($key in $Value.Keys) { if (!$allowed.Contains([string]$key)) { throw 'Unknown diagnostic property' } }
     foreach ($key in $Required) { if (!$Value.Contains($key)) { throw 'Missing diagnostic property' } }
 }
 function Require-Integer($Value, [long]$Minimum = 0, [long]$Maximum = 1000000) {
@@ -17,7 +18,8 @@ function Require-Integer($Value, [long]$Minimum = 0, [long]$Maximum = 1000000) {
 }
 function Require-Boolean($Value) { if ($Value -isnot [bool]) { throw 'Invalid diagnostic boolean' } }
 function Require-Enum($Value, [string[]]$Values) {
-    if ($Value -isnot [string] -or $Value -cnotin $Values) { throw 'Unknown diagnostic enum' }
+    $allowed=[Collections.Generic.HashSet[string]]::new($Values,[StringComparer]::Ordinal)
+    if ($Value -isnot [string] -or !$allowed.Contains($Value)) { throw 'Unknown diagnostic enum' }
 }
 function Require-UniqueJsonProperties([System.Text.Json.JsonElement]$Element) {
     if ($Element.ValueKind -eq [System.Text.Json.JsonValueKind]::Object) {
@@ -67,7 +69,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
     if ($null -ne $record.sanitizedMessage) { Require-Enum $record.sanitizedMessage $messages }
     foreach ($name in @('success','created','marked','dedicatedLocalDb','ownershipVerified','pooling')) { Require-Boolean $record[$name] }
     if ($record.pooling -or !$record.dedicatedLocalDb) { throw 'Unexpected diagnostic target' }
-    if (($record.operation -ceq 'Completed') -ne $record.success -or $record.success -ne ($null -eq $record.exceptionType)) { throw 'Conflicting diagnostic lifecycle' }
+    if ([string]::Equals($record.operation,'Completed',[StringComparison]::Ordinal) -ne $record.success -or $record.success -ne ($null -eq $record.exceptionType)) { throw 'Conflicting diagnostic lifecycle' }
     foreach ($name in @('efOpenConnections','efOpenedEvents','efClosedEvents')) { Require-Integer $record[$name] }
     if ($null -ne $record.guardSessions) { Require-Integer $record.guardSessions }
     $guardDetails = [ordered]@{ availability = 'unavailable'; truncated = $null; sessions = $null }
@@ -75,7 +77,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
         $details = $record.guardSessionDetails
         Require-Shape $details @('availability','truncated','sessions') @('availability','truncated','sessions')
         Require-Enum $details.availability @('available','unavailable')
-        if ($details.availability -ceq 'unavailable') {
+        if ([string]::Equals($details.availability,'unavailable',[StringComparison]::Ordinal)) {
             if ($null -ne $details.truncated -or $null -ne $details.sessions) { throw 'Conflicting unavailable guard metadata' }
         } else {
             Require-Boolean $details.truncated
@@ -128,7 +130,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
             foreach ($name in @('method','file')) {
                 if ($null -ne $frame[$name] -and ($frame[$name] -isnot [string] -or $frame[$name].Length -gt 1024)) { throw 'Invalid diagnostic frame' }
             }
-            if ($frame.file -cin $files -and $frame.line -gt 0) { $locations += @{ file = [string]$frame.file; line = [int]$frame.line } }
+            if ([Collections.Generic.HashSet[string]]::new([string[]]$files,[StringComparer]::Ordinal).Contains([string]$frame.file) -and $frame.line -gt 0) { $locations += @{ file = [string]$frame.file; line = [int]$frame.line } }
         }
     }
     # Rebuild, never forward record, messages, stack text, session IDs or names.
@@ -170,9 +172,9 @@ function Get-CleanupEvidence($Result, $Method) {
 }
 [xml]$raw = Get-Content -LiteralPath $InputPath -Raw
 $inventory = Get-Content (Join-Path $PSScriptRoot '../test-inventory.json') -Raw | ConvertFrom-Json
-$allowed = @{}
+$allowed = [Collections.Generic.Dictionary[string,object]]::new([StringComparer]::Ordinal)
 foreach ($method in $inventory.suites.$Suite) { $allowed[$method.className + '.' + $method.methodName] = $method }
-$definitions = @{}
+$definitions = [Collections.Generic.Dictionary[string,object]]::new([StringComparer]::Ordinal)
 foreach ($definition in @($raw.TestRun.TestDefinitions.UnitTest)) {
     $name = ([string]$definition.TestMethod.className).Split(',')[0] + '.' + [string]$definition.TestMethod.name
     if ($allowed.ContainsKey($name)) { $definitions[[string]$definition.id] = $allowed[$name] }
@@ -185,16 +187,16 @@ $root.SetAttribute('id',[guid]::NewGuid().ToString())
 $root.SetAttribute('name',"GarageSaas CI $Suite (sanitized)")
 $results = $safe.CreateElement('Results',$ns); [void]$root.AppendChild($results)
 $safeDefinitions = $safe.CreateElement('TestDefinitions',$ns); [void]$root.AppendChild($safeDefinitions)
-$defined = @{}
+$defined = [Collections.Generic.Dictionary[string,bool]]::new([StringComparer]::Ordinal)
 foreach ($result in @($raw.TestRun.Results.UnitTestResult)) {
     $method = $definitions[[string]$result.testId]
     $label = if ($method) { $method.className + '.' + $method.methodName } else { 'UnmappedTest' }
     $id = [string]$result.testId
-    if ($id -notmatch '^[a-fA-F0-9-]{36}$') { $id = [guid]::NewGuid().ToString() }
+    if ($id -cnotmatch '\A[a-fA-F0-9-]{36}\z') { $id = [guid]::NewGuid().ToString() }
     $entry = $safe.CreateElement('UnitTestResult',$ns); [void]$results.AppendChild($entry)
     $entry.SetAttribute('testId',$id); $entry.SetAttribute('testName',$label)
     $outcome = [string]$result.outcome
-    if ($outcome -notin @('Passed','Failed','NotExecuted','Error','Timeout','Aborted','Inconclusive')) { $outcome = 'Error' }
+    if (![Collections.Generic.HashSet[string]]::new([string[]]@('Passed','Failed','NotExecuted','Error','Timeout','Aborted','Inconclusive'),[StringComparer]::Ordinal).Contains($outcome)) { $outcome = 'Error' }
     $entry.SetAttribute('outcome',$outcome)
     $duration = [TimeSpan]::Zero
     if ([TimeSpan]::TryParse([string]$result.duration,[ref]$duration)) { $entry.SetAttribute('duration',$duration.ToString()) }
@@ -206,7 +208,7 @@ foreach ($result in @($raw.TestRun.Results.UnitTestResult)) {
         $testMethod.SetAttribute('name',$(if ($method) { $method.methodName } else { 'UnmappedTest' }))
         $defined[$id] = $true
     }
-    if ($outcome -ne 'Passed') {
+    if (![string]::Equals($outcome,'Passed',[StringComparison]::Ordinal)) {
         # Only fixed classifications and reviewed source-file line numbers leave
         # the runner. Never copy raw messages, stdout, stack text or data arguments.
         $message = [string]$result.Output.ErrorInfo.Message
@@ -235,7 +237,7 @@ foreach ($result in @($raw.TestRun.Results.UnitTestResult)) {
 }
 $summary = $safe.CreateElement('ResultSummary',$ns); [void]$root.AppendChild($summary)
 $outcome = [string]$raw.TestRun.ResultSummary.outcome
-$summary.SetAttribute('outcome',$(if ($outcome -in @('Completed','Failed','Aborted')) { $outcome } else { 'Failed' }))
+$summary.SetAttribute('outcome',$(if ([Collections.Generic.HashSet[string]]::new([string[]]@('Completed','Failed','Aborted'),[StringComparer]::Ordinal).Contains($outcome)) { $outcome } else { 'Failed' }))
 $counters = $safe.CreateElement('Counters',$ns); [void]$summary.AppendChild($counters)
 foreach ($name in @('total','executed','passed','failed','error','timeout','aborted','inconclusive','notRunnable','notExecuted','disconnected','warning','completed','inProgress','pending')) {
     $number = 0

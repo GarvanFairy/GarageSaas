@@ -14,8 +14,10 @@ function CheckSettings($value, [string]$parent = '', [string]$path = '') {
             $child=$value[$key]; $next=if($path){"$path.$key"}else{$key}
             # One exact public policy identifier, at its known JSON location, with
             # B2C policy-id syntax. No general Password-named property exemption.
-            $policy=$next -ceq 'AzureAdB2C.ResetPasswordPolicyId' -and $child -is [string] -and $child -match '^B2C_[A-Za-z0-9_]{1,100}$'
-            if (!$policy -and ($key -match '(?i)(password|pwd$|clientsecret|apikey|access[_-]?token|refresh[_-]?token|id[_-]?token|bearer[_-]?token|^token$|privatekey|connectionstring)' -or $parent -eq 'ConnectionStrings') -and
+            # Preserve the existing public B2C policy prefix's ASCII case variants;
+            # do not use culture-aware matching or permit non-ASCII identifiers.
+            $policy=[string]::Equals($next,'AzureAdB2C.ResetPasswordPolicyId',[StringComparison]::Ordinal) -and $child -is [string] -and $child -cmatch '\A[Bb]2[Cc]_[A-Za-z0-9_]{1,100}\z'
+            if (!$policy -and ($key -match '(?i)(password|pwd$|clientsecret|apikey|access[_-]?token|refresh[_-]?token|id[_-]?token|bearer[_-]?token|^token$|privatekey|connectionstring)' -or [string]::Equals($parent,'ConnectionStrings',[StringComparison]::OrdinalIgnoreCase)) -and
                 $null -ne $child -and $child -isnot [Collections.IDictionary] -and $child -isnot [array] -and ![string]::IsNullOrWhiteSpace([string]$child)) {
                 throw 'Nonempty credential or connection configuration in artifact.'
             }
@@ -24,12 +26,13 @@ function CheckSettings($value, [string]$parent = '', [string]$path = '') {
     } elseif ($value -is [array]) { foreach ($child in $value) { CheckSettings $child $parent $path } }
 }
 $inventory=Get-Content (Join-Path $PSScriptRoot '../staging-native-dependencies.json') -Raw|ConvertFrom-Json -AsHashtable
-$native=@{};foreach($item in $inventory.files){$native[$item.path]=$item.sha256}
+$native=[Collections.Generic.Dictionary[string,string]]::new([StringComparer]::Ordinal);foreach($item in $inventory.files){$native.Add($item.path,$item.sha256)}
+$settings=[Collections.Generic.HashSet[string]]::new([string[]]@('appsettings.json','appsettings.Production.json','signupappsettings.json','signupappsettings.Production.json'),[StringComparer]::Ordinal)
 $zip=[IO.Compression.ZipFile]::OpenRead([IO.Path]::GetFullPath($Path))
 try {
     $depsEntry=$zip.GetEntry('GarageSaas.deps.json');if(!$depsEntry){throw 'Missing dependency graph.'}
     $deps=ReadJson $depsEntry
-    if($deps.runtimeTarget.name -ne '.NETCoreApp,Version=v10.0'){throw 'Unexpected application target framework.'}
+    if(![string]::Equals($deps.runtimeTarget.name,'.NETCoreApp,Version=v10.0',[StringComparison]::Ordinal)){throw 'Unexpected application target framework.'}
     $target=$deps.targets[$deps.runtimeTarget.name];if(!$target){throw 'Missing runtime dependency inventory.'}
     $expected=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     foreach($library in $target.Keys){
@@ -49,27 +52,28 @@ try {
     # SDK-generated apphosts for the two reviewed projects, not arbitrary EXEs.
     foreach($name in @('GarageSaas.exe','SignupAPI.exe')){[void]$expected.Add($name)}
     $package=$deps.libraries[$inventory.package]
-    if(!$package -or $package.type -ne 'package' -or $package.sha512 -cne $inventory.packageSha512){throw 'Reviewed native package identity changed.'}
+    if(!$package -or ![string]::Equals($package.type,'package',[StringComparison]::Ordinal) -or ![string]::Equals($package.sha512,$inventory.packageSha512,[StringComparison]::Ordinal)){throw 'Reviewed native package identity changed.'}
     $seen=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
     foreach($entry in $zip.Entries){
         $name=$entry.FullName.Replace('\','/')
         $reviewedName=$false
         $named=$inventory.reviewedNamedLibrary
-        if($name -ceq $named.path){
+        if([string]::Equals($name,$named.path,[StringComparison]::Ordinal)){
             $namedPackage=$deps.libraries[$named.package]
             $hash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData((ReadEntry $entry))).ToLowerInvariant()
-            if(!$namedPackage -or $namedPackage.sha512 -cne $named.packageSha512 -or
-                !$target[$named.package].runtime.ContainsKey($named.asset) -or $hash -cne $named.sha256){throw 'Reviewed named dependency identity changed.'}
+            if(!$namedPackage -or ![string]::Equals($namedPackage.sha512,$named.packageSha512,[StringComparison]::Ordinal) -or
+                !$target[$named.package].runtime.ContainsKey($named.asset) -or ![string]::Equals($hash,$named.sha256,[StringComparison]::Ordinal)){throw 'Reviewed named dependency identity changed.'}
             $reviewedName=$true
         }
         if(!$seen.Add($name) -or $name -match '(^/|^[A-Za-z]:|(^|/)\.\.?(/|$)|:)' -or
             $name -match '(^|/)\.' -or $name -match '(?i)(^|/)(uploads|artifacts|deployment|docs|node_modules|Properties)(/|$)' -or
+            $name -match '(?i)(^|/)(tests?|testhelpers|fixtures|testfixtures|test-results)(/|$)|\.(log|tmp|bak|orig)$' -or
             ($name -match '(?i)secrets' -and !$reviewedName) -or
             $name -match '(?i)(credentials|receipt|subjectverification|nameidentifier\.txt|launchsettings|appsettings\.(Development|Local|Staging)|\.env|\.pfx$|\.pem$|\.key$|\.pubxml|\.publishsettings|\.cs$|\.csproj$|\.pdb$|\.trx$)' -or
             (($entry.ExternalAttributes -shr 16) -band 0xF000) -eq 0xA000){throw 'Artifact contains a forbidden, duplicate or unsafe path.'}
         # SignupAPI is a referenced project; its two public settings files are
         # expected publish content, inspected with the same strict JSON rules.
-        if($name -match '(?i)appsettings.*\.json$' -and $name -cnotin @('appsettings.json','appsettings.Production.json','signupappsettings.json','signupappsettings.Production.json')){throw 'Unexpected application configuration file.'}
+        if($name -match '(?i)appsettings.*\.json$' -and !$settings.Contains($name)){throw 'Unexpected application configuration file.'}
         $bytes=ReadEntry $entry
         $binary=$name -match '(?i)\.(dll|exe|so|dylib)$' -or
             ($bytes.Length -ge 4 -and (($bytes[0] -eq 0x4D -and $bytes[1] -eq 0x5A) -or
@@ -78,7 +82,7 @@ try {
         $reviewedNative=$false
         if($native.ContainsKey($name)){
             $sha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
-            if($sha -cne $native[$name] -or !$target[$inventory.package].runtimeTargets.ContainsKey($name)){throw 'Reviewed native asset content or provenance changed.'}
+            if(![string]::Equals($sha,$native[$name],[StringComparison]::Ordinal) -or !$target[$inventory.package].runtimeTargets.ContainsKey($name)){throw 'Reviewed native asset content or provenance changed.'}
             $reviewedNative=$true
         }
         # All binaries still receive diagnostic/private-key scans.
@@ -104,6 +108,6 @@ try {
     }
     foreach($binaryName in $expected){if(!$seen.Contains($binaryName)){throw 'Runtime dependency inventory is incomplete.'}}
     $runtime=ReadJson ($zip.GetEntry('GarageSaas.runtimeconfig.json'))
-    if($runtime.runtimeOptions.tfm -ne 'net10.0'){throw 'Unexpected runtime configuration.'}
+    if(![string]::Equals($runtime.runtimeOptions.tfm,'net10.0',[StringComparison]::Ordinal)){throw 'Unexpected runtime configuration.'}
     Write-Output "Artifact safety checks passed: $($zip.Entries.Count) entries; runtime dependencies and reviewed native hashes verified."
 } finally {$zip.Dispose()}

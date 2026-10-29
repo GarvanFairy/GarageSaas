@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 # Never create or manage a SQL instance on the developer workstation.
-if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted') {
+if (![string]::Equals($env:GITHUB_ACTIONS,'true',[StringComparison]::Ordinal) -or ![string]::Equals($env:RUNNER_ENVIRONMENT,'github-hosted',[StringComparison]::Ordinal)) {
     throw 'LocalDB setup is restricted to an ephemeral GitHub-hosted runner.'
 }
 if ($env:GARAGESAAS_ALLOW_SHARED_LOCAL_SQLSERVER) { throw 'Shared SQL opt-in is forbidden in CI.' }

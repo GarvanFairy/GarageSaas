@@ -20,7 +20,11 @@ $summary = "$Suite`: discovered=$total; executed=$executed; passed=$passed; fail
 Write-Output $summary
 if ($env:GITHUB_STEP_SUMMARY) { $summary >> $env:GITHUB_STEP_SUMMARY }
 if (!$SummaryOnly) {
-    if ($total -lt 1 -or $executed -ne $total -or $passed -ne $total -or $trx.TestRun.ResultSummary.outcome -ne 'Completed') {
+    $results=@($trx.TestRun.Results.UnitTestResult)
+    if ($total -lt 1 -or $executed -ne $total -or $passed -ne $total -or $failed -ne 0 -or $notPassed -ne 0 -or
+        ($counters.HasAttribute('notExecuted') -and [int]$counters.notExecuted -ne 0) -or
+        ![string]::Equals([string]$trx.TestRun.ResultSummary.outcome,'Completed',[StringComparison]::Ordinal) -or
+        $results.Count -ne $total -or @($results|Where-Object {![string]::Equals([string]$_.outcome,'Passed',[StringComparison]::Ordinal)}).Count){
         throw "$Suite did not execute and pass every selected test. Missing infrastructure/skips are not a passing gate."
     }
     if ($ExpectedCount -gt 0 -and $total -ne $ExpectedCount) {
@@ -34,14 +38,16 @@ if (!$SummaryOnly) {
             $expected = @($expected | Where-Object { $_.className -eq "GarageSaas.UnitTests.Services.$InventoryClass" })
         }
         if (!$expected.Count) { throw 'Reviewed test inventory is missing.' }
-        $definitions = @{}
+        $definitions = [Collections.Generic.Dictionary[string,string]]::new([StringComparer]::Ordinal)
         foreach ($definition in @($trx.TestRun.TestDefinitions.UnitTest)) {
-            $definitions[[string]$definition.id] = ([string]$definition.TestMethod.className).Split(',')[0] + '.' + [string]$definition.TestMethod.name
+            if(!$definitions.TryAdd([string]$definition.id,([string]$definition.TestMethod.className).Split(',')[0] + '.' + [string]$definition.TestMethod.name)){
+                throw 'Duplicate test definition identity.'
+            }
         }
-        $counts = @{}
+        $counts = [Collections.Generic.Dictionary[string,int]]::new([StringComparer]::Ordinal)
         foreach ($result in @($trx.TestRun.Results.UnitTestResult)) {
-            $method = $definitions[[string]$result.testId]
-            if (!$method) { throw 'Test result has no method definition.' }
+            $method=$null
+            if (!$definitions.TryGetValue([string]$result.testId,[ref]$method)) { throw 'Test result has no method definition.' }
             if (!$counts.ContainsKey($method)) { $counts[$method] = 0 }
             $counts[$method]++
         }

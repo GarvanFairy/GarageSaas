@@ -235,3 +235,33 @@ Case 'guard-missing-count-cannot-imply-zero' { Reject-Guard {param($r)$r.guardSe
 Case 'guard-untracked-ef-role-rejected' { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0].fixtureRole='EfContext'} }
 if ($executed.Count - $guardStart -ne 36) { throw 'Required guard-session diagnostic inventory did not execute.' }
 Write-Output "PASS: $($executed.Count-$guardStart) additional guard-session security regressions; original 60-case gate preserved."
+$ordinalStart=$executed.Count
+foreach($code in @(0x00AD,0)){
+    $character=[string][char]$code
+    Case "guard-status-ordinal-$code" { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0].status='sleep'+$character+'ing'} }
+    Case "guard-role-ordinal-$code" { Reject-Guard {param($r)$r.guardSessionDetails.sessions[0].fixtureRole='Ownership'+$character+'Verification'} }
+}
+Case 'guard-property-ordinal' { Reject-Guard {param($r)$r.guardSessionDetails['avail'+[char]0x00AD+'ability']='available'} }
+Case 'guard-source-file-ordinal' {
+    $record=New-GuardRecord;$record.stack[0].file='Disposable'+[char]0x00AD+'SqlDatabase.cs'
+    $r=Export-Fixture (Marker $record)
+    Assert-Check (!$r.text.Contains([string][char]0x00AD))
+}
+foreach($kind in @('row','summary')){
+    $value=$kind
+    Case "trx-outcome-ordinal-$kind" {
+        $inputPath=Join-Path $root ('ordinal-'+$value+'-raw.trx');$outputPath=Join-Path $root ('ordinal-'+$value+'-safe.trx')
+        New-Trx -Path $inputPath -Text 'synthetic' -Outcome Passed -Suite unit
+        [xml]$xml=Get-Content -LiteralPath $inputPath -Raw
+        if($value -eq 'row'){$xml.TestRun.Results.UnitTestResult.SetAttribute('outcome',('Passed'+[char]0x00AD))}
+        else{$xml.TestRun.ResultSummary.SetAttribute('outcome',('Completed'+[char]0x00AD))}
+        $xml.Save($inputPath)
+        & $exporter -InputPath $inputPath -OutputPath $outputPath -Suite unit
+        $text=Get-Content -LiteralPath $outputPath -Raw
+        Assert-Check (!$text.Contains([string][char]0x00AD))
+        [xml]$safe=$text
+        Assert-Check $(if($value -eq 'row'){[string]::Equals($safe.TestRun.Results.UnitTestResult.outcome,'Error',[StringComparison]::Ordinal)}else{[string]::Equals($safe.TestRun.ResultSummary.outcome,'Failed',[StringComparison]::Ordinal)})
+    }
+}
+if($executed.Count-$ordinalStart -ne 8){throw 'Required ordinal diagnostic regressions did not execute.'}
+Write-Output 'PASS: 8 ordinal allowlist/status regressions; all original 96 reporting cases preserved.'
