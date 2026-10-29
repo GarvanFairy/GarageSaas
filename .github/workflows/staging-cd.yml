@@ -3,9 +3,15 @@ name: Prepare staging release (deployment disabled)
 on:
   workflow_dispatch:
     inputs:
+      mode:
+        description: Prepare a new candidate or validate the fixed historical promotion
+        type: choice
+        options: [prepare, promote]
+        default: prepare
+        required: true
       commit:
         description: Full SHA of a reviewed master commit with successful master-push full CI
-        required: true
+        required: false
         type: string
 
 permissions:
@@ -21,7 +27,7 @@ defaults:
 
 jobs:
   prerequisite:
-    if: ${{ github.repository == 'GarvanFairy/GarageSaas' && github.ref == 'refs/heads/master' }}
+    if: ${{ github.repository == 'GarvanFairy/GarageSaas' && github.ref == 'refs/heads/master' && inputs.mode == 'prepare' }}
     runs-on: windows-2025
     timeout-minutes: 5
     permissions:
@@ -169,20 +175,62 @@ jobs:
             artifacts/test-results/sql-status.json
           retention-days: 7
 
+  promotion:
+    if: ${{ github.repository == 'GarvanFairy/GarageSaas' && github.ref == 'refs/heads/master' && inputs.mode == 'promote' }}
+    runs-on: windows-2025
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      commit: ${{ steps.source.outputs.commit }}
+      run: ${{ steps.source.outputs.run }}
+      artifact: ${{ steps.source.outputs.artifact }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify fixed historical promotion source
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROMOTION_MODE: ${{ inputs.mode }}
+        run: ./.github/scripts/Resolve-StagingPromotion.ps1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          repository: GarvanFairy/GarageSaas
+          run-id: ${{ steps.source.outputs.run }}
+          artifact-ids: ${{ steps.source.outputs.artifact }}
+          path: candidate
+      - name: Validate existing ZIP without rebuilding
+        env:
+          RELEASE_COMMIT: ${{ steps.source.outputs.commit }}
+          GH_TOKEN: ${{ github.token }}
+          PROMOTION_MODE: ${{ inputs.mode }}
+        run: |
+          ./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash 640efc3f6084c9fc2562a0e09da3dc229e4f329ccdc40a71bc6873ccc0c56ce5 -SourceRun 40953823134
+          ./.github/scripts/Resolve-StagingPromotion.ps1
+
   deploy:
     # HARD STOP. Only a reviewed workflow commit may remove this condition after
     # the diagnostic-free release, target, recovery and OIDC approvals. No input
     # or repository/environment variable can enable deployment in this version.
     if: ${{ false }}
-    needs: [prerequisite, release]
+    needs: promotion
     runs-on: windows-2025
     timeout-minutes: 15
     environment: staging
     permissions:
       contents: read
+      actions: read
       id-token: write
     env:
-      RELEASE_COMMIT: ${{ needs.prerequisite.outputs.commit }}
+      RELEASE_COMMIT: ${{ needs.promotion.outputs.commit }}
+      AZURE_LOGIN_CLIENT_ID: dd6047f8-4557-4401-aab5-d7fd9e7d40a8
+      GH_TOKEN: ${{ github.token }}
+      PROMOTION_MODE: ${{ inputs.mode }}
       TARGET_RESOURCE_ID: ${{ vars.AZURE_STAGING_RESOURCE_ID }}
       EXPECTED_SHA256: ${{ vars.STAGING_APPROVED_ARTIFACT_SHA256 }}
       AZURE_LOGIN_TENANT_ID: ${{ vars.AZURE_STAGING_TENANT_ID }}
@@ -194,15 +242,20 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: staging-release-${{ needs.prerequisite.outputs.commit }}-${{ github.run_id }}
+          github-token: ${{ github.token }}
+          repository: GarvanFairy/GarageSaas
+          run-id: ${{ needs.promotion.outputs.run }}
+          artifact-ids: ${{ needs.promotion.outputs.artifact }}
           path: candidate
       - name: Revalidate approved archive and target before Azure login
         run: |
-          ./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256
-          ./.github/scripts/Assert-StagingTarget.ps1 -ResourceId $env:TARGET_RESOURCE_ID -TenantId $env:AZURE_LOGIN_TENANT_ID -SubscriptionId $env:AZURE_LOGIN_SUBSCRIPTION_ID
+          ./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun 40953823134
+          ./.github/scripts/Assert-StagingTarget.ps1 -ResourceId $env:TARGET_RESOURCE_ID -TenantId $env:AZURE_LOGIN_TENANT_ID -SubscriptionId $env:AZURE_LOGIN_SUBSCRIPTION_ID -ClientId $env:AZURE_LOGIN_CLIENT_ID -RequireClientId
+          ./.github/scripts/Resolve-StagingPromotion.ps1
+          throw 'Independent operational readiness evidence, reviewed CLI and sanitized deployment-status handling require a separate enablement review.'
       - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac
         with:
-          client-id: ${{ vars.AZURE_STAGING_CLIENT_ID }}
+          client-id: ${{ env.AZURE_LOGIN_CLIENT_ID }}
           tenant-id: ${{ env.AZURE_LOGIN_TENANT_ID }}
           subscription-id: ${{ env.AZURE_LOGIN_SUBSCRIPTION_ID }}
       - name: Deploy only the approved package to the existing staging app
