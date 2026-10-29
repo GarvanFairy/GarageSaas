@@ -117,6 +117,11 @@ foreach($job in @($promotion,$deploy)){
     $downloads=@($job.steps|Where-Object {$_.uses -like 'actions/download-artifact@*'})
     Require ($downloads.Count -eq 1)
     $download=$downloads[0]
+    Keys $download.with @('github-token','repository','run-id','artifact-ids','merge-multiple','path')
+    # Duplicate-safe BaseLoader deliberately returns YAML scalar values as strings.
+    Require ((Equal $download.with['merge-multiple'] 'true') -and (Equal $download.with.path 'candidate'))
+    Require (Equal $download.uses 'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093')
+    Require (Equal $download.with['github-token'] '${{ github.token }}')
     Require (!$download.Contains('if') -and !$download.Contains('continue-on-error') -and !$download.with.Contains('name') -and (Equal $download.with.repository 'GarvanFairy/GarageSaas'))
     $prefix=if([object]::ReferenceEquals($job,$promotion)){'steps.source'}else{'needs.promotion'}
     Require ((Equal $download.with['run-id'] ('${{ '+$prefix+'.outputs.run }}')) -and (Equal $download.with['artifact-ids'] ('${{ '+$prefix+'.outputs.artifact }}')))

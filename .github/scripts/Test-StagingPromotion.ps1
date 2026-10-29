@@ -58,6 +58,25 @@ foreach($pair in @(
     Check ('workflow-'+$count) $false {& $guard -Path $path}
 }
 if($count -ne 39){throw "Promotion inventory mismatch: $count"}
+# Independently mutate each download, retaining the other job's valid settings.
+# The reviewed action's ID path is flat only when merge-multiple is true.
+foreach($expression in @('steps.source','needs.promotion')){
+    $block='          artifact-ids: ${{ '+$expression+'.outputs.artifact }}'+"`n"+'          merge-multiple: true'+"`n"+'          path: candidate'
+    $normalized=$yaml.Replace("`r`n","`n")
+    if(!$normalized.Contains($block)){throw 'Missing expected single-artifact download layout fixture.'}
+    foreach($replacement in @(
+        $block.Replace('merge-multiple: true','merge-multiple: false'),
+        $block.Replace('          merge-multiple: true'+"`n",''),
+        $block.Replace('path: candidate','path: candidate/nested'),
+        $block.Replace('artifact-ids: ${{ '+$expression+'.outputs.artifact }}','artifact-ids: 999'),
+        $block.Replace('artifact-ids: ${{ '+$expression+'.outputs.artifact }}','artifact-ids: 12933496952,999'),
+        ($block+"`n"+'          pattern: staging-release-*')
+    )){
+        $path=Join-Path $root 'layout.yml';[IO.File]::WriteAllText($path,$normalized.Replace($block,$replacement))
+        Check ('layout-'+$expression+'-'+$count) $false {& $guard -Path $path}
+    }
+}
+if($count -ne 51){throw "Promotion layout inventory mismatch: $count"}
 if($PackageDirectory){
     # Copy an existing validated fixture only. Never build or repackage a ZIP.
     $bundle=Join-Path $root 'bundle';[void][IO.Directory]::CreateDirectory($bundle)
@@ -68,6 +87,20 @@ if($PackageDirectory){
     $gate=Join-Path $PSScriptRoot 'Assert-StagingDeploymentArtifact.ps1'
     $valid=@{Directory=$bundle;Commit=$Commit;ApprovedHash=$manifest.sha256;SourceRun='777'}
     Check 'bundle-valid' $true {& $gate @valid}
+    $nested=Join-Path $bundle 'staging-release-synthetic';[void][IO.Directory]::CreateDirectory($nested)
+    Check 'bundle-flat-plus-nested-directory' $false {& $gate @valid}
+    $nestedOnly=Join-Path $root 'nested-only';$artifactDirectory=Join-Path $nestedOnly 'staging-release-synthetic'
+    [void][IO.Directory]::CreateDirectory($artifactDirectory)
+    Copy-Item -LiteralPath (Join-Path $bundle $zip),(Join-Path $bundle 'release.json') -Destination $artifactDirectory
+    Check 'bundle-artifact-name-nesting' $false {& $gate -Directory $nestedOnly -Commit $Commit -ApprovedHash $manifest.sha256 -SourceRun 777}
+    # Empty, explicitly created fixture directory only; no recursive deletion.
+    Remove-Item -LiteralPath $nested
+    $textFile=Join-Path $bundle 'unexpected.txt';[IO.File]::WriteAllText($textFile,'synthetic')
+    Check 'bundle-extra-file' $false {& $gate @valid};Remove-Item -LiteralPath $textFile
+    $alternativeDirectory=Join-Path $root 'alternative';[void][IO.Directory]::CreateDirectory($alternativeDirectory)
+    Copy-Item -LiteralPath (Join-Path $bundle $zip) -Destination (Join-Path $alternativeDirectory 'GarageSaas-alternative.zip')
+    Copy-Item -LiteralPath (Join-Path $bundle 'release.json') -Destination $alternativeDirectory
+    Check 'bundle-alternative-package' $false {& $gate -Directory $alternativeDirectory -Commit $Commit -ApprovedHash $manifest.sha256 -SourceRun 777}
     Check 'bundle-source-run' $false {& $gate -Directory $bundle -Commit $Commit -ApprovedHash $manifest.sha256 -SourceRun 778}
     Check 'bundle-commit' $false {& $gate -Directory $bundle -Commit ('f'*40) -ApprovedHash $manifest.sha256 -SourceRun 777}
     Check 'bundle-hash' $false {& $gate -Directory $bundle -Commit $Commit -ApprovedHash ('0'*64) -SourceRun 777}
@@ -77,6 +110,6 @@ if($PackageDirectory){
     Check 'bundle-modified-bytes' $false {& $gate @valid}
     [IO.File]::WriteAllText((Join-Path $bundle 'release.json'),'{}')
     Check 'bundle-invalid-manifest' $false {& $gate @valid}
-    if($count -ne 46){throw "Promotion package inventory mismatch: $count"}
+    if($count -ne 62){throw "Promotion package inventory mismatch: $count"}
 }
 Write-Output "PASS: $count offline promotion regressions. Synthetic fixtures retained in temporary storage; no deployment."

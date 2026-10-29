@@ -203,6 +203,7 @@ jobs:
           repository: GarvanFairy/GarageSaas
           run-id: ${{ steps.source.outputs.run }}
           artifact-ids: ${{ steps.source.outputs.artifact }}
+          merge-multiple: true
           path: candidate
       - name: Validate existing ZIP without rebuilding
         env:
@@ -246,6 +247,7 @@ jobs:
           repository: GarvanFairy/GarageSaas
           run-id: ${{ needs.promotion.outputs.run }}
           artifact-ids: ${{ needs.promotion.outputs.artifact }}
+          merge-multiple: true
           path: candidate
       - name: Revalidate approved archive and target before Azure login
         run: |
