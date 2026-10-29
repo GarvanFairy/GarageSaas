@@ -1,0 +1,61 @@
+name: Staging OIDC read-only diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: garagesaas-staging-oidc-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  verify-oidc:
+    name: Verify staging OIDC and App Service read access
+    if: ${{ github.repository == 'GarvanFairy/GarageSaas' && github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      STAGING_CLIENT_ID: ${{ vars.AZURE_STAGING_CLIENT_ID }}
+      STAGING_TENANT_ID: ${{ vars.AZURE_STAGING_TENANT_ID }}
+      STAGING_SUBSCRIPTION_ID: ${{ vars.AZURE_STAGING_SUBSCRIPTION_ID }}
+      STAGING_RESOURCE_ID: ${{ vars.AZURE_STAGING_RESOURCE_ID }}
+    steps:
+      - name: Validate exact staging identity and target before login
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REPOSITORY" == "GarvanFairy/GarageSaas" ]] || exit 1
+          [[ "$GITHUB_REF" == "refs/heads/master" ]] || exit 1
+          [[ "$STAGING_CLIENT_ID" == "dd6047f8-4557-4401-aab5-d7fd9e7d40a8" ]] || { echo "Unexpected staging client ID"; exit 1; }
+          [[ "$STAGING_TENANT_ID" == "90589b9f-6a39-4285-a798-5d72f6937826" ]] || { echo "Unexpected staging tenant"; exit 1; }
+          [[ "$STAGING_SUBSCRIPTION_ID" == "d49b2f61-156a-489f-ba4c-acba574d30a0" ]] || { echo "Unexpected staging subscription"; exit 1; }
+          [[ "$STAGING_RESOURCE_ID" == "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu" ]] || { echo "Unexpected staging resource ID"; exit 1; }
+          echo "Exact configured staging identity and target match."
+
+      - name: Authenticate with Azure via GitHub OIDC (no secret)
+        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac
+        with:
+          client-id: ${{ env.STAGING_CLIENT_ID }}
+          tenant-id: ${{ env.STAGING_TENANT_ID }}
+          subscription-id: ${{ env.STAGING_SUBSCRIPTION_ID }}
+
+      - name: Verify Azure login context and read exact App Service
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual_tenant="$(az account show --query tenantId --output tsv --only-show-errors)"
+          actual_subscription="$(az account show --query id --output tsv --only-show-errors)"
+          [[ "$actual_tenant" == "$STAGING_TENANT_ID" ]] || { echo "Azure login tenant mismatch"; exit 1; }
+          [[ "$actual_subscription" == "$STAGING_SUBSCRIPTION_ID" ]] || { echo "Azure login subscription mismatch"; exit 1; }
+
+          actual_id="$(az webapp show --ids "$STAGING_RESOURCE_ID" --query id --output tsv --only-show-errors)"
+          [[ "$actual_id" == "$STAGING_RESOURCE_ID" ]] || { echo "Azure App Service resource mismatch"; exit 1; }
+
+          echo "GitHub OIDC login and staging App Service read access verified."
+          echo "No resource modifications, publishing, uploads, or deployment commands were executed." >> "$GITHUB_STEP_SUMMARY"
