@@ -196,6 +196,8 @@ jobs:
           ./.github/scripts/New-StagingReleaseArtifact.ps1 -PublishPath artifacts/ci-package-validation/publish -OutputDirectory artifacts/ci-package-validation/package -Commit $env:EXPECTED_COMMIT
       - name: Require all 37 artifact security mutation cases
         run: ./.github/scripts/Test-StagingReleaseArtifactChecks.ps1 -Path "artifacts/ci-package-validation/package/GarageSaas-$env:EXPECTED_COMMIT.zip"
+      - name: Require staging release hardening regressions
+        run: ./.github/scripts/Test-StagingReleaseHardening.ps1 -PublishPath artifacts/ci-package-validation/publish -PackageDirectory artifacts/ci-package-validation/package -Commit $env:EXPECTED_COMMIT
       - name: Verify complete ZIP inventory and independent SHA-256
         run: ./.github/scripts/Assert-StagingValidationArtifact.ps1 -PublishPath artifacts/ci-package-validation/publish -OutputDirectory artifacts/ci-package-validation/package -Commit $env:EXPECTED_COMMIT
       # Deliberately no upload, Azure login, OIDC, environment or deployment step.

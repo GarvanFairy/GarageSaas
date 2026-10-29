@@ -11,7 +11,7 @@ $paths=[string[]]@($files|ForEach-Object{[IO.Path]::GetRelativePath($root,$_.Ful
 [Array]::Sort($paths,[StringComparer]::Ordinal)
 $lines=foreach($relative in $paths){$hash=(Get-FileHash -LiteralPath (Join-Path $root $relative) -Algorithm SHA256).Hash;"${relative}:$hash"}
 $fingerprint=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes(($lines -join "`n")))).ToLowerInvariant()
-if($PSBoundParameters.ContainsKey('Expected') -and ($Expected -cnotmatch '^[0-9a-f]{64}$' -or $Expected -cne $fingerprint)){
+if($PSBoundParameters.ContainsKey('Expected') -and ($Expected -cnotmatch '\A[0-9a-f]{64}\z' -or ![string]::Equals($Expected,$fingerprint,[StringComparison]::Ordinal))){
     throw 'Runtime output differs from the build validated by full CI.'
 }
 Write-Output $fingerprint

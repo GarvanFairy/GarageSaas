@@ -32,6 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
+          ref: ${{ github.sha }}
           persist-credentials: false
       - id: check
         name: Require exact successful master-push full CI
@@ -51,11 +52,30 @@ jobs:
       EmailSettings__Username: ''
       EmailSettings__Password: ''
       RELEASE_COMMIT: ${{ needs.prerequisite.outputs.commit }}
+      CONTROLLER_COMMIT: ${{ github.sha }}
+      RELEASE_CONTROLS: ${{ github.workspace }}/release-control/.github/scripts
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Checkout exact validated application commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           ref: ${{ needs.prerequisite.outputs.commit }}
           persist-credentials: false
+      - name: Checkout reviewed release controls separately
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.sha }}
+          path: release-control
+          persist-credentials: false
+      - name: Verify application and workflow identities
+        env:
+          CONTROLLER_COMMIT: ${{ github.sha }}
+        run: |
+          $application = git rev-parse HEAD
+          if ($LASTEXITCODE -ne 0 -or ![string]::Equals($application,$env:RELEASE_COMMIT,[StringComparison]::Ordinal)) { throw 'Application checkout identity mismatch.' }
+          $controller = git -C release-control rev-parse HEAD
+          if ($LASTEXITCODE -ne 0 -or ![string]::Equals($controller,$env:CONTROLLER_COMMIT,[StringComparison]::Ordinal)) { throw 'Release controller identity mismatch.' }
+          & "$env:RELEASE_CONTROLS/Assert-StagingWorkflow.ps1" -Path release-control/.github/workflows/staging-cd.yml
+          "Application commit: $application; workflow/control commit: $controller. Candidate preparation does not approve deployment." >> $env:GITHUB_STEP_SUMMARY
       - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
         with:
           dotnet-version: '10.0.301'
@@ -65,12 +85,18 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Restore failed.' }
           dotnet build GarageSaas.sln -c Release --no-restore -p:ContinuousIntegrationBuild=true
           if ($LASTEXITCODE -ne 0) { throw 'Release build failed.' }
+      - name: Record release runtime identity before tests
+        id: runtime_identity
+        run: |
+          $fingerprint = & "$env:RELEASE_CONTROLS/Get-CiRuntimeFingerprint.ps1" -Path GarageSaas/bin/Release/net10.0
+          & "$env:RELEASE_CONTROLS/Assert-StagingBuildIdentity.ps1" -Path GarageSaas/bin/Release/net10.0 -Commit $env:RELEASE_COMMIT -ExpectedFingerprint $fingerprint
+          "fingerprint=$fingerprint" >> $env:GITHUB_OUTPUT
       # Re-test these build outputs before publish --no-build. No alternate
       # diagnostic-stripping compilation is allowed between test and publish.
       - name: Require full unit and identity inventories
         run: |
-          ./.github/scripts/Invoke-CiTests.ps1 -Suite unit
-          ./.github/scripts/Invoke-CiTests.ps1 -Suite identity
+          & "$env:RELEASE_CONTROLS/Invoke-CiTests.ps1" -Suite unit -ApplicationRoot . -ApplicationCommit $env:RELEASE_COMMIT -ControllerCommit $env:CONTROLLER_COMMIT
+          & "$env:RELEASE_CONTROLS/Invoke-CiTests.ps1" -Suite identity -ApplicationRoot . -ApplicationCommit $env:RELEASE_COMMIT -ControllerCommit $env:CONTROLLER_COMMIT
       - name: Require all JavaScript suites
         run: |
           foreach ($suite in @('CoreWorkflowClient','GarageContextClient','QuoteSuggestionsClient')) {
@@ -78,7 +104,10 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw 'Required JavaScript suite failed.' }
           }
       - name: Prepare isolated LocalDB
-        run: ./.github/scripts/Start-CiLocalDb.ps1
+        run: '& "$env:RELEASE_CONTROLS/Start-CiLocalDb.ps1"'
+      - name: Require SQL diagnostic sanitization regressions before SQL and evidence
+        id: sql_diagnostic_security
+        run: '& "$env:RELEASE_CONTROLS/Test-SafeSqlCleanupDiagnostics.ps1"'
       - name: Require full disposable SQL inventory
         env:
           GARAGESAAS_TEST_SQLSERVER: '(localdb)\GarageSaasIntegrationTests'
@@ -97,14 +126,26 @@ jobs:
           GARAGESAAS_RUN_MANUAL_QUOTE_ATTACHMENT_SQL_TESTS: '1'
           GARAGESAAS_RUN_WORKITEM_QUOTE_RACE_SQL_TESTS: '1'
           GARAGESAAS_RUN_EF_UPGRADE_SQL_TESTS: '1'
-        run: ./.github/scripts/Invoke-CiTests.ps1 -Suite sql
+        run: '& "$env:RELEASE_CONTROLS/Invoke-CiTests.ps1" -Suite sql -ApplicationRoot . -ApplicationCommit $env:RELEASE_COMMIT -ControllerCommit $env:CONTROLLER_COMMIT'
       - name: Publish tested build and validate actual ZIP
+        env:
+          TESTED_RUNTIME_FINGERPRINT: ${{ steps.runtime_identity.outputs.fingerprint }}
         run: |
+          & "$env:RELEASE_CONTROLS/Assert-StagingBuildIdentity.ps1" -Path GarageSaas/bin/Release/net10.0 -Commit $env:RELEASE_COMMIT -ExpectedFingerprint $env:TESTED_RUNTIME_FINGERPRINT
           dotnet publish GarageSaas/GarageSaas.csproj -c Release --no-build --no-restore --self-contained false -p:ContinuousIntegrationBuild=true -o artifacts/staging-release/publish
           if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
-          ./.github/scripts/New-StagingReleaseArtifact.ps1 -PublishPath artifacts/staging-release/publish -OutputDirectory artifacts/staging-release/package -Commit $env:RELEASE_COMMIT
+          & "$env:RELEASE_CONTROLS/Assert-StagingBuildIdentity.ps1" -Path artifacts/staging-release/publish -Commit $env:RELEASE_COMMIT -ExpectedFingerprint $env:TESTED_RUNTIME_FINGERPRINT
+          & "$env:RELEASE_CONTROLS/New-StagingReleaseArtifact.ps1" -PublishPath artifacts/staging-release/publish -OutputDirectory artifacts/staging-release/package -Commit $env:RELEASE_COMMIT
       - name: Require artifact security regression checks
-        run: ./.github/scripts/Test-StagingReleaseArtifactChecks.ps1 -Path "artifacts/staging-release/package/GarageSaas-$env:RELEASE_COMMIT.zip"
+        run: '& "$env:RELEASE_CONTROLS/Test-StagingReleaseArtifactChecks.ps1" -Path "artifacts/staging-release/package/GarageSaas-$env:RELEASE_COMMIT.zip"'
+      - name: Require staging release hardening regressions
+        run: '& "$env:RELEASE_CONTROLS/Test-StagingReleaseHardening.ps1" -PublishPath artifacts/staging-release/publish -PackageDirectory artifacts/staging-release/package -Commit $env:RELEASE_COMMIT'
+      - name: Independently verify final release ZIP and tested identity
+        env:
+          TESTED_RUNTIME_FINGERPRINT: ${{ steps.runtime_identity.outputs.fingerprint }}
+        run: |
+          & "$env:RELEASE_CONTROLS/Assert-StagingBuildIdentity.ps1" -Path artifacts/staging-release/publish -Commit $env:RELEASE_COMMIT -ExpectedFingerprint $env:TESTED_RUNTIME_FINGERPRINT
+          & "$env:RELEASE_CONTROLS/Assert-StagingValidationArtifact.ps1" -PublishPath artifacts/staging-release/publish -OutputDirectory artifacts/staging-release/package -Commit $env:RELEASE_COMMIT
       - name: Upload validated immutable candidate
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -115,7 +156,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - name: Upload sanitized test evidence
-        if: ${{ always() }}
+        if: ${{ always() && steps.sql_diagnostic_security.outcome == 'success' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: staging-release-tests-${{ github.run_id }}
@@ -144,9 +185,12 @@ jobs:
       RELEASE_COMMIT: ${{ needs.prerequisite.outputs.commit }}
       TARGET_RESOURCE_ID: ${{ vars.AZURE_STAGING_RESOURCE_ID }}
       EXPECTED_SHA256: ${{ vars.STAGING_APPROVED_ARTIFACT_SHA256 }}
+      AZURE_LOGIN_TENANT_ID: ${{ vars.AZURE_STAGING_TENANT_ID }}
+      AZURE_LOGIN_SUBSCRIPTION_ID: ${{ vars.AZURE_STAGING_SUBSCRIPTION_ID }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
+          ref: ${{ github.sha }}
           persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
@@ -154,17 +198,13 @@ jobs:
           path: candidate
       - name: Revalidate approved archive and target before Azure login
         run: |
-          $manifest = Get-Content candidate/release.json -Raw | ConvertFrom-Json
-          $name = "GarageSaas-$env:RELEASE_COMMIT.zip"
-          $hash = (Get-FileHash "candidate/$name" -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($manifest.commit -ne $env:RELEASE_COMMIT -or $manifest.package -ne $name -or $manifest.sha256 -ne $hash -or $env:EXPECTED_SHA256 -cne $hash) { throw 'Approved artifact identity/hash mismatch.' }
-          if ($env:TARGET_RESOURCE_ID -notmatch '^/subscriptions/[0-9a-f-]{36}/resourceGroups/[^/]+/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu$') { throw 'Unapproved staging target.' }
-          ./.github/scripts/Test-StagingReleaseArtifact.ps1 -Path "candidate/$name"
+          ./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256
+          ./.github/scripts/Assert-StagingTarget.ps1 -ResourceId $env:TARGET_RESOURCE_ID -TenantId $env:AZURE_LOGIN_TENANT_ID -SubscriptionId $env:AZURE_LOGIN_SUBSCRIPTION_ID
       - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac
         with:
           client-id: ${{ vars.AZURE_STAGING_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_STAGING_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_STAGING_SUBSCRIPTION_ID }}
+          tenant-id: ${{ env.AZURE_LOGIN_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_LOGIN_SUBSCRIPTION_ID }}
       - name: Deploy only the approved package to the existing staging app
         run: |
           az webapp deploy --ids $env:TARGET_RESOURCE_ID --src-path "candidate/GarageSaas-$env:RELEASE_COMMIT.zip" --type zip --clean true --restart true --only-show-errors --output none

@@ -7,8 +7,10 @@ New-Item -ItemType Directory -Path $fixtureRoot -Force|Out-Null
 $sha='a'*40
 $fullSteps=@('Build Release','Record runtime identity before tests','Unit and in-process HTTP tests (no SQL)',
     'Identity diagnostic safety tests (exactly 19 required)','JavaScript client regression checks',
+    'Require all 60 SQL diagnostic sanitization regressions',
     'Create isolated runner-only LocalDB instance','Disposable SQL integration tests','Upload sanitized test evidence on success or failure')
-$artifactSteps=@('Checkout exact CI validation commit','Verify and report artifact source identity','Install .NET 10 SDK',
+$artifactSteps=@('Checkout exact CI validation commit','Require staging release prerequisite regression tests',
+    'Verify and report artifact source identity','Install .NET 10 SDK',
     'Restore and build Release application','Publish without rebuilding and validate package',
     'Require all 37 artifact security mutation cases','Verify complete ZIP inventory and independent SHA-256')
 function NewEvidence {
@@ -87,6 +89,17 @@ foreach($index in 0..($fullSteps.Count-1)){
     $stepIndex=$index
     CheckFixture "full-step-$index-missing" $false {param($e)$e.jobs[0].steps=@($e.jobs[0].steps|Where-Object{$_.name -cne $fullSteps[$stepIndex]})}
 }
+foreach($mode in @('failure','skipped','running','duplicate')){
+    $securityMode=$mode
+    CheckFixture "sanitizer-$mode" $false {param($e)
+        $step=@($e.jobs[0].steps|Where-Object {$_.name -ceq 'Require all 60 SQL diagnostic sanitization regressions'})[0]
+        switch($securityMode){
+            'running'{$step.status='in_progress'}
+            'duplicate'{$e.jobs[0].steps+=$step}
+            default{$step.conclusion=$securityMode}
+        }
+    }
+}
 CheckFixture 'workflow-running' $false {param($e)$e.run.status='in_progress'}
 CheckFixture 'workflow-cancelled' $false {param($e)$e.run.conclusion='cancelled'}
 CheckFixture 'workflow-skipped' $false {param($e)$e.run.conclusion='skipped'}
@@ -103,6 +116,14 @@ CheckFixture 'uppercase-sha' $false {} ('A'*40)
 CheckFixture 'short-sha' $false {} 'a635441'
 CheckFixture 'invalid-sha' $false {} ('z'*40)
 CheckFixture 'placeholder-sha' $false {} ('0'*40)
+CheckFixture 'ordinal-input-sha' $false {} ($sha+[char]0x00AD)
+CheckFixture 'ordinal-run-sha' $false {param($e)$e.run.head_sha=$sha+[char]0x00AD}
+CheckFixture 'ordinal-comparison' $false {param($e)$e.comparison='ahead'+[char]0x00AD}
+CheckFixture 'ordinal-event' $false {param($e)$e.run.event='push'+[char]0x00AD}
+CheckFixture 'ordinal-job-name' $false {param($e)$e.jobs[0].name='Windows build and tests'+[char]0x00AD}
+CheckFixture 'ordinal-step-name' $false {param($e)$e.jobs[0].steps[0].name='Build Release'+[char]0x00AD}
+CheckFixture 'ordinal-run-id' $false {param($e)$e.run.id='91001'+[char]0x00AD}
+CheckFixture 'ordinal-head-branch' $false {param($e)$e.run.head_branch='master'+[char]0}
 $badPath=Join-Path $fixtureRoot 'malformed.json';Set-Content $badPath '{invalid'
 $rejected=$false;try{& $checker -Commit $sha -EvidencePath $badPath|Out-Null}catch{$rejected=$true}
 if(!$rejected){throw 'Malformed evidence accepted'};$negative++
@@ -157,5 +178,5 @@ try{
     Remove-Item Function:\Invoke-RestMethod
     Remove-Variable GarageSaasStagingPrerequisiteMock -Scope Global
 }
-if ($positive -ne 5 -or $negative -ne 98) { throw 'Required staging prerequisite inventory did not execute: expected 5 positive and 98 negative cases.' }
+if ($positive -ne 5 -or $negative -ne 116) { throw 'Required staging prerequisite inventory did not execute: expected 5 positive and 116 negative cases.' }
 Write-Output "PASS: $positive positive and $negative negative staging prerequisite regressions. Synthetic fixtures/mocked HTTP only; zero live requests or workflow executions."
