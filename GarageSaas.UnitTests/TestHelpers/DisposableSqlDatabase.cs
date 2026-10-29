@@ -176,6 +176,10 @@ internal sealed class DisposableSqlDatabase
     }
 
     internal T Track<T>(T task) where T : Task => _workers.Track(task);
+    internal void RegisterCustomerDiagnostics() { if (!_sharedServer) _cleanupDiagnostics.RegisterCustomerDiagnostics(); }
+    internal T SeedStep<T>(SqlCleanupDiagnostics.SeedGraph graph, SqlCleanupDiagnostics.SeedStage stage, Func<T> work) => _cleanupDiagnostics.SeedStep(graph, stage, work);
+    internal void SeedStep(SqlCleanupDiagnostics.SeedGraph graph, SqlCleanupDiagnostics.SeedStage stage, Action work) => _cleanupDiagnostics.SeedStep(graph, stage, work);
+    internal IDisposable SeedDisposal(IDisposable resource) => _cleanupDiagnostics.SeedDisposal(resource);
     internal void RegisterScenario(SqlCleanupDiagnostics.Scenario scenario) { if (!_sharedServer) _cleanupDiagnostics.RegisterScenario(scenario); }
     internal void BodyCompleted() => _cleanupDiagnostics.BodyCompleted();
     private void ObserveLifecycle(string phase)
@@ -216,7 +220,9 @@ internal sealed class DisposableSqlDatabase
             ValidateCatalog(DatabaseName);
             ObserveLifecycle("PreOwnership");
             operation = "OpenOwnedDatabase";
-            using (var database = Open(DatabaseName, SqlFixtureConnectionRole.OwnershipVerification))
+            var database = Open(DatabaseName, SqlFixtureConnectionRole.OwnershipVerification);
+            using (var databaseLifetime = _cleanupDiagnostics.OpenDisposal(_cleanupDiagnostics.CustomerDiagnosticsEnabled,
+                SqlCleanupDiagnostics.OpenStage.ConnectionDispose, database))
             {
                 operation = "VerifyOwnershipMarker";
                 using var command = database.CreateCommand(); command.CommandTimeout = 8;
@@ -285,11 +291,16 @@ internal sealed class DisposableSqlDatabase
 
     private SqlConnection Open(string catalog, SqlFixtureConnectionRole role)
     {
+        var observed = _cleanupDiagnostics.CustomerDiagnosticsEnabled && role == SqlFixtureConnectionRole.OwnershipVerification;
+        T Step<T>(SqlCleanupDiagnostics.OpenStage stage, Func<T> work) => observed ? _cleanupDiagnostics.OpenStep(stage, work) : work();
         var connection = new SqlConnection(Connection(catalog));
         try
         {
-            connection.Open();
-            using var command = connection.CreateCommand(); command.CommandTimeout = 8;
+            Step(SqlCleanupDiagnostics.OpenStage.ConnectionOpen, () => { connection.Open(); return true; });
+            var command = Step(SqlCleanupDiagnostics.OpenStage.IdentityQuerySetup, connection.CreateCommand);
+            using var commandLifetime = _cleanupDiagnostics.OpenDisposal(observed, SqlCleanupDiagnostics.OpenStage.CommandDispose, command);
+            Step(SqlCleanupDiagnostics.OpenStage.IdentityQuerySetup, () => {
+            command.CommandTimeout = 8;
             command.CommandText = @"SELECT CONVERT(nvarchar(128),SERVERPROPERTY('MachineName')),
                 CONVERT(nvarchar(128),SERVERPROPERTY('InstanceName')), CONVERT(int,SERVERPROPERTY('IsLocalDB')), DB_NAME(),
                 CONVERT(nvarchar(128),SERVERPROPERTY('ComputerNamePhysicalNetBIOS')),
@@ -302,7 +313,11 @@ internal sealed class DisposableSqlDatabase
                         WHERE session_id=@@SPID AND parent_connection_id IS NULL ORDER BY connection_id;
                     END TRY
                     BEGIN CATCH SELECT CAST(NULL AS uniqueidentifier); END CATCH";
-            using var reader = command.ExecuteReader();
+            return true;
+            });
+            var reader = Step(SqlCleanupDiagnostics.OpenStage.IdentityQueryExecute, command.ExecuteReader);
+            using var readerLifetime = _cleanupDiagnostics.OpenDisposal(observed, SqlCleanupDiagnostics.OpenStage.ReaderDispose, reader);
+            Step(SqlCleanupDiagnostics.OpenStage.IdentityQueryRead, () => {
             if (!reader.Read()) throw new InvalidOperationException("SQL instance identity unavailable.");
             if (_sharedServer)
                 ValidateSharedIdentity(new SqlServerIdentity(reader.GetString(0), reader.GetString(4),
@@ -316,10 +331,12 @@ internal sealed class DisposableSqlDatabase
             }
             if (!string.Equals(reader.GetString(3), catalog, StringComparison.Ordinal))
                 throw new InvalidOperationException("Resolved server/catalog mismatch.");
-            _cleanupDiagnostics.TrackConnection(reader, role);
-            return connection;
+            return true;
+            });
+            Step(SqlCleanupDiagnostics.OpenStage.RoleQueryRead, () => { _cleanupDiagnostics.TrackConnection(reader, role); return true; });
+            return Step(SqlCleanupDiagnostics.OpenStage.Completed, () => connection);
         }
-        catch { connection.Dispose(); throw; }
+        catch { Step(SqlCleanupDiagnostics.OpenStage.ConnectionDispose, () => { connection.Dispose(); return true; }); throw; }
     }
 
     private static string ResolvePipe()

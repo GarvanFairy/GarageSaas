@@ -20,6 +20,7 @@ public class CustomerDeletionCoordinationSqlTests
     {
         if (_unsafeCleanup) Assert.Inconclusive("Uncertain cleanup: refuse further creation.");
         _database = DisposableSqlDatabase.Start("GARAGESAAS_RUN_CUSTOMER_DELETION_SQL_TESTS", "QuoteCoordination");
+        _database.RegisterCustomerDiagnostics();
         _database.Create(); TestContext.WriteLine($"Owned disposable database: {_database.DatabaseName}");
     }
     [TestCleanup]
@@ -145,21 +146,31 @@ public class CustomerDeletionCoordinationSqlTests
     private sealed record State(SqlInvoiceGraph Main, SqlInvoiceGraph Other, int Customer, int TargetId);
     private State Seed(string kind)
     {
-        using var db = new SignupContext(Options()); var a = SqlInvoiceGraph.Seed(db); var b = SqlInvoiceGraph.Seed(db);
-        db.CustomerOwnedVehicles.RemoveRange(db.CustomerOwnedVehicles.AsQueryable().Where(x => x.VehicleId == a.VehicleId));
-        db.CustomerVehicle.Single(x => x.Id == a.VehicleId).GarageOwned = true;
-        var c = new GarageBusinessCustomer { GarageBusinessId = a.GarageId, CreatedDate = DateTime.UtcNow, GarageCustomerForename = "Deletion target" };
-        db.Add(c); db.SaveChanges(); var target = 0;
+        var db = _database!.SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.ContextConstruction, () => new SignupContext(Options()));
+        using var contextLifetime = _database.SeedDisposal(db);
+        SqlInvoiceGraph Graph(SqlCleanupDiagnostics.SeedGraph graph) =>
+            _database.SeedStep(graph, SqlCleanupDiagnostics.SeedStage.GraphConstruction, () =>
+                SqlInvoiceGraph.Seed(db, (stage, save) => _database.SeedStep(graph, stage, save)));
+        var a = Graph(SqlCleanupDiagnostics.SeedGraph.First);
+        var b = Graph(SqlCleanupDiagnostics.SeedGraph.Second);
+        var c = _database.SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.PrepareExistingState, () => {
+            db.CustomerOwnedVehicles.RemoveRange(db.CustomerOwnedVehicles.AsQueryable().Where(x => x.VehicleId == a.VehicleId));
+            db.CustomerVehicle.Single(x => x.Id == a.VehicleId).GarageOwned = true;
+            var customer = new GarageBusinessCustomer { GarageBusinessId = a.GarageId, CreatedDate = DateTime.UtcNow, GarageCustomerForename = "Deletion target" };
+            db.Add(customer); return customer;
+        });
+        _database.SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.CustomerSave, () => db.SaveChanges());
+        var target = 0;
         if (kind == "quote-edit")
-        {
-            var result = new WorkQuoteService(db).AddOrUpdateWorkQuote(Quote(a, a.CustomerId), a.GarageId, "seed");
-            Assert.IsTrue(result.Success, result.ErrorMessage); target = result.Data.WorkQuoteId;
-        }
+            target = _database.SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.ExistingQuoteSeed, () => {
+                var result = new WorkQuoteService(db).AddOrUpdateWorkQuote(Quote(a, a.CustomerId), a.GarageId, "seed");
+                Assert.IsTrue(result.Success, result.ErrorMessage); return result.Data.WorkQuoteId;
+            });
         if (kind == "invoice-edit")
-        {
-            var result = new VehicleInvoiceService(db).AddOrUpdateVehicleInvoice(Invoice(a, a.CustomerId), a.GarageId, "seed");
-            Assert.IsTrue(result.Success, result.ErrorMessage); target = result.Data.Id;
-        }
+            target = _database.SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.ExistingInvoiceSeed, () => {
+                var result = new VehicleInvoiceService(db).AddOrUpdateVehicleInvoice(Invoice(a, a.CustomerId), a.GarageId, "seed");
+                Assert.IsTrue(result.Success, result.ErrorMessage); return result.Data.Id;
+            });
         return new(a,b,c.Id,target);
     }
     private static CombinedWorkQuoteWorkitem Quote(SqlInvoiceGraph a, int customer, int id = 0) => new()

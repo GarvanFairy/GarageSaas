@@ -11,6 +11,66 @@ namespace GarageSaas.UnitTests.TestHelpers;
 // principals, query payloads or database ownership-marker values are emitted.
 internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
 {
+    internal enum SeedGraph { None, First, Second }
+    internal enum SeedStage { ContextConstruction, GraphConstruction, GarageSave, CustomerVehicleSave, OwnershipWorkItemSave, PrepareExistingState, CustomerSave, ExistingQuoteSeed, ExistingInvoiceSeed, ContextDispose }
+    internal enum OpenStage { ConnectionOpen, IdentityQuerySetup, IdentityQueryExecute, IdentityQueryRead, RoleQueryRead, ReaderDispose, CommandDispose, ConnectionDispose, Completed }
+    internal const int MaximumStepMilliseconds = 600000;
+    private bool _customerDiagnostics;
+    private object? _seedEvidence, _openEvidence;
+    private Exception? _seedFailure;
+    internal bool CustomerDiagnosticsEnabled => Enabled && _customerDiagnostics;
+    internal void RegisterCustomerDiagnostics() { if (Enabled && !_scenario.HasValue) _customerDiagnostics = true; }
+    internal static (int Milliseconds, bool Capped) BoundDuration(long milliseconds)
+        => ((int)Math.Clamp(milliseconds, 0, MaximumStepMilliseconds), milliseconds > MaximumStepMilliseconds);
+    internal static object StepEvidence(string graph, string stage, Exception? error, long elapsed)
+    {
+        var numbers = new List<int>(); var cursor = error; var depth = 0; var errorsTruncated = false;
+        while (cursor != null && depth++ < 4) {
+            if (cursor is SqlException sql) {
+                errorsTruncated |= sql.Errors.Count > 5;
+                foreach (SqlError item in sql.Errors.Cast<SqlError>().Take(5))
+                    if (!numbers.Contains(item.Number) && numbers.Count < 5) numbers.Add(item.Number);
+            }
+            cursor = cursor.InnerException;
+        }
+        var duration = BoundDuration(elapsed);
+        return new { graph, stage, succeeded = error == null,
+            category = error switch { null => "None", SqlException => "Sql", Microsoft.EntityFrameworkCore.DbUpdateException => "DbUpdate", TimeoutException => "Timeout", OperationCanceledException => "Cancelled", InvalidOperationException => "InvalidOperation", _ => "Other" },
+            sqlErrorNumbers = numbers.Count == 0 ? null : numbers.Take(4).ToArray(),
+            sqlErrorsTruncated = numbers.Count > 4 || errorsTruncated, exceptionChainTruncated = cursor != null,
+            elapsedMilliseconds = duration.Milliseconds, durationCapped = duration.Capped };
+    }
+    private T Measure<T>(bool seed, string graph, string stage, Func<T> work)
+    {
+        if (!CustomerDiagnosticsEnabled) return work();
+        var clock = Stopwatch.StartNew();
+        try {
+            var result = work();
+            // Successful disposal must not overwrite the operation's original failure.
+            if (seed && _seedFailure == null || !seed && stage == nameof(OpenStage.Completed))
+                try { if (seed) _seedEvidence = StepEvidence(graph, stage, null, clock.ElapsedMilliseconds);
+                      else _openEvidence = StepEvidence(graph, stage, null, clock.ElapsedMilliseconds); } catch { }
+            return result;
+        } catch (Exception original) {
+            try {
+                if (seed) {
+                    if (_seedFailure == null) _seedEvidence = StepEvidence(graph, stage, original, clock.ElapsedMilliseconds);
+                    _seedFailure ??= original;
+                } else _openEvidence = StepEvidence(graph, stage, original, clock.ElapsedMilliseconds);
+            } catch { } // Observation cannot replace the exception from work/disposal.
+            throw;
+        }
+    }
+    internal T SeedStep<T>(SeedGraph graph, SeedStage stage, Func<T> work) => Measure(true, graph.ToString(), stage.ToString(), work);
+    internal void SeedStep(SeedGraph graph, SeedStage stage, Action work) => SeedStep(graph, stage, () => { work(); return true; });
+    internal T OpenStep<T>(OpenStage stage, Func<T> work) => Measure(false, "None", stage.ToString(), work);
+    internal void OpenStep(OpenStage stage, Action work) => OpenStep(stage, () => { work(); return true; });
+    private sealed class DiagnosticDisposal(Action dispose) : IDisposable { public void Dispose() => dispose(); }
+    internal IDisposable OpenDisposal(bool observe, OpenStage stage, IDisposable resource)
+        => observe ? new DiagnosticDisposal(() => OpenStep(stage, resource.Dispose)) : resource;
+    internal IDisposable SeedDisposal(IDisposable resource)
+        => CustomerDiagnosticsEnabled ? new DiagnosticDisposal(() => SeedStep(SeedGraph.None, SeedStage.ContextDispose, resource.Dispose)) : resource;
+
     internal enum Scenario { NewRetargetNone, UpdateRetargetNone, NewQuoteNone, UpdateQuoteNone, NewRetargetDirect, NewRetargetMixed }
     private Scenario? _scenario;
     private bool _bodyCompleted;
@@ -21,7 +81,7 @@ internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
     private readonly List<int> _guardIds = new();
     private int? _lifecycleGuardCount;
     internal bool LifecycleEnabled => Enabled && _scenario.HasValue;
-    internal void RegisterScenario(Scenario scenario) { if (Enabled && Enum.IsDefined(scenario)) _scenario = scenario; }
+    internal void RegisterScenario(Scenario scenario) { if (Enabled && !_customerDiagnostics && Enum.IsDefined(scenario)) _scenario = scenario; }
     internal void BodyCompleted() { if (LifecycleEnabled) _bodyCompleted = true; }
 
     // IDs and login timestamps are private correlation inputs, never serialized.
@@ -320,13 +380,17 @@ internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
                 data["snapshotSqlErrors"] = snapshotError is SqlException sqlError ? SqlCodes(sqlError) : null;
             }
         }
+        if (CustomerDiagnosticsEnabled) {
+            data["seeding"] = _seedEvidence;
+            data["cleanupOpen"] = _openEvidence;
+        }
         if (LifecycleEnabled) {
             data["lifecycle"] = new { availability = "available", scenario = _scenario.ToString(), bodyCompleted = _bodyCompleted, observations = _observations };
             if (JsonSerializer.Serialize(data).Length > 16384)
                 data["lifecycle"] = new { availability = "unavailable", scenario = _scenario.ToString(), bodyCompleted = _bodyCompleted, observations = Array.Empty<object>() };
         }
         try { _write("SQL-CLEANUP-DIAGNOSTIC:" + JsonSerializer.Serialize(data)); }
-        finally { _identities.Clear(); _ambiguous.Clear(); _guardIds.Clear(); _roles.Clear(); _observations.Clear(); _phases.Clear(); }
+        finally { _identities.Clear(); _ambiguous.Clear(); _guardIds.Clear(); _roles.Clear(); _observations.Clear(); _phases.Clear(); _seedFailure = null; _seedEvidence = null; _openEvidence = null; }
     }
 
     private static object[] SqlCodes(SqlException error) => error.Errors.Cast<SqlError>()

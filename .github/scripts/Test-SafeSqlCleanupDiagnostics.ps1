@@ -339,3 +339,55 @@ Case 'lifecycle-unknown-count-not-zero' {$r=New-LifecycleRecord;$s=$r.lifecycle.
 Case 'lifecycle-body-completed-does-not-pass-failed-test' {$r=New-LifecycleRecord;$r.lifecycle.bodyCompleted=$true;$safe=Export-Fixture (Marker $r);$blocked=$false;try{& $gate -Path $safe.path -Suite sql -ExpectedCount 1|Out-Null}catch{$blocked=$true};Assert-Check $blocked}
 if($badLifecycle.Count -ne 33 -or $executed.Count-$lifecycleStart -ne 88){throw "Lifecycle security inventory incomplete: $($executed.Count-$lifecycleStart)"}
 Write-Output 'PASS: 88 lifecycle security regressions; original 104 cases preserved (192 total). Synthetic fixtures only.'
+# Customer fixture step evidence. Preserve all original 192 lifecycle/reporting cases.
+$stepStart=$executed.Count
+function New-StepEvidence([bool]$Seed=$true){
+    [ordered]@{graph=$(if($Seed){'First'}else{'None'});stage=$(if($Seed){'GarageSave'}else{'ConnectionOpen'});
+        succeeded=$false;category='Sql';sqlErrorNumbers=@(-2);sqlErrorsTruncated=$false;exceptionChainTruncated=$false;
+        elapsedMilliseconds=8;durationCapped=$false}
+}
+function New-StepRecord { $r=New-Record;$r.seeding=New-StepEvidence;$r.cleanupOpen=New-StepEvidence $false;return $r }
+function Reject-Step([scriptblock]$change){$r=New-StepRecord;& $change $r;$safe=Export-Fixture (Marker $r);Assert-Check ($safe.diagnostic.reason -ceq 'invalid' -and $null -eq $safe.diagnostic.record)}
+foreach($graph in @('First','Second')){foreach($stage in @('GraphConstruction','GarageSave','CustomerVehicleSave','OwnershipWorkItemSave')){
+    Case "step-seed-$graph-$stage" {$r=New-StepRecord;$r.seeding.graph=$graph;$r.seeding.stage=$stage;$safe=Export-Fixture (Marker $r);Assert-Check ($safe.diagnostic.record.seeding.graph -ceq $graph -and $safe.diagnostic.record.seeding.stage -ceq $stage -and @($safe.diagnostic.record.seeding.sqlErrorNumbers)[0] -eq -2)}
+}}
+foreach($stage in @('ContextConstruction','PrepareExistingState','CustomerSave','ExistingQuoteSeed','ExistingInvoiceSeed','ContextDispose')){
+    Case "step-seed-$stage" {$r=New-StepRecord;$r.seeding.graph='None';$r.seeding.stage=$stage;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.stage -ceq $stage)}
+}
+foreach($stage in @('ConnectionOpen','IdentityQuerySetup','IdentityQueryExecute','IdentityQueryRead','RoleQueryRead','ReaderDispose','CommandDispose','ConnectionDispose')){
+    Case "step-open-$stage" {$r=New-StepRecord;$r.cleanupOpen.stage=$stage;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.cleanupOpen.stage -ceq $stage)}
+}
+Case 'step-open-completed' {$r=New-StepRecord;$s=$r.cleanupOpen;$s.stage='Completed';$s.succeeded=$true;$s.category='None';$s.sqlErrorNumbers=$null;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.cleanupOpen.succeeded)}
+Case 'step-optional-unavailable' {$r=New-StepRecord;$r.seeding=$null;$r.cleanupOpen=$null;$safe=Export-Fixture (Marker $r);Assert-Check ($null -eq $safe.diagnostic.record.seeding -and $null -eq $safe.diagnostic.record.cleanupOpen)}
+Case 'step-wrapped-dbupdate' {$r=New-StepRecord;$r.seeding.category='DbUpdate';$r.seeding.sqlErrorNumbers=@(-2,1205,3702,4060);$r.seeding.sqlErrorsTruncated=$true;$r.seeding.exceptionChainTruncated=$true;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.sqlErrorNumbers.Count -eq 4)}
+Case 'step-duration-cap' {$r=New-StepRecord;$r.seeding.elapsedMilliseconds=600000;$r.seeding.durationCapped=$true;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.durationCapped)}
+Case 'step-missing-sql-numbers' {$r=New-StepRecord;$r.seeding.category='Other';$r.seeding.sqlErrorNumbers=$null;Assert-Check ($null -eq (Export-Fixture (Marker $r)).diagnostic.record.seeding.sqlErrorNumbers)}
+Case 'step-successful-seeding' {$r=New-StepRecord;$r.seeding.succeeded=$true;$r.seeding.category='None';$r.seeding.sqlErrorNumbers=$null;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.succeeded)}
+foreach($category in @('Timeout','Cancelled','InvalidOperation')){
+    Case "step-category-$category" {$r=New-StepRecord;$r.seeding.category=$category;$r.seeding.sqlErrorNumbers=$null;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.category -ceq $category)}
+}
+$badSteps=[ordered]@{
+    'array'={param($r)$r.seeding=@()};'missing-stage'={param($r)$r.seeding.Remove('stage')};
+    'unknown-stage'={param($r)$r.seeding.stage=$canary};'unicode-stage'={param($r)$r.cleanupOpen.stage='ConnectionOpen'+[char]0x00ad};
+    'unknown-graph'={param($r)$r.seeding.graph=$canary};'graph-conflict'={param($r)$r.seeding.graph='None'};
+    'unknown-category'={param($r)$r.seeding.category=$canary};'outcome-conflict'={param($r)$r.seeding.succeeded=$true};
+    'raw-exception'={param($r)$r.seeding.message=$canary};'extra-exception-data'={param($r)$r.cleanupOpen.data=@{sql=$canary}};
+    'raw-database'={param($r)$r.cleanupOpen.databaseName=$canary};'negative-time'={param($r)$r.seeding.elapsedMilliseconds=-1};
+    'oversized-time'={param($r)$r.seeding.elapsedMilliseconds=600001};'overflow-time'={param($r)$r.seeding.elapsedMilliseconds=9223372036854775807};
+    'fractional-time'={param($r)$r.seeding.elapsedMilliseconds=0.5};'string-time'={param($r)$r.seeding.elapsedMilliseconds=$canary};
+    'cap-conflict'={param($r)$r.seeding.durationCapped=$true};'bool-duration'={param($r)$r.seeding.durationCapped='true'};
+    'five-errors'={param($r)$r.seeding.sqlErrorNumbers=@(-2,1,2,3,4)};'duplicate-errors'={param($r)$r.seeding.sqlErrorNumbers=@(-2,-2)};
+    'overflow-error'={param($r)$r.seeding.sqlErrorNumbers=@(2147483648)};'string-error'={param($r)$r.seeding.sqlErrorNumbers=@($canary)};
+    'empty-errors'={param($r)$r.seeding.sqlErrorNumbers=@()};'scalar-errors'={param($r)$r.seeding.sqlErrorNumbers=-2};
+    'missing-errors'={param($r)$r.seeding.Remove('sqlErrorNumbers')};'wrong-open-graph'={param($r)$r.cleanupOpen.graph='First'};
+    'open-success-wrong-stage'={param($r)$r.cleanupOpen.succeeded=$true;$r.cleanupOpen.category='None';$r.cleanupOpen.sqlErrorNumbers=$null};
+    'open-completed-failure'={param($r)$r.cleanupOpen.stage='Completed'};
+    'scope-cross-contamination'={param($r)$r.lifecycle=(New-LifecycleRecord).lifecycle};
+    'seed-vs-open-enum'={param($r)$r.seeding.stage='ConnectionOpen'};
+    'open-vs-seed-enum'={param($r)$r.cleanupOpen.stage='GarageSave'}
+}
+foreach($stepCase in $badSteps.Keys){Case "step-reject-$stepCase" {Reject-Step $badSteps[$stepCase]}}
+Case 'step-duplicate-property' {$json=(New-StepRecord|ConvertTo-Json -Depth 12 -Compress).Replace('"elapsedMilliseconds":8','"elapsedMilliseconds":8,"elapsedMilliseconds":9');Assert-Check ((Export-Fixture ('SQL-CLEANUP-DIAGNOSTIC:'+$json)).diagnostic.reason -ceq 'invalid')}
+Case 'step-never-passes-failed-test' {$r=Export-Fixture (Marker (New-StepRecord));$blocked=$false;try{& $gate -Path $r.path -Suite sql -ExpectedCount 1|Out-Null}catch{$blocked=$true};Assert-Check $blocked}
+if($badSteps.Count -ne 31 -or $executed.Count-$stepStart -ne 64){throw "Step security inventory incomplete: $($executed.Count-$stepStart)"}
+Write-Output 'PASS: 64 seeding/cleanup-open security regressions; original 192 cases preserved (256 total). Synthetic fixtures only.'

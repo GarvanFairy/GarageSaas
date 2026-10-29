@@ -101,6 +101,31 @@ function Convert-Lifecycle($value) {
     }
     return [ordered]@{availability=[string]$value.availability;scenario=[string]$value.scenario;bodyCompleted=[bool]$value.bodyCompleted;observations=$observations}
 }
+function Convert-StepEvidence($value,[bool]$Seed) {
+    if($null -eq $value){return $null}
+    $keys=@('graph','stage','succeeded','category','sqlErrorNumbers','sqlErrorsTruncated','exceptionChainTruncated','elapsedMilliseconds','durationCapped')
+    Require-Shape $value $keys $keys
+    Require-Enum $value.graph @('None','First','Second')
+    $stages=if($Seed){@('ContextConstruction','GraphConstruction','GarageSave','CustomerVehicleSave','OwnershipWorkItemSave','PrepareExistingState','CustomerSave','ExistingQuoteSeed','ExistingInvoiceSeed','ContextDispose')}else{@('ConnectionOpen','IdentityQuerySetup','IdentityQueryExecute','IdentityQueryRead','RoleQueryRead','ReaderDispose','CommandDispose','ConnectionDispose','Completed')}
+    Require-Enum $value.stage $stages
+    Require-Enum $value.category @('None','Sql','DbUpdate','Timeout','Cancelled','InvalidOperation','Other')
+    foreach($key in @('succeeded','sqlErrorsTruncated','exceptionChainTruncated','durationCapped')){Require-Boolean $value[$key]}
+    Require-Integer $value.elapsedMilliseconds 0 600000
+    if($value.durationCapped -and $value.elapsedMilliseconds -ne 600000){throw 'Conflicting duration cap'}
+    if($value.succeeded -ne ($value.category -ceq 'None')){throw 'Conflicting step outcome'}
+    if(!$Seed -and ($value.graph -cne 'None' -or ($value.stage -ceq 'Completed' -and !$value.succeeded) -or ($value.succeeded -and $value.stage -cne 'Completed'))){throw 'Conflicting cleanup-open stage'}
+    if($Seed){$graphStage=$value.stage -cin @('GraphConstruction','GarageSave','CustomerVehicleSave','OwnershipWorkItemSave');if($graphStage -eq ($value.graph -ceq 'None')){throw 'Conflicting graph attribution'}}
+    $numbers=$null
+    if($null -ne $value.sqlErrorNumbers){
+        if($value.sqlErrorNumbers -isnot [array] -or $value.sqlErrorNumbers.Count -lt 1 -or $value.sqlErrorNumbers.Count -gt 4){throw 'Invalid step SQL error bound'}
+        $set=[Collections.Generic.HashSet[int]]::new();$numbers=@()
+        foreach($number in $value.sqlErrorNumbers){Require-Integer $number -2147483648 2147483647;if(!$set.Add([int]$number)){throw 'Duplicate step SQL error'};$numbers+= [int]$number}
+    }
+    if($value.succeeded -and ($null -ne $numbers -or $value.sqlErrorsTruncated -or $value.exceptionChainTruncated)){throw 'Conflicting successful step errors'}
+    return [ordered]@{graph=[string]$value.graph;stage=[string]$value.stage;succeeded=[bool]$value.succeeded;category=[string]$value.category;
+        sqlErrorNumbers=$numbers;sqlErrorsTruncated=[bool]$value.sqlErrorsTruncated;exceptionChainTruncated=[bool]$value.exceptionChainTruncated;
+        elapsedMilliseconds=[int]$value.elapsedMilliseconds;durationCapped=[bool]$value.durationCapped}
+}
 function Convert-CleanupRecord([string]$Json, $Method) {
     if ($Json.Length -gt 16384) { throw 'Oversized diagnostic record' }
     $options = [System.Text.Json.JsonDocumentOptions]::new(); $options.MaxDepth = 12
@@ -112,7 +137,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
     $record = ConvertFrom-Json -InputObject $Json -AsHashtable -Depth 12
     $base = @('operation','success','created','marked','dedicatedLocalDb','ownershipVerified','pooling',
         'efOpenConnections','efOpenedEvents','efClosedEvents','workers','guardSessions','exceptionType','sanitizedMessage','sqlErrors','stack')
-    Require-Shape $record ($base + @('databasePresent','databaseState','databaseAccess','serverSessionsAfterOutcome','snapshotExceptionType','snapshotSqlErrors','guardSessionDetails','lifecycle')) $base
+    Require-Shape $record ($base + @('databasePresent','databaseState','databaseAccess','serverSessionsAfterOutcome','snapshotExceptionType','snapshotSqlErrors','guardSessionDetails','lifecycle','seeding','cleanupOpen')) $base
     Require-Enum $record.operation @('DrainWorkers','OwnershipPrecondition','OpenOwnedDatabase','VerifyOwnershipMarker','OpenMaster','VerifyTarget','ActiveSessionGuard','DropOwnedDatabase','Completed')
     $types = @('System.InvalidOperationException','System.TimeoutException','System.OperationCanceledException','System.Threading.Tasks.TaskCanceledException',
         'System.IO.IOException','System.ObjectDisposedException','System.UnauthorizedAccessException','System.ArgumentException',
@@ -193,6 +218,9 @@ function Convert-CleanupRecord([string]$Json, $Method) {
     }
     # Rebuild, never forward record, messages, stack text, session IDs or names.
     $lifecycle=if($record.Contains('lifecycle')){Convert-Lifecycle $record.lifecycle}else{$null}
+    $seeding=if($record.Contains('seeding')){Convert-StepEvidence $record.seeding $true}else{$null}
+    $cleanupOpen=if($record.Contains('cleanupOpen')){Convert-StepEvidence $record.cleanupOpen $false}else{$null}
+    if($null -ne $lifecycle -and ($null -ne $seeding -or $null -ne $cleanupOpen)){throw 'Conflicting diagnostic fixture scopes'}
     return [ordered]@{
         stage = [string]$record.operation; exceptionType = $record.exceptionType; sqlErrorNumbers = $numbers
         trackedOpenConnections = [int]$record.efOpenConnections; activeSessionsAtGuard = $record.guardSessions
@@ -204,6 +232,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
         sessionsAfterOutcome = $sessionCount; snapshotExceptionType = $record.snapshotExceptionType
         snapshotSqlErrorNumbers = $snapshotNumbers; locations = $locations
         lifecycle = $lifecycle
+        seeding = $seeding; cleanupOpen = $cleanupOpen
     }
 }
 function Get-CleanupEvidence($Result, $Method) {
