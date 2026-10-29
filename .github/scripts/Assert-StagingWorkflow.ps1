@@ -30,20 +30,23 @@ try{
     Require ($process.ExitCode -eq 0)
     $workflow=$json|ConvertFrom-Json -AsHashtable
 }finally{$process.Dispose()}
-Keys $workflow.on @('workflow_dispatch');Keys $workflow.on.workflow_dispatch.inputs @('commit')
-Keys $workflow.jobs @('prerequisite','release','deploy')
+Keys $workflow.on @('workflow_dispatch');Keys $workflow.on.workflow_dispatch.inputs @('mode','commit')
+Keys $workflow.jobs @('prerequisite','release','promotion','deploy')
 Keys $workflow.permissions @('contents');Require (Equal $workflow.permissions.contents 'read')
 Require (Equal $workflow.defaults.run.shell 'pwsh')
 $pre=$workflow.jobs.prerequisite;$release=$workflow.jobs.release;$deploy=$workflow.jobs.deploy
+Keys $workflow.on.workflow_dispatch.inputs.mode @('description','type','options','default','required')
+Require ((Equal $workflow.on.workflow_dispatch.inputs.mode.type 'choice') -and (Equal $workflow.on.workflow_dispatch.inputs.mode.default 'prepare'))
+Require ($workflow.on.workflow_dispatch.inputs.mode.options.Count -eq 2 -and (Equal $workflow.on.workflow_dispatch.inputs.mode.options[0] 'prepare') -and (Equal $workflow.on.workflow_dispatch.inputs.mode.options[1] 'promote'))
 Keys $pre.permissions @('contents','actions')
 Require ((Equal $pre.permissions.contents 'read') -and (Equal $pre.permissions.actions 'read'))
-Require (Equal $pre.if "`${{ github.repository == 'GarvanFairy/GarageSaas' && github.ref == 'refs/heads/master' }}")
+Require (Equal $pre.if "`${{ github.repository == 'GarvanFairy/GarageSaas' && github.ref == 'refs/heads/master' && inputs.mode == 'prepare' }}")
 Require (Equal $release.needs 'prerequisite')
 Require (!$release.Contains('if') -and !$release.Contains('permissions') -and !$release.Contains('continue-on-error'))
-Keys $deploy.permissions @('contents','id-token')
+Keys $deploy.permissions @('contents','actions','id-token')
 Require ((Equal $deploy.permissions.contents 'read') -and (Equal $deploy.permissions['id-token'] 'write'))
 Require ((Equal $deploy.if '${{ false }}') -and (Equal $deploy.environment 'staging'))
-Require ($deploy.needs.Count -eq 2 -and (Equal $deploy.needs[0] 'prerequisite') -and (Equal $deploy.needs[1] 'release'))
+Require (Equal $deploy.needs 'promotion')
 foreach($job in @($pre,$release,$deploy)){
     Require ((Equal $job['runs-on'] 'windows-2025') -and !$job.Contains('strategy') -and !$job.Contains('uses') -and !$job.Contains('continue-on-error') -and !$job.Contains('defaults'))
 }
@@ -89,6 +92,38 @@ Require (Equal $deploy.env.TARGET_RESOURCE_ID '${{ vars.AZURE_STAGING_RESOURCE_I
 Require (Equal $deploy.env.EXPECTED_SHA256 '${{ vars.STAGING_APPROVED_ARTIFACT_SHA256 }}')
 Require (Equal $deploy.env.AZURE_LOGIN_TENANT_ID '${{ vars.AZURE_STAGING_TENANT_ID }}')
 Require (Equal $deploy.env.AZURE_LOGIN_SUBSCRIPTION_ID '${{ vars.AZURE_STAGING_SUBSCRIPTION_ID }}')
+Require ((Equal $deploy.env.RELEASE_COMMIT '${{ needs.promotion.outputs.commit }}') -and (Equal $deploy.env.AZURE_LOGIN_CLIENT_ID 'dd6047f8-4557-4401-aab5-d7fd9e7d40a8'))
+Require (Equal $deploy.permissions.actions 'read')
+$promotion=$workflow.jobs.promotion
+Keys $promotion.permissions @('contents','actions')
+Require ((Equal $promotion.permissions.contents 'read') -and (Equal $promotion.permissions.actions 'read'))
+Require (Equal $promotion.if "`${{ github.repository == 'GarvanFairy/GarageSaas' && github.ref == 'refs/heads/master' && inputs.mode == 'promote' }}")
+Require ((Equal $promotion['runs-on'] 'windows-2025') -and !$promotion.Contains('needs') -and !$promotion.Contains('continue-on-error') -and !$promotion.Contains('strategy') -and $promotion.steps.Count -eq 4)
+$source=Step $promotion 'Verify fixed historical promotion source'
+[void](Command $source './.github/scripts/Resolve-StagingPromotion.ps1')
+Require (Equal $source.run.Trim() './.github/scripts/Resolve-StagingPromotion.ps1')
+Require ((Equal $source.env.PROMOTION_MODE '${{ inputs.mode }}') -and (Equal $source.id 'source'))
+$validation=Step $promotion 'Validate existing ZIP without rebuilding'
+$cmd=Command $validation './.github/scripts/Assert-StagingDeploymentArtifact.ps1'
+Parameter $cmd 'SourceRun' '40953823134'
+Parameter $cmd 'Commit' '$env:RELEASE_COMMIT'
+Parameter $cmd 'ApprovedHash' '640efc3f6084c9fc2562a0e09da3dc229e4f329ccdc40a71bc6873ccc0c56ce5'
+[void](Command $validation './.github/scripts/Resolve-StagingPromotion.ps1')
+$expectedValidation='./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash 640efc3f6084c9fc2562a0e09da3dc229e4f329ccdc40a71bc6873ccc0c56ce5 -SourceRun 40953823134'+"`n"+'./.github/scripts/Resolve-StagingPromotion.ps1'
+Require (Equal $validation.run.Replace("`r`n","`n").Trim() $expectedValidation)
+Require ((Equal $validation.env.RELEASE_COMMIT '${{ steps.source.outputs.commit }}') -and (Equal $validation.env.PROMOTION_MODE '${{ inputs.mode }}'))
+foreach($output in @('commit','run','artifact')){Require (Equal $promotion.outputs[$output] ('${{ steps.source.outputs.'+$output+' }}'))}
+foreach($job in @($promotion,$deploy)){
+    $downloads=@($job.steps|Where-Object {$_.uses -like 'actions/download-artifact@*'})
+    Require ($downloads.Count -eq 1)
+    $download=$downloads[0]
+    Require (!$download.Contains('if') -and !$download.Contains('continue-on-error') -and !$download.with.Contains('name') -and (Equal $download.with.repository 'GarvanFairy/GarageSaas'))
+    $prefix=if([object]::ReferenceEquals($job,$promotion)){'steps.source'}else{'needs.promotion'}
+    Require ((Equal $download.with['run-id'] ('${{ '+$prefix+'.outputs.run }}')) -and (Equal $download.with['artifact-ids'] ('${{ '+$prefix+'.outputs.artifact }}')))
+    foreach($step in $job.steps){Require (!($step.run -match '(?i)\b(dotnet|npm|nuget|msbuild)\b') -and !($step.uses -like 'actions/upload-artifact@*'))}
+}
+$promotionCheckout=$promotion.steps[0]
+Require ($promotionCheckout.uses -like 'actions/checkout@*' -and (Equal $promotionCheckout.with.ref '${{ github.sha }}') -and (Equal $promotionCheckout.with['persist-credentials'] 'false'))
 $checkouts=@($release.steps|Where-Object {$_.uses -like 'actions/checkout@*'})
 Require ($checkouts.Count -eq 2)
 Require ((Equal $checkouts[0].with.ref '${{ needs.prerequisite.outputs.commit }}') -and (Equal $checkouts[1].with.ref '${{ github.sha }}') -and (Equal $checkouts[1].with.path 'release-control'))
@@ -137,9 +172,15 @@ $target=Step $deploy 'Revalidate approved archive and target before Azure login'
 $cmd=Command $target './.github/scripts/Assert-StagingDeploymentArtifact.ps1';Parameter $cmd 'Commit' '$env:RELEASE_COMMIT';Parameter $cmd 'ApprovedHash' '$env:EXPECTED_SHA256'
 $cmd=Command $target './.github/scripts/Assert-StagingTarget.ps1'
 Parameter $cmd 'ResourceId' '$env:TARGET_RESOURCE_ID';Parameter $cmd 'TenantId' '$env:AZURE_LOGIN_TENANT_ID';Parameter $cmd 'SubscriptionId' '$env:AZURE_LOGIN_SUBSCRIPTION_ID'
+Parameter $cmd 'ClientId' '$env:AZURE_LOGIN_CLIENT_ID'
+Require ($cmd.Extent.Text.Contains('-RequireClientId'))
+Parameter (Command $target './.github/scripts/Assert-StagingDeploymentArtifact.ps1') 'SourceRun' '40953823134'
+[void](Command $target './.github/scripts/Resolve-StagingPromotion.ps1')
+Require ($target.run.Contains("throw 'Independent operational readiness evidence, reviewed CLI and sanitized deployment-status handling require a separate enablement review.'"))
 $login=@($deploy.steps|Where-Object {$_.uses -like 'azure/login@*'})
 Require ($login.Count -eq 1 -and (Position $deploy $target) -lt (Position $deploy $login[0]))
 Require (!$login[0].Contains('if') -and !$login[0].Contains('continue-on-error'))
 Require ((Equal $login[0].with['tenant-id'] '${{ env.AZURE_LOGIN_TENANT_ID }}') -and (Equal $login[0].with['subscription-id'] '${{ env.AZURE_LOGIN_SUBSCRIPTION_ID }}'))
+Require (Equal $login[0].with['client-id'] '${{ env.AZURE_LOGIN_CLIENT_ID }}')
 foreach($job in @($pre,$release)){foreach($step in $job.steps){Require (!($step.uses -like 'azure/*') -and !($step.run -match '(?i)\baz\s+webapp\s+deploy\b'))}}
 Write-Output 'Structured YAML and executable PowerShell gates verified; deployment remains unconditional false.'
