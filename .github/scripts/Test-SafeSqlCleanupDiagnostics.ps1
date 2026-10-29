@@ -265,3 +265,129 @@ foreach($kind in @('row','summary')){
 }
 if($executed.Count-$ordinalStart -ne 8){throw 'Required ordinal diagnostic regressions did not execute.'}
 Write-Output 'PASS: 8 ordinal allowlist/status regressions; all original 96 reporting cases preserved.'
+# Lifecycle extension: synthetic fixtures only; original 104-case gates above remain intact.
+$lifecycleStart=$executed.Count
+function New-LifecycleRecord {
+    $record=New-Record
+    $session=[ordered]@{correlation=1;userProcess=$false;sessionStatus='sleeping';hasActiveRequest=$true;requestStatus='background';
+        sessionDatabaseAssociation='target';requestDatabaseAssociation='target';openTransactions=1;fixtureRole='Unavailable';
+        transactionsAvailability='available';transactionsTruncated=$false;
+        transactions=@(@{userTransaction=$false;type='system';state='active';databaseAssociation='target'})}
+    $record.lifecycle=[ordered]@{availability='available';scenario='NewRetargetNone';bodyCompleted=$false;
+        observations=@(@{phase='PreOwnership';availability='available';errorCategory='none';truncated=$false;sessions=@($session)},
+                       @{phase='Guard';availability='available';errorCategory='none';truncated=$false;sessions=@($session)},
+                       @{phase='PostRefusal';availability='available';errorCategory='none';truncated=$false;sessions=@()})}
+    return $record
+}
+function Reject-Lifecycle([scriptblock]$change){$r=New-LifecycleRecord;& $change $r;$result=Export-Fixture (Marker $r);Assert-Check ($result.diagnostic.reason -ceq 'invalid' -and $null -eq $result.diagnostic.record)}
+foreach($scenario in @('NewRetargetNone','UpdateRetargetNone','NewQuoteNone','UpdateQuoteNone','NewRetargetDirect','NewRetargetMixed')){
+    Case "lifecycle-scenario-$scenario" {$r=New-LifecycleRecord;$r.lifecycle.scenario=$scenario;$safe=Export-Fixture (Marker $r);Assert-Check ($safe.diagnostic.record.lifecycle.scenario -ceq $scenario -and $safe.diagnostic.record.lifecycle.observations.Count -eq 3)}
+}
+foreach($type in @('readWrite','readOnly','system','distributed')){foreach($state in @('initializing','initialized','active','ended','commitInitiated','prepared','committed','rollingBack','rolledBack')){
+    Case "lifecycle-transaction-$type-$state" {$r=New-LifecycleRecord;$r.lifecycle.observations[0].sessions[0].transactions[0].type=$type;$r.lifecycle.observations[0].sessions[0].transactions[0].state=$state;$safe=Export-Fixture (Marker $r);Assert-Check ($safe.diagnostic.availability -ceq 'available')}
+}}
+Case 'lifecycle-correlation-and-absence' {$r=Export-Fixture (Marker (New-LifecycleRecord));Assert-Check ($r.diagnostic.record.lifecycle.observations[0].sessions[0].correlation -eq $r.diagnostic.record.lifecycle.observations[1].sessions[0].correlation -and $r.diagnostic.record.lifecycle.observations[2].sessions.Count -eq 0)}
+Case 'lifecycle-unavailable-extension' {$r=New-LifecycleRecord;$r.lifecycle.availability='unavailable';$r.lifecycle.observations=@();Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.lifecycle.availability -ceq 'unavailable')}
+Case 'lifecycle-unavailable-phase' {$r=New-LifecycleRecord;$p=$r.lifecycle.observations[0];$p.availability='unavailable';$p.errorCategory='metadataUnavailable';$p.sessions=@();Assert-Check ((Export-Fixture (Marker $r)).diagnostic.availability -ceq 'available')}
+Case 'lifecycle-zero-transactions' {$r=New-LifecycleRecord;$s=$r.lifecycle.observations[0].sessions[0];$s.openTransactions=0;$s.transactions=@();Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.lifecycle.observations[0].sessions[0].transactions.Count -eq 0)}
+Case 'lifecycle-unmapped-positive-count' {$r=New-LifecycleRecord;$s=$r.lifecycle.observations[0].sessions[0];$s.transactionsAvailability='unavailable';$s.transactions=@();Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.lifecycle.observations[0].sessions[0].transactionsAvailability -ceq 'unavailable')}
+Case 'lifecycle-four-transaction-cap' {$r=New-LifecycleRecord;$s=$r.lifecycle.observations[0].sessions[0];$s.openTransactions=8;$s.transactionsTruncated=$true;$s.transactions=@($s.transactions[0]) * 4;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.lifecycle.observations[0].sessions[0].transactionsTruncated)}
+Case 'lifecycle-missing-request-and-correlation' {$r=New-LifecycleRecord;$s=$r.lifecycle.observations[0].sessions[0];$s.correlation=$null;$s.hasActiveRequest=$false;$s.requestStatus='unavailable';$s.requestDatabaseAssociation='unavailable';Assert-Check ((Export-Fixture (Marker $r)).diagnostic.availability -ceq 'available')}
+$badLifecycle=[ordered]@{
+    'null'={param($r)$r.lifecycle=$null};'array'={param($r)$r.lifecycle=@()};
+    'extra'={param($r)$r.lifecycle.sqlText=$canary};'missing'={param($r)$r.lifecycle.Remove('scenario')};
+    'scenario'={param($r)$r.lifecycle.scenario=$canary};'unicode-enum'={param($r)$r.lifecycle.scenario='NewRetargetNone'+[char]0x00ad};
+    'body-type'={param($r)$r.lifecycle.bodyCompleted='true'};
+    'four-phases'={param($r)$r.lifecycle.observations+= $r.lifecycle.observations[0]};
+    'duplicate-phase'={param($r)$r.lifecycle.observations[1].phase='PreOwnership'};
+    'reversed-phase'={param($r)$r.lifecycle.observations=@($r.lifecycle.observations[2],$r.lifecycle.observations[0])};
+    'phase-extra'={param($r)$r.lifecycle.observations[0].databaseName=$canary};
+    'phase-missing'={param($r)$r.lifecycle.observations[0].Remove('sessions')};
+    'phase-category'={param($r)$r.lifecycle.observations[0].errorCategory=$canary};
+    'unavailable-conflict'={param($r)$r.lifecycle.observations[0].availability='unavailable'};
+    'too-many-sessions'={param($r)$r.lifecycle.observations[0].sessions=@($r.lifecycle.observations[0].sessions[0])*17};
+    'duplicate-token'={param($r)$r.lifecycle.observations[0].sessions=@($r.lifecycle.observations[0].sessions[0])*2};
+    'raw-session-id'={param($r)$r.lifecycle.observations[0].sessions[0].sessionId=7100};
+    'negative-token'={param($r)$r.lifecycle.observations[0].sessions[0].correlation=-1};
+    'oversized-token'={param($r)$r.lifecycle.observations[0].sessions[0].correlation=49};
+    'negative-count'={param($r)$r.lifecycle.observations[0].sessions[0].openTransactions=-1};
+    'overflow-count'={param($r)$r.lifecycle.observations[0].sessions[0].openTransactions=9223372036854775807};
+    'string-count'={param($r)$r.lifecycle.observations[0].sessions[0].openTransactions=$canary};
+    'bad-request-status'={param($r)$r.lifecycle.observations[0].sessions[0].requestStatus=$canary};
+    'bad-association'={param($r)$r.lifecycle.observations[0].sessions[0].sessionDatabaseAssociation=$canary};
+    'bad-role'={param($r)$r.lifecycle.observations[0].sessions[0].fixtureRole=$canary};
+    'mapping-count-conflict'={param($r)$r.lifecycle.observations[0].sessions[0].openTransactions=2};
+    'five-transactions'={param($r)$s=$r.lifecycle.observations[0].sessions[0];$s.transactions=@($s.transactions[0])*5};
+    'bad-truncation'={param($r)$r.lifecycle.observations[0].sessions[0].transactionsTruncated=$true};
+    'transaction-extra'={param($r)$r.lifecycle.observations[0].sessions[0].transactions[0].transactionName=$canary};
+    'transaction-type'={param($r)$r.lifecycle.observations[0].sessions[0].transactions[0].type=$canary};
+    'transaction-state'={param($r)$r.lifecycle.observations[0].sessions[0].transactions[0].state=$canary};
+    'transaction-classification'={param($r)$r.lifecycle.observations[0].sessions[0].transactions[0].userTransaction='false'};
+    'transaction-association'={param($r)$r.lifecycle.observations[0].sessions[0].transactions[0].databaseAssociation=$canary}
+}
+foreach($case in $badLifecycle.Keys){Case "lifecycle-reject-$case" {Reject-Lifecycle $badLifecycle[$case]}}
+Case 'lifecycle-duplicate-property' {$json=(New-LifecycleRecord|ConvertTo-Json -Depth 12 -Compress).Replace('"bodyCompleted":false','"bodyCompleted":false,"bodyCompleted":true');$r=Export-Fixture ('SQL-CLEANUP-DIAGNOSTIC:'+$json);Assert-Check ($r.diagnostic.reason -ceq 'invalid')}
+Case 'lifecycle-oversized-record' {$r=New-LifecycleRecord;$r.lifecycle.scenario='x'*17000;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.reason -ceq 'invalid')}
+Case 'lifecycle-sixteen-session-cap' {
+    $r=New-LifecycleRecord;$p=$r.lifecycle.observations[0];$original=$p.sessions[0];$p.sessions=@()
+    foreach($i in 1..16){$copy=$original|ConvertTo-Json -Depth 12 -Compress|ConvertFrom-Json -AsHashtable;$copy.correlation=$i;$p.sessions+= $copy}
+    $p.truncated=$true;$r.lifecycle.observations=@($p)
+    Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.lifecycle.observations[0].sessions.Count -eq 16)
+}
+Case 'lifecycle-user-transaction-other-database' {$r=New-LifecycleRecord;$t=$r.lifecycle.observations[0].sessions[0].transactions[0];$t.userTransaction=$true;$t.databaseAssociation='other';Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.lifecycle.observations[0].sessions[0].transactions[0].userTransaction)}
+Case 'lifecycle-unknown-count-not-zero' {$r=New-LifecycleRecord;$s=$r.lifecycle.observations[0].sessions[0];$s.openTransactions=$null;$s.transactionsAvailability='unavailable';Assert-Check ($null -eq (Export-Fixture (Marker $r)).diagnostic.record.lifecycle.observations[0].sessions[0].openTransactions)}
+Case 'lifecycle-body-completed-does-not-pass-failed-test' {$r=New-LifecycleRecord;$r.lifecycle.bodyCompleted=$true;$safe=Export-Fixture (Marker $r);$blocked=$false;try{& $gate -Path $safe.path -Suite sql -ExpectedCount 1|Out-Null}catch{$blocked=$true};Assert-Check $blocked}
+if($badLifecycle.Count -ne 33 -or $executed.Count-$lifecycleStart -ne 88){throw "Lifecycle security inventory incomplete: $($executed.Count-$lifecycleStart)"}
+Write-Output 'PASS: 88 lifecycle security regressions; original 104 cases preserved (192 total). Synthetic fixtures only.'
+# Customer fixture step evidence. Preserve all original 192 lifecycle/reporting cases.
+$stepStart=$executed.Count
+function New-StepEvidence([bool]$Seed=$true){
+    [ordered]@{graph=$(if($Seed){'First'}else{'None'});stage=$(if($Seed){'GarageSave'}else{'ConnectionOpen'});
+        succeeded=$false;category='Sql';sqlErrorNumbers=@(-2);sqlErrorsTruncated=$false;exceptionChainTruncated=$false;
+        elapsedMilliseconds=8;durationCapped=$false}
+}
+function New-StepRecord { $r=New-Record;$r.seeding=New-StepEvidence;$r.cleanupOpen=New-StepEvidence $false;return $r }
+function Reject-Step([scriptblock]$change){$r=New-StepRecord;& $change $r;$safe=Export-Fixture (Marker $r);Assert-Check ($safe.diagnostic.reason -ceq 'invalid' -and $null -eq $safe.diagnostic.record)}
+foreach($graph in @('First','Second')){foreach($stage in @('GraphConstruction','GarageSave','CustomerVehicleSave','OwnershipWorkItemSave')){
+    Case "step-seed-$graph-$stage" {$r=New-StepRecord;$r.seeding.graph=$graph;$r.seeding.stage=$stage;$safe=Export-Fixture (Marker $r);Assert-Check ($safe.diagnostic.record.seeding.graph -ceq $graph -and $safe.diagnostic.record.seeding.stage -ceq $stage -and @($safe.diagnostic.record.seeding.sqlErrorNumbers)[0] -eq -2)}
+}}
+foreach($stage in @('ContextConstruction','PrepareExistingState','CustomerSave','ExistingQuoteSeed','ExistingInvoiceSeed','ContextDispose')){
+    Case "step-seed-$stage" {$r=New-StepRecord;$r.seeding.graph='None';$r.seeding.stage=$stage;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.stage -ceq $stage)}
+}
+foreach($stage in @('ConnectionOpen','IdentityQuerySetup','IdentityQueryExecute','IdentityQueryRead','RoleQueryRead','ReaderDispose','CommandDispose','ConnectionDispose')){
+    Case "step-open-$stage" {$r=New-StepRecord;$r.cleanupOpen.stage=$stage;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.cleanupOpen.stage -ceq $stage)}
+}
+Case 'step-open-completed' {$r=New-StepRecord;$s=$r.cleanupOpen;$s.stage='Completed';$s.succeeded=$true;$s.category='None';$s.sqlErrorNumbers=$null;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.cleanupOpen.succeeded)}
+Case 'step-optional-unavailable' {$r=New-StepRecord;$r.seeding=$null;$r.cleanupOpen=$null;$safe=Export-Fixture (Marker $r);Assert-Check ($null -eq $safe.diagnostic.record.seeding -and $null -eq $safe.diagnostic.record.cleanupOpen)}
+Case 'step-wrapped-dbupdate' {$r=New-StepRecord;$r.seeding.category='DbUpdate';$r.seeding.sqlErrorNumbers=@(-2,1205,3702,4060);$r.seeding.sqlErrorsTruncated=$true;$r.seeding.exceptionChainTruncated=$true;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.sqlErrorNumbers.Count -eq 4)}
+Case 'step-duration-cap' {$r=New-StepRecord;$r.seeding.elapsedMilliseconds=600000;$r.seeding.durationCapped=$true;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.durationCapped)}
+Case 'step-missing-sql-numbers' {$r=New-StepRecord;$r.seeding.category='Other';$r.seeding.sqlErrorNumbers=$null;Assert-Check ($null -eq (Export-Fixture (Marker $r)).diagnostic.record.seeding.sqlErrorNumbers)}
+Case 'step-successful-seeding' {$r=New-StepRecord;$r.seeding.succeeded=$true;$r.seeding.category='None';$r.seeding.sqlErrorNumbers=$null;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.succeeded)}
+foreach($category in @('Timeout','Cancelled','InvalidOperation')){
+    Case "step-category-$category" {$r=New-StepRecord;$r.seeding.category=$category;$r.seeding.sqlErrorNumbers=$null;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.category -ceq $category)}
+}
+$badSteps=[ordered]@{
+    'array'={param($r)$r.seeding=@()};'missing-stage'={param($r)$r.seeding.Remove('stage')};
+    'unknown-stage'={param($r)$r.seeding.stage=$canary};'unicode-stage'={param($r)$r.cleanupOpen.stage='ConnectionOpen'+[char]0x00ad};
+    'unknown-graph'={param($r)$r.seeding.graph=$canary};'graph-conflict'={param($r)$r.seeding.graph='None'};
+    'unknown-category'={param($r)$r.seeding.category=$canary};'outcome-conflict'={param($r)$r.seeding.succeeded=$true};
+    'raw-exception'={param($r)$r.seeding.message=$canary};'extra-exception-data'={param($r)$r.cleanupOpen.data=@{sql=$canary}};
+    'raw-database'={param($r)$r.cleanupOpen.databaseName=$canary};'negative-time'={param($r)$r.seeding.elapsedMilliseconds=-1};
+    'oversized-time'={param($r)$r.seeding.elapsedMilliseconds=600001};'overflow-time'={param($r)$r.seeding.elapsedMilliseconds=9223372036854775807};
+    'fractional-time'={param($r)$r.seeding.elapsedMilliseconds=0.5};'string-time'={param($r)$r.seeding.elapsedMilliseconds=$canary};
+    'cap-conflict'={param($r)$r.seeding.durationCapped=$true};'bool-duration'={param($r)$r.seeding.durationCapped='true'};
+    'five-errors'={param($r)$r.seeding.sqlErrorNumbers=@(-2,1,2,3,4)};'duplicate-errors'={param($r)$r.seeding.sqlErrorNumbers=@(-2,-2)};
+    'overflow-error'={param($r)$r.seeding.sqlErrorNumbers=@(2147483648)};'string-error'={param($r)$r.seeding.sqlErrorNumbers=@($canary)};
+    'empty-errors'={param($r)$r.seeding.sqlErrorNumbers=@()};'scalar-errors'={param($r)$r.seeding.sqlErrorNumbers=-2};
+    'missing-errors'={param($r)$r.seeding.Remove('sqlErrorNumbers')};'wrong-open-graph'={param($r)$r.cleanupOpen.graph='First'};
+    'open-success-wrong-stage'={param($r)$r.cleanupOpen.succeeded=$true;$r.cleanupOpen.category='None';$r.cleanupOpen.sqlErrorNumbers=$null};
+    'open-completed-failure'={param($r)$r.cleanupOpen.stage='Completed'};
+    'scope-cross-contamination'={param($r)$r.lifecycle=(New-LifecycleRecord).lifecycle};
+    'seed-vs-open-enum'={param($r)$r.seeding.stage='ConnectionOpen'};
+    'open-vs-seed-enum'={param($r)$r.cleanupOpen.stage='GarageSave'}
+}
+foreach($stepCase in $badSteps.Keys){Case "step-reject-$stepCase" {Reject-Step $badSteps[$stepCase]}}
+Case 'step-duplicate-property' {$json=(New-StepRecord|ConvertTo-Json -Depth 12 -Compress).Replace('"elapsedMilliseconds":8','"elapsedMilliseconds":8,"elapsedMilliseconds":9');Assert-Check ((Export-Fixture ('SQL-CLEANUP-DIAGNOSTIC:'+$json)).diagnostic.reason -ceq 'invalid')}
+Case 'step-never-passes-failed-test' {$r=Export-Fixture (Marker (New-StepRecord));$blocked=$false;try{& $gate -Path $r.path -Suite sql -ExpectedCount 1|Out-Null}catch{$blocked=$true};Assert-Check $blocked}
+if($badSteps.Count -ne 31 -or $executed.Count-$stepStart -ne 64){throw "Step security inventory incomplete: $($executed.Count-$stepStart)"}
+Write-Output 'PASS: 64 seeding/cleanup-open security regressions; original 192 cases preserved (256 total). Synthetic fixtures only.'
