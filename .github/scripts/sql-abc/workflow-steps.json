@@ -1,0 +1,57 @@
+[
+  {
+    "name": "Refuse unapproved controller or execution context",
+    "run": "if ($env:SQL_ABC_CONTROLLER -cnotmatch '\\A[0-9a-f]{40}\\z' -or $env:SQL_ABC_CONTROLLER -ceq ('0'*40) -or\n    $env:GITHUB_REF -cne 'refs/heads/master' -or $env:GITHUB_EVENT_NAME -cne 'workflow_dispatch' -or\n    $env:GITHUB_RUN_ATTEMPT -cne '1' -or $env:GITHUB_REPOSITORY -cne 'GarvanFairy/GarageSaas') {\n  throw 'Reviewed default-branch controller enrollment and separate execution approval required.'\n}\n"
+  },
+  {
+    "name": "Checkout fixed reviewed controller",
+    "uses": "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+    "with": {
+      "ref": "${{ env.SQL_ABC_CONTROLLER }}",
+      "path": "controller",
+      "fetch-depth": "0",
+      "persist-credentials": "false"
+    }
+  },
+  {
+    "name": "Checkout fixed historical application",
+    "uses": "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+    "with": {
+      "ref": "${{ matrix.revision }}",
+      "path": "application",
+      "persist-credentials": "false"
+    }
+  },
+  {
+    "name": "Verify both immutable checkouts before controller execution",
+    "run": "$mapping = @{ A='050458d658505f787a49aced52f9a21f1aa2fb75'; B='820890d205a1a4f73defda03ce854acc04068001'; C='2ebca1cb613520b1e60b5fc65ceb3b680b8a89f9' }\n$controller = git -C controller rev-parse HEAD\nif ($LASTEXITCODE -ne 0 -or $controller -cne $env:SQL_ABC_CONTROLLER) { throw 'Controller identity mismatch.' }\ngit -C controller merge-base --is-ancestor $env:SQL_ABC_CONTROLLER origin/master\nif ($LASTEXITCODE -ne 0) { throw 'Controller is not on the default branch.' }\n$application = git -C application rev-parse HEAD\nif ($LASTEXITCODE -ne 0 -or $application -cne $mapping['${{ matrix.arm }}']) { throw 'Application identity mismatch.' }\n"
+  },
+  {
+    "name": "Offline experiment security gates",
+    "id": "security",
+    "run": "./controller/.github/scripts/Test-SqlAbcExperiment.ps1"
+  },
+  {
+    "name": "Install identical pinned SDK",
+    "uses": "actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1",
+    "with": {
+      "dotnet-version": "10.0.301"
+    }
+  },
+  {
+    "name": "Build overlay and execute SQL suite once",
+    "id": "sql",
+    "run": "./controller/.github/scripts/Invoke-SqlAbcArm.ps1 -Arm '${{ matrix.arm }}' -ApplicationRoot ./application -ControllerCommit $env:SQL_ABC_CONTROLLER"
+  },
+  {
+    "name": "Upload bounded validated JSON only",
+    "if": "${{ !cancelled() && steps.security.outcome == 'success' && steps.sql.outcome != 'skipped' }}",
+    "uses": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+    "with": {
+      "name": "sql-abc-${{ matrix.arm }}-${{ github.run_id }}",
+      "path": "${{ runner.temp }}/sql-abc-evidence/evidence.json",
+      "if-no-files-found": "error",
+      "retention-days": "7"
+    }
+  }
+]

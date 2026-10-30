@@ -1,0 +1,40 @@
+{
+  "files": [
+    {
+      "path": "GarageSaas.UnitTests/Services/QuoteConversionSqlTests.cs",
+      "edits": [
+        {
+          "find": "        var quote = new WorkQuote { GarageBusinessCustomerId = _garage, CustomerId = _graph.CustomerId,\n            VehicleId = _graph.VehicleId, CreatedDate = DateTime.UtcNow, CreatedBy = \"test\", Labour = 50 };",
+          "replace": "        var quote = SqlAbcDiagnostics.Measure(\"QuoteConstruction\", () => new WorkQuote { GarageBusinessCustomerId = _garage, CustomerId = _graph.CustomerId,\n            VehicleId = _graph.VehicleId, CreatedDate = DateTime.UtcNow, CreatedBy = \"test\", Labour = 50 });"
+        },
+        {
+          "find": "        db.WorkQuote.Add(quote); db.SaveChanges();",
+          "replace": "        db.WorkQuote.Add(quote); SqlAbcDiagnostics.Measure(\"QuoteSeedSave1\", () => db.SaveChanges());"
+        },
+        {
+          "find": "        db.SaveChanges(); return quote.Id;",
+          "replace": "        SqlAbcDiagnostics.Measure(\"QuoteSeedSave2\", () => db.SaveChanges()); return quote.Id;"
+        },
+        {
+          "find": "        Assert.IsFalse(observed.VehicleInvoice.Any(x => x.WorkQuoteId == quote));",
+          "replace": "        var invoicePresent = SqlAbcDiagnostics.Measure(\"InvoiceAbsenceQuery\", () => observed.VehicleInvoice.Any(x => x.WorkQuoteId == quote));\n        SqlAbcDiagnostics.Measure(\"InvoiceAbsenceAssertion\", () => Assert.IsFalse(invoicePresent));"
+        }
+      ]
+    },
+    {
+      "path": "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabase.cs",
+      "edits": [
+        {
+          "find": "    internal void Create()\n    {",
+          "replace": "    internal void Create()\n    {\n        using var abcDuration = SqlAbcDiagnostics.Duration(\"FixtureCreateDuration\");"
+        },
+        {
+          "find": "    private SqlConnection Open(string catalog, SqlFixtureConnectionRole role)\n    {",
+          "replace": "    private SqlConnection Open(string catalog, SqlFixtureConnectionRole role)\n    {\n        using var abcDuration = SqlAbcDiagnostics.Duration(\"FixtureOpenDuration\");"
+        }
+      ]
+    }
+  ],
+  "newPath": "GarageSaas.UnitTests/TestHelpers/SqlAbcDiagnostics.cs",
+  "helperSha256": "6e979bad52a8b1ff4e51252841f8041e1dde828716219dc2ff7df0d3b9309fb6"
+}
