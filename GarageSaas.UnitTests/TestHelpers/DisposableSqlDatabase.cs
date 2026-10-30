@@ -129,7 +129,15 @@ internal sealed class DisposableSqlDatabase
             throw new ArgumentException("Unknown SQL fixture category.");
         var shared = string.Equals(server, SharedServer, StringComparison.OrdinalIgnoreCase);
         // Force shared memory: never resolve GARVAN_ASUS via DNS or a client alias.
-        return new DisposableSqlDatabase(category, shared ? "lpc:" + SharedServer : ResolvePipe(), shared);
+        var discovery = new SqlCleanupDiagnostics(); discovery.RegisterCustomerDiagnostics();
+        try { return new DisposableSqlDatabase(category, discovery.SeedStep(SqlCleanupDiagnostics.SeedGraph.None,
+            SqlCleanupDiagnostics.SeedStage.InstanceIdentity, () => shared ? "lpc:" + SharedServer : ResolvePipe()), shared); }
+        catch (Exception error) {
+            // No fixture exists yet. Report the original discovery failure without opening SQL.
+            try { discovery.Record("OwnershipPrecondition", error, false, false, !shared, false, null,
+                "", new SqlTestWorkers(), () => throw new InvalidOperationException("No created fixture.")); } catch { }
+            throw;
+        }
     }
 
     private DisposableSqlDatabase(string category, string dataSource, bool shared)
@@ -151,32 +159,37 @@ internal sealed class DisposableSqlDatabase
     internal void Create()
     {
         ValidateCatalog(DatabaseName);
-        using (var master = Open("master", SqlFixtureConnectionRole.SetupMaster))
+        using (var master = SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.SetupConnection,
+            () => Open("master", SqlFixtureConnectionRole.SetupMaster)))
         {
-            VerifyTarget(master);
+            SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.SetupPermissions, () => VerifyTarget(master));
             using var exists = master.CreateCommand(); exists.CommandTimeout = 8;
             exists.CommandText = "SELECT COUNT(*) FROM sys.databases WHERE name=@name";
             exists.Parameters.AddWithValue("@name", DatabaseName);
-            if (Convert.ToInt32(exists.ExecuteScalar()) != 0) throw new InvalidOperationException("Refusing to reuse an existing database.");
+            if (Convert.ToInt32(SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.SetupPermissions,
+                () => exists.ExecuteScalar())) != 0) throw new InvalidOperationException("Refusing to reuse an existing database.");
             // CREATE (not EnsureCreated) resolves the existence-check race: collision
             // fails, and _created remains false. The identifier is generated here.
             using var create = master.CreateCommand(); create.CommandTimeout = 30;
             create.CommandText = $"CREATE DATABASE [{DatabaseName}]";
-            create.ExecuteNonQuery(); _created = true;
+            SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.DatabaseCreate, () => create.ExecuteNonQuery()); _created = true;
         }
-        using (var database = Open(DatabaseName, SqlFixtureConnectionRole.SetupOwnership))
+        using (var database = SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.OwnershipMarker,
+            () => Open(DatabaseName, SqlFixtureConnectionRole.SetupOwnership)))
         {
             using var marker = database.CreateCommand(); marker.CommandTimeout = 8;
             marker.CommandText = "EXEC sys.sp_addextendedproperty @name=N'GarageSaasTestOwner', @value=@owner";
-            marker.Parameters.AddWithValue("@owner", _owner); marker.ExecuteNonQuery(); _marked = true;
+            marker.Parameters.AddWithValue("@owner", _owner);
+            SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.OwnershipMarker, () => marker.ExecuteNonQuery()); _marked = true;
         }
-        using var db = new SignupContext(Options());
         // Existing, exclusively created EMPTY database: creates current model tables.
-        db.Database.EnsureCreated();
+        SeedStep(SqlCleanupDiagnostics.SeedGraph.None, SqlCleanupDiagnostics.SeedStage.SchemaInitialize, () => {
+            using var db = new SignupContext(Options()); db.Database.EnsureCreated(); });
     }
 
     internal T Track<T>(T task) where T : Task => _workers.Track(task);
     internal void RegisterCustomerDiagnostics() { if (!_sharedServer) _cleanupDiagnostics.RegisterCustomerDiagnostics(); }
+    internal void HelperEvidence(SqlCleanupDiagnostics.SeedStage stage, Exception? error) => _cleanupDiagnostics.HelperEvidence(stage,error);
     internal T SeedStep<T>(SqlCleanupDiagnostics.SeedGraph graph, SqlCleanupDiagnostics.SeedStage stage, Func<T> work) => _cleanupDiagnostics.SeedStep(graph, stage, work);
     internal void SeedStep(SqlCleanupDiagnostics.SeedGraph graph, SqlCleanupDiagnostics.SeedStage stage, Action work) => _cleanupDiagnostics.SeedStep(graph, stage, work);
     internal IDisposable SeedDisposal(IDisposable resource) => _cleanupDiagnostics.SeedDisposal(resource);
@@ -248,17 +261,18 @@ internal sealed class DisposableSqlDatabase
                     // the returned metadata is capped; the guard count is not.
                     sessions.CommandText = @"DECLARE @observed TABLE
                         (session_id smallint, user_process bit, status nvarchar(30), active_request bit,
-                         open_transactions int, connection_id uniqueidentifier, login_time datetime);
+                         open_transactions int, connection_id uniqueidentifier, login_time datetime, request_command nvarchar(32), wait_type nvarchar(60));
                         INSERT @observed
                         SELECT s.session_id, s.is_user_process, s.status,
                             CONVERT(bit, CASE WHEN EXISTS(SELECT 1 FROM sys.dm_exec_requests r WHERE r.session_id=s.session_id) THEN 1 ELSE 0 END),
-                            s.open_transaction_count, c.connection_id, s.login_time
+                            s.open_transaction_count, c.connection_id, s.login_time, r.command, r.wait_type
                         FROM sys.dm_exec_sessions s
                         OUTER APPLY (SELECT TOP(1) connection_id FROM sys.dm_exec_connections c
                             WHERE c.session_id=s.session_id AND c.parent_connection_id IS NULL ORDER BY c.connection_id) c
+                        OUTER APPLY (SELECT TOP(1) command,wait_type FROM sys.dm_exec_requests r WHERE r.session_id=s.session_id ORDER BY request_id) r
                         WHERE s.database_id=DB_ID(@name) AND s.session_id<>@@SPID;
                         SELECT COUNT(*) FROM @observed;
-                        SELECT TOP(16) user_process, status, active_request, open_transactions, connection_id, session_id, login_time
+                        SELECT TOP(16) user_process, status, active_request, open_transactions, connection_id, session_id, login_time, request_command, wait_type
                         FROM @observed ORDER BY session_id;";
                     guardSessions = _cleanupDiagnostics.InspectGuard(() => sessions.ExecuteReader());
                     _cleanupDiagnostics.ObserveLifecycle("Guard", master, DatabaseName);
@@ -292,7 +306,10 @@ internal sealed class DisposableSqlDatabase
     private SqlConnection Open(string catalog, SqlFixtureConnectionRole role)
     {
         var observed = _cleanupDiagnostics.CustomerDiagnosticsEnabled && role == SqlFixtureConnectionRole.OwnershipVerification;
-        T Step<T>(SqlCleanupDiagnostics.OpenStage stage, Func<T> work) => observed ? _cleanupDiagnostics.OpenStep(stage, work) : work();
+        T Step<T>(SqlCleanupDiagnostics.OpenStage stage, Func<T> work) => role == SqlFixtureConnectionRole.SetupMaster
+            ? _cleanupDiagnostics.SeedStep(SqlCleanupDiagnostics.SeedGraph.None,
+                stage == SqlCleanupDiagnostics.OpenStage.ConnectionOpen ? SqlCleanupDiagnostics.SeedStage.SetupConnection : SqlCleanupDiagnostics.SeedStage.InstanceIdentity, work)
+            : observed ? _cleanupDiagnostics.OpenStep(stage, work) : work();
         var connection = new SqlConnection(Connection(catalog));
         try
         {

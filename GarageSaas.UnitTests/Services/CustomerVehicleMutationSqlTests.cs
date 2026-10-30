@@ -13,6 +13,7 @@ public class CustomerVehicleMutationSqlTests
     {
         if (_unsafeCleanup) Assert.Inconclusive("Uncertain earlier cleanup: no more database creation.");
         _database = DisposableSqlDatabase.Start("GARAGESAAS_RUN_CUSTOMER_VEHICLE_MUTATION_SQL_TESTS", "QuoteCoordination");
+        _database.RegisterCustomerDiagnostics();
         _database.Create(); TestContext.WriteLine($"Owned disposable database: {_database.DatabaseName}");
     }
     [TestCleanup]
@@ -42,5 +43,5 @@ public class CustomerVehicleMutationSqlTests
     [DataRow("garage-update", 0, false)] [DataRow("garage-update", 1, true)]
     [DataRow("pending", 0, false)] [DataRow("commit-uncertainty", 0, false)]
     public void AtomicMutationsAndRollback(string operation, int failAt, bool after)
-        => CustomerVehicleMutationCases.Check(_database!.Options(), operation, failAt, after, true);
+        => CustomerVehicleMutationCases.Check(_database!.Options(), operation, failAt, after, true, _database.HelperEvidence);
 }
