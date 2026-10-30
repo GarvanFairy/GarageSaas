@@ -138,9 +138,11 @@ public class StaffInvitationConcurrencySqlTests
     [TestMethod]
     public void InactiveMembershipNotReactivated()
     {
+        _database!.RegisterPendingDropDiagnostics();
         var s=Seed(); using(var db=new SignupContext(_database!.Options())){db.Add(new GarageBusinessUser{GarageBusinessId=s.Garage,UserId=s.User!.Value,Role="Staff",IsActive=false,CreatedDate=DateTime.UtcNow});db.SaveChanges();}
         using(var db=new SignupContext(_database.Options()))Assert.IsInstanceOfType<ForbidResult>(Accept(db,s));
-        using var check=new SignupContext(_database.Options());Assert.IsFalse(check.GarageUserInvitation.Single().Accepted);Assert.IsFalse(check.GarageBusinessUser.Single(x=>x.UserId==s.User).IsActive);
+        using(var check=new SignupContext(_database.Options())){Assert.IsFalse(check.GarageUserInvitation.Single().Accepted);Assert.IsFalse(check.GarageBusinessUser.Single(x=>x.UserId==s.User).IsActive);}
+        _database.PendingDropBodyCompleted();
     }
     [TestMethod]
     public void SecondMembershipPreservesExplicitSelection()

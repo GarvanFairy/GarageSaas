@@ -189,6 +189,8 @@ internal sealed class DisposableSqlDatabase
         catch { _cleanupDiagnostics.ObserveLifecycle(phase, () => throw new InvalidOperationException("Lifecycle connection unavailable.")); }
     }
     internal Task DrainAsync() => _workers.DrainAsync(TimeSpan.FromSeconds(30));
+    internal void RegisterPendingDropDiagnostics() { if (!_sharedServer) _cleanupDiagnostics.RegisterPendingDrop(); }
+    internal void PendingDropBodyCompleted() => _cleanupDiagnostics.PendingDropBodyCompleted();
 
     // Experiments may execute DDL only through a freshly verified connection to
     // this object's successfully created and marked database. Never adopts a DB.
@@ -270,7 +272,10 @@ internal sealed class DisposableSqlDatabase
                 using var drop = master.CreateCommand(); drop.CommandTimeout = 8;
                 drop.CommandText = $"DROP DATABASE [{DatabaseName}]";
                 operation = "DropOwnedDatabase";
-                drop.ExecuteNonQuery(); _created = false;
+                if (_cleanupDiagnostics.PendingDropEnabled && !_sharedServer)
+                    _cleanupDiagnostics.ObserveDrop(() => drop.ExecuteNonQuery(), master);
+                else drop.ExecuteNonQuery();
+                _created = false;
             }
         }, error => {
             _cleanupDiagnostics.Record(error == null ? "Completed" : operation, error,
