@@ -187,5 +187,12 @@ Require ($login.Count -eq 1 -and (Position $deploy $target) -lt (Position $deplo
 Require (!$login[0].Contains('if') -and !$login[0].Contains('continue-on-error'))
 Require ((Equal $login[0].with['tenant-id'] '${{ env.AZURE_LOGIN_TENANT_ID }}') -and (Equal $login[0].with['subscription-id'] '${{ env.AZURE_LOGIN_SUBSCRIPTION_ID }}'))
 Require (Equal $login[0].with['client-id'] '${{ env.AZURE_LOGIN_CLIENT_ID }}')
+$cli=Step $deploy 'Verify reviewed deployment CLI'
+Require (Equal $cli.run './.github/scripts/Invoke-StagingDeployment.ps1 -PreflightOnly')
+Require ((Position $deploy $cli) -lt (Position $deploy $login[0]))
+$execution=Step $deploy 'Deploy only the approved package to the existing staging app'
+Require (Equal $execution.run './.github/scripts/Invoke-StagingDeployment.ps1')
+Require ((Position $deploy $execution) -gt (Position $deploy $login[0]))
+foreach($step in $deploy.steps){Require (!($step.run -match '(?i)\baz\s+webapp\s+deploy\b'))}
 foreach($job in @($pre,$release)){foreach($step in $job.steps){Require (!($step.uses -like 'azure/*') -and !($step.run -match '(?i)\baz\s+webapp\s+deploy\b'))}}
 Write-Output 'Structured YAML and executable PowerShell gates verified; deployment remains unconditional false.'

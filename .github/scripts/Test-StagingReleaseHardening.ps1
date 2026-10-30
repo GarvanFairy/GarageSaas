@@ -237,4 +237,5 @@ for($i=0;$i -lt $extraWorkflow.Count;$i++){
 if($identifierCount -ne 37 -or $count -ne 140 -or $positive -ne 6){throw "Expanded hardening inventory incomplete: identifiers=$identifierCount count=$count positive=$positive"}
 & (Join-Path $PSScriptRoot 'Test-CiControllerBoundary.ps1')
 & (Join-Path $PSScriptRoot 'Test-StagingPromotion.ps1') -PackageDirectory $package -Commit $Commit
+& (Join-Path $PSScriptRoot 'Test-StagingDeploymentExecution.ps1')
 Write-Output "PASS: 160 staging hardening regressions: original 83 + 37 identifier/manifest + 20 structured-workflow + 20 mixed-revision cases. No Azure/SQL/network/release operation."
