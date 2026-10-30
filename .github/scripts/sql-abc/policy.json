@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "overlaySha256": "52d82b5e8544c0f9aff570707cd74ff9a148ca17743c401d20e26419d0838587",
+  "arms": {
+    "A": {
+      "revision": "050458d658505f787a49aced52f9a21f1aa2fb75",
+      "sourceHashes": {
+        "GarageSaas.UnitTests/Services/QuoteConversionSqlTests.cs": "867de19a623dbdbfc5e7cc82425528bb554aa782fcbdada09c60f268d464b211",
+        "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabase.cs": "099acbe5e2e6e0ad19f66108c70c776a6abbfbba84727ca21f8075407c926a8e"
+      }
+    },
+    "B": {
+      "revision": "820890d205a1a4f73defda03ce854acc04068001",
+      "sourceHashes": {
+        "GarageSaas.UnitTests/Services/QuoteConversionSqlTests.cs": "867de19a623dbdbfc5e7cc82425528bb554aa782fcbdada09c60f268d464b211",
+        "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabase.cs": "099acbe5e2e6e0ad19f66108c70c776a6abbfbba84727ca21f8075407c926a8e"
+      }
+    },
+    "C": {
+      "revision": "2ebca1cb613520b1e60b5fc65ceb3b680b8a89f9",
+      "sourceHashes": {
+        "GarageSaas.UnitTests/Services/QuoteConversionSqlTests.cs": "867de19a623dbdbfc5e7cc82425528bb554aa782fcbdada09c60f268d464b211",
+        "GarageSaas.UnitTests/TestHelpers/DisposableSqlDatabase.cs": "7b23a2c6035d9187b3b8d57889154d9e1c742f4fef739d6bddba670a58c64982"
+      }
+    }
+  }
+}
