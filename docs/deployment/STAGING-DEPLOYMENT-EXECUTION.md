@@ -1,108 +1,65 @@
-# Staging deployment execution hardening
+# Controlled Staging publishing (implementation only)
 
-## State: publishing blocked, including after removal of the workflow false guard
+Deployment remains disabled: `deploy.if: ${{ false }}` AND the unchanged operational-readiness throw before Azure login. No input or variable removes either stop. This is Staging only; it does not establish a Production policy. Prepare is unchanged, including its full 223-case SQL qualification.
 
-No deployment is authorized. The existing unconditional `if: ${{ false }}` and
-the exact operational-readiness throw before Azure login remain unchanged.
-Prepare/promote provenance, artifact 12933496952, source run 40953823134,
-application 665d8d9a91235c73d1d41185d3c2df2ddb545f58 and independently approved
-ZIP SHA-256 remain unchanged. No application build is part of this hardening.
+## Fixed release and target
 
-This is a single-developer workflow. The developer approves merge, activation,
-deployment and recovery separately. This change introduces no second-person
-approval, reviewer requirement, branch protection, environment or RBAC change.
+- Application commit: `665d8d9a91235c73d1d41185d3c2df2ddb545f58`.
+- Source run: `40953823134`; artifact: `12933496952`.
+- ZIP SHA-256: `640efc3f6084c9fc2562a0e09da3dc229e4f329ccdc40a71bc6873ccc0c56ce5`.
+- Site: `/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu`.
+- Tenant: `90589b9f-6a39-4285-a798-5d72f6937826`; OIDC client: `dd6047f8-4557-4401-aab5-d7fd9e7d40a8`.
 
-## CLI version and distribution
+The existing manifest, ZIP inventory, provenance, same-run CI and SHA gates remain. The publisher holds the validated ZIP open with no write/delete sharing, independently hashes that handle, and uploads that same handle. No rebuild, repackage, replacement artifact, application binary upload to GitHub, migration or application-setting update is introduced.
 
-Use only the existing official Windows Azure CLI MSI installation's Python at
-`%ProgramFiles%\Microsoft SDKs\Azure\CLI2\python.exe`, invoked with `-IBm azure.cli`
-to avoid shell/batch interpretation of arguments. Require exactly Azure CLI 2.91.0;
-fail if absent, older or newer. No download, installation, update or PATH fallback.
-The published windows-2025 image inventory reviewed on 30 October 2026 lists this
-version. The image label is mutable, so version drift deliberately blocks execution.
-This checks installation path/version, not a cryptographic distribution attestation.
+## Supported publishing contract
 
-Sources:
-- https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-Readme.md
-- https://github.com/Azure/azure-cli/blob/azure-cli-2.91.0/src/azure-cli/azure/cli/command_modules/appservice/custom.py
+Use Microsoft Entra bearer authentication with the supported Kudu ZIP deployment REST API:
 
-## Additional confirmed upstream blocker
+`POST https://garagesaas-stg-d49b2f61-weu.scm.azurewebsites.net/api/zipdeploy?isAsync=true`
 
-In reviewed CLI 2.91.0, `_make_onedeploy_request` sends a local Windows ZIP then
-polls through `_check_zip_deployment_status`, including when `--async true` is set.
-That helper calls `_configure_default_logging` on failed deployment or timeout.
-The latter attempts application/web-server/filesystem logging configuration changes.
-It also polls `/api/deployments/latest`, which is not exact-request correlation.
-No reviewed supported flag removes these problems. Consequently the wrapper
-constructs and tests the intended command but NEVER invokes it. It emits only
-ConfirmedFailure / PublishingPathBlocked, with no deployment ID, and fails.
-This is a known pre-submission rejection, not a claim that Azure rejected a deploy.
+The body is the original ZIP. Azure login remains the existing pinned OIDC action. The wrapper requires the existing official Azure CLI 2.91.0 Windows distribution for **read-only account/token commands only**. It never executes `az webapp deploy`; its logging-configuration side effects are avoided entirely. The historical command-plan helpers remain for regression compatibility and are never executed.
 
-Do not monkey-patch CLI, rely on a permission denial to prevent side effects,
-expand RBAC, or exploit timeout values to evade the unsupported path. A separately
-reviewed upstream fix or supported publishing mechanism is needed before execution.
-The current PR must not be described as ready to activate deployment.
+Before upload, validate exact account tenant, subscription and service-principal client; read the exact ARM site resource using API `2024-11-01`; require its expected default and SCM hostnames. Retrieve an ARM-audience access token into bounded private pipes; check tenant/subscription and at least ten minutes remaining. Tokens are only request-specific Authorization headers, never command arguments or output. Azure validates the bearer token; local metadata validation is not a token-signature validation claim. No publishing passwords, publish profiles or long-lived credentials.
 
-## Implemented execution and status primitives
+Microsoft documentation: [ZIP REST deployment with Entra token](https://github.com/MicrosoftDocs/azure-docs/blob/main/includes/app-service-deploy-zip-push-rest.md), [App Service ZIP deployment](https://learn.microsoft.com/en-us/azure/app-service/deploy-zip), [Kudu async ZIP API](https://github.com/projectkudu/kudu/wiki/Deploying-from-a-zip-file-or-url), [deployment status API](https://github.com/projectkudu/kudu/wiki/REST-API).
 
-The private process collector uses argument arrays, no shell, concurrent stdout
-and stderr draining, 64 Ki-character limits per stream and a bounded deadline.
-Limits/timeouts terminate the local process tree only, never Azure processes or
-resources. Killing a client cannot cancel an already submitted server operation.
-Raw streams/exceptions are never written to summaries, reports or artifact files.
-Only a three-field allowlisted receipt may reach stdout/step summary.
+The server may return a Location pointing to `/api/deployments/latest`. That is **not** exact-request evidence: it is never fetched and the receipt stays Unknown. Only an absolute HTTPS Location on the exact SCM host, with `/api/deployments/` plus 32 lowercase hex characters, is eligible for status reads. Relative URLs, other ID formats, ports, queries, fragments, redirects and other hosts are not followed. This conservative subset may produce Unknown on a successful deployment; that is intentional.
 
-The command plan fixes target, identity, ZIP filename and approved hash, reuses
-existing package validation and preserves ZIP/clean/restart semantics. The process
-collector is tested using local synthetic processes, not Azure CLI deployments.
+There is one POST, no mutation retry, fallback, restart, rollback, logging update or automatic recovery. There are at most six status GETs, each bounded to ten seconds. Only matching `id`, terminal `status`, `active` and `complete` can establish a terminal receipt. Status messages and log URLs are discarded. No deployment log endpoint is called. There is no guarantee a terminal state will be observable during this short window.
 
-Outcome model:
-- ConfirmedSuccess: a trusted exact-request deployment ID, a different known baseline
-  deployment, and an independently read matching completed/active status 4.
-- ConfirmedFailure: exact correlated terminal status 3, or an explicitly identified
-  pre-submission rejection. A nonzero CLI exit is not proof of failed activation.
-- Unknown: missing correlation, timeout, interruption, oversized output, nonzero
-  process exit, malformed/duplicate/unexpected fields, inconsistent status or no
-  terminal evidence. Missing receipt after runner termination is also Unknown.
+HTTP uses default certificate validation plus revocation checking, no certificate bypass, redirects, proxy, cookies or default credentials. Upload is bounded to 180 seconds; other reads to ten seconds, JSON/health to 64 KiB, headers to 16 KiB, identity DLL reads to 64 MiB each; the existing job ceiling remains 15 minutes. Local process pipes are independently bounded. Interrupted uploads, redirects, unexpected authentication responses, malformed/oversized replies and unproven completion are Unknown, never evidence that Azure did nothing.
 
-The strict projected status contract is `{id,status,active,complete}`. It is not a
-claim that unmodified raw ARM/Kudu responses have that schema. The future supported
-adapter must validate/project its documented response and prove request correlation.
-No live adapter is enabled. `/health` alone never proves activation or database,
-B2C, membership, customer/vehicle, quote, invoice or isolation acceptance.
+## Independent outcomes
 
-## Read-only reconciliation runbook (not an execution script)
+Publishing receipt: ConfirmedSuccess requires exact response-correlated status 4, active and complete; ConfirmedFailure requires correlated status 3, inactive and complete, or an explicitly identified preflight rejection before upload. All other results are Unknown.
 
-1. Freeze further mutations. Identify the exact staging resource, application SHA,
-   approved ZIP hash, controller commit and original promotion run/attempt.
-2. Record the last known active deployment as baseline before an approved attempt.
-3. Prefer an identifier obtained from that exact publishing request's response.
-   Do not substitute `/latest`, timestamp proximity, a healthy endpoint or a user-
-   entered ID as proof of package/request correspondence.
-4. An authorized operator reads deployment metadata for the exact ID, and current
-   active deployment identity, using existing read permissions. Emit IDs and fixed
-   statuses only; never logs, headers, tokens, messages or application data.
-5. Compare baseline, correlated ID, completion and activation evidence. Missing,
-   contradictory or uncorrelated evidence remains Unknown. Do not poll or mutate
-   automatically after uncertainty; the developer authorizes further read checks.
-6. Only after activation is established perform existing liveness checking. Any
-   synthetic authenticated acceptance remains separately authorized.
-7. Require the developer's explicit approval before retry, restart, restore or
-   rollback. Use the retained exact rollback ZIP only after persistent-state and
-   schema compatibility checks; no rebuild or automatic database restore.
+Application acceptance: verify the deployed `GarageSaas.dll` and `SignupAPI.dll` hashes through two fixed, authenticated SCM VFS paths against their entries in the approved ZIP, then check the exact site's `/health` for HTTP 200 and `Healthy`. Only **both** checks yield VerifiedHealthy. Matching deployed identity with a failing liveness response yields VerifiedUnhealthy. Missing/mismatched identity or unavailable evidence yields NotVerified.
 
-## Offline tests and remaining work
+This establishes **deployed-file identity and liveness**, not the loaded process version, database/B2C functionality, synthetic-user binding or authenticated business acceptance. The fixed evidence explicitly keeps `runningProcessVersion` and `authenticatedAcceptance` NotVerified. Those remain manual readiness/acceptance requirements; a healthy endpoint alone cannot satisfy them.
 
-70 deterministic execution/status regressions exercise version gates, command
-identity, strict JSON, conflicting/historical IDs, both bounded pipes, oversized
-output, nonzero/terminated/timeout processes, exception canaries, summaries and
-workflow mutation rejection. The existing hardening suite invokes them in hosted
-artifact-security CI alongside its original 160 and the 62 promotion regressions.
+The fixed-schema JSON goes only to stdout and the step summary; no raw responses, logs, tokens, headers or binary artifacts are uploaded. Unknown remains Unknown even when acceptance is VerifiedHealthy and the job completes. It sets `manualReconciliationRequired: true`. ConfirmedFailure, VerifiedUnhealthy or NotVerified fail the step, without redeployment. A lost runner or missing final receipt is Unknown.
 
-Before activation: resolve the upstream publishing/correlation blocker, review a
-real response adapter with deterministic fixtures, and confirm the existing runtime,
-recovery, capacity, SCM/network and developer authorization prerequisites. No live
-deployment or restore is part of this change.
+## Prevention of subsequent attempts
+
+The existing workflow concurrency group serializes all Staging release runs, without cancelling in-progress work. Require master/manual/promote, exact repository and workflow reference, hosted runner, and run attempt 1. Before Azure login, and again immediately before publication preflight, inspect read-only GitHub workflow/job history. A local atomic CreateNew stamp prevents duplicate wrapper invocation in one workspace.
+
+This is deliberately **first-deployment-only authorization**: every prior staging workflow run created on/after `2026-10-31T00:00:00Z` must have a completed, skipped deploy job for every attempt. Any started/non-skipped deploy job blocks subsequent deployment, even if successful, failed before upload, cancelled or missing a final receipt. Incomplete, duplicate or truncated history fails closed (100-run/page cap, five attempts maximum, 90-second scan budget). Earlier runs were under the reviewed unconditional deployment stop. The current run must be present. No input/environment setting bypasses the checkpoint.
+
+After any actual attempt, reconcile manually and obtain explicit authorization before a **separately reviewed code change** can advance that checkpoint. Do not rerun the deploy job or blindly dispatch again. The guard does not infer reconciliation from health, a green workflow or `/latest`. It conservatively blocks known-safe preflight failures too. History expiration/deletion or gaps that prevent reliable reconciliation must be treated as a blocker by the operator, never permission to retry.
+
+## Remaining enablement checklist (not performed by this PR)
+
+1. Review/merge this draft and require full PR and post-merge master CI. New 123 offline publishing regressions run through the existing required artifact-security job via the hardening suite; retain 160 hardening, 70 legacy execution, 62 promotion, 20 controller-boundary, 37 artifact mutations, six native checks and 121 prerequisite regressions.
+2. Separately verify the current Staging environment's master-only restriction and owner approval policy, OIDC subject/audience, exact app-scoped publishing permissions, SCM Entra access and permitted network path. Do not expand RBAC implicitly. This implementation has not tested live publication or these permission contracts.
+3. Confirm existing settings keep server-side build/remote build disabled, retain SMTP/OpenAI disabled, resolve Key Vault references, and preserve managed-identity database connectivity. No settings are read or changed by implementation validation.
+4. Confirm staging-only schema compatibility without migrations; synthetic B2C mapping and garage membership; authenticated tenant-isolation, customer/vehicle, quote/invoice acceptance. Repository history is not fresh live evidence.
+5. Confirm recoverable Data Protection keys and uploaded logos outside deployment content, retained exact rollback ZIP/hash, schema compatibility and explicit manual recovery authorization. Do not equate file existence with recoverability.
+6. Resolve the independent running-process/version verification limitation and record its approved acceptance method before enablement. Do not use HTTP 200 or deployed-file identity alone to claim authenticated/runtime acceptance.
+7. Approve a separate workflow change removing **both** stops, after operational evidence and an independently approved hash are recorded. Preserve master/manual/promote, pinned source/target, environment approvals, concurrency and first-attempt guard. Require full CI for that change. Do not enable this implementation by editing an input.
+8. Separately approve one promote dispatch on the reviewed master controller; review its environment approval. Upload once. Record publishing and acceptance independently. On Unknown, freeze mutations and reconcile before authorizing any subsequent attempt. No automatic redeploy or rollback.
+
+No Azure, SQL, GitHub environment, RBAC or configuration changes were made for implementation. No live deployment is authorized.
 
 ## Temporary PR #14 readiness exception (expires 7 November 2026 UTC)
 

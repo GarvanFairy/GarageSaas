@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$PreflightOnly)
+param([switch]$PreflightOnly,[switch]$CheckPriorAttempts)
 $ErrorActionPreference='Stop'
 
 function Get-StagingDeploymentPlan {
@@ -135,23 +135,93 @@ function Write-StagingSafeReceipt {
     Write-Output $json
 }
 
+. (Join-Path $PSScriptRoot 'StagingKuduPublishing.ps1')
+
+function Assert-ControlledStagingHistory {
+    Assert-ControlledStagingContext
+    $gh=Join-Path $env:ProgramFiles 'GitHub CLI/gh.exe'
+    if(!(Test-Path -LiteralPath $gh -PathType Leaf) -or !$env:GH_TOKEN){throw 'Deployment history unavailable.'}
+    $watch=[Diagnostics.Stopwatch]::StartNew()
+    $api={param($path)
+        $remaining=90000-[int]$watch.ElapsedMilliseconds
+        if($remaining -le 0){throw 'Deployment history unavailable.'}
+        # Fixed repository, bounded pages, no pagination/fallback/retry. Projection
+        # excludes titles, user records, URLs and other unnecessary metadata.
+        if($path -cnotmatch '\Aactions/(workflows/staging-cd\.yml/runs\?branch=master&event=workflow_dispatch&created=%3E%3D2026-10-31&per_page=100|runs/[0-9]+/attempts/[1-5]/jobs\?per_page=100)\z'){throw 'Unexpected history endpoint.'}
+        $query=if($path.StartsWith('actions/workflows/')){'{total_count,workflow_runs:[.workflow_runs[]|{id,run_attempt}]}'}else{'{total_count,jobs:[.jobs[]|{name,status,conclusion}]}'}
+        $r=Invoke-StagingBoundedProcess -Executable $gh -Arguments @('api','--hostname','github.com',('repos/GarvanFairy/GarageSaas/'+$path),'--jq',$query) -TimeoutMilliseconds ([Math]::Min(10000,$remaining))
+        if($r.exitCode -ne 0 -or $null -eq $r.exitCode -or $r.timedOut -or $r.interrupted -or $r.oversized){throw 'Deployment history unavailable.'}
+        return ($r.stdout|ConvertFrom-Json)
+    }
+    Assert-StagingPriorAttempts -Api $api -CurrentRun $env:GITHUB_RUN_ID
+}
+
 # Dot-source loads pure helpers for deterministic offline tests; never a workflow input.
 if($MyInvocation.InvocationName -ceq '.'){return}
+$publishing=[pscustomobject]@{outcome='ConfirmedFailure';reason='PreflightRejected';deploymentId=$null}
+$acceptance=[pscustomobject]@{outcome='NotVerified';reason='IdentityUnavailable';identity='Unavailable'}
+$client=$null;$zip=$null;$attempted=$false
 try{
+    if($CheckPriorAttempts){Assert-ControlledStagingHistory;Write-Output 'Prior-attempt gate passed; no publication attempted.';return}
     $python=Join-Path $env:ProgramFiles 'Microsoft SDKs/Azure/CLI2/python.exe'
     if(!(Test-Path -LiteralPath $python -PathType Leaf)){throw 'Expected CLI distribution unavailable.'}
     $version=Invoke-StagingBoundedProcess -Executable $python -Arguments @('-IBm','azure.cli','version','--query','"azure-cli"','--output','tsv','--only-show-errors') -TimeoutMilliseconds 30000
     if(!(Test-StagingCliVersion $version)){throw 'Expected CLI version unavailable.'}
-    if($PreflightOnly){Write-Output 'Reviewed Azure CLI 2.91.0 distribution/version confirmed; publishing path remains blocked.';return}
+    if($PreflightOnly){Write-Output 'Reviewed Azure CLI 2.91.0 distribution/version confirmed; workflow publishing remains disabled.';return}
     $plan=Get-StagingDeploymentPlan -ResourceId $env:TARGET_RESOURCE_ID -TenantId $env:AZURE_LOGIN_TENANT_ID -SubscriptionId $env:AZURE_LOGIN_SUBSCRIPTION_ID -ClientId $env:AZURE_LOGIN_CLIENT_ID -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -Directory candidate
     & (Join-Path $PSScriptRoot 'Assert-StagingDeploymentArtifact.ps1') -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun 40953823134|Out-Null
+    Assert-ControlledStagingHistory
+    $cli={param([string[]]$a)
+        $r=Invoke-StagingBoundedProcess -Executable $python -Arguments (@('-IBm','azure.cli')+$a+@('--only-show-errors','--output','json')) -TimeoutMilliseconds 30000
+        if($r.exitCode -ne 0 -or $null -eq $r.exitCode -or $r.timedOut -or $r.oversized -or $r.interrupted){throw 'Authenticated preflight unavailable.'}
+        return $r.stdout
+    }
+    $account=Read-StagingStrictObject (& $cli -a @('account','show','--query','{tenantId:tenantId,subscriptionId:id,clientId:user.name,type:user.type}')) @('tenantId','subscriptionId','clientId','type')
+    if($account.tenantId -cne $env:AZURE_LOGIN_TENANT_ID -or $account.subscriptionId -cne $env:AZURE_LOGIN_SUBSCRIPTION_ID -or
+       $account.clientId -cne $env:AZURE_LOGIN_CLIENT_ID -or $account.type -cne 'servicePrincipal'){throw 'Azure identity rejected.'}
+    $auth=Read-StagingStrictObject (& $cli -a @('account','get-access-token','--resource','https://management.azure.com/','--subscription',$env:AZURE_LOGIN_SUBSCRIPTION_ID,'--query','{accessToken:accessToken,tenant:tenant,subscription:subscription,expires_on:expires_on}')) @('accessToken','tenant','subscription','expires_on')
+    if($auth.tenant -cne $env:AZURE_LOGIN_TENANT_ID -or $auth.subscription -cne $env:AZURE_LOGIN_SUBSCRIPTION_ID -or
+       $auth.accessToken -isnot [string] -or $auth.accessToken -cnotmatch '\A[A-Za-z0-9_.-]{100,32768}\z' -or
+       [long]$auth.expires_on -lt [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()+600){throw 'Authentication unavailable.'}
+    $client=New-KuduClient
+    $metadata=Invoke-KuduHttp -Client $client -Kind Target -Url ('https://management.azure.com'+$env:TARGET_RESOURCE_ID+'?api-version=2024-11-01') -Token $auth.accessToken
+    if($metadata.failure -cne 'None' -or $metadata.code -ne 200){throw 'Azure site identity unavailable.'}
+    $site=Read-StagingSiteMetadata $metadata.bytes
+    Assert-StagingAuthentication $account $auth $site
+    # Hold the exact validated bytes open without write/delete sharing, rehash this
+    # same handle, then upload it. No rebuild, archive rewrite or pathname reopen.
+    $zip=[IO.File]::Open($plan.Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+    if($zip.Length -gt 2147483648 -or [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($zip)).ToLowerInvariant() -cne $script:StagingHash){throw 'Package identity rejected.'}
+    $zip.Position=0
+    $archive=[IO.Compression.ZipArchive]::new($zip,[IO.Compression.ZipArchiveMode]::Read,$true)
+    $expected=@{}
+    try{foreach($name in @('GarageSaas.dll','SignupAPI.dll')){
+        $entries=@($archive.Entries|Where-Object {$_.FullName -ceq $name})
+        if($entries.Count -ne 1 -or $entries[0].Length -gt 67108864){throw 'Package identity unavailable.'}
+        $s=$entries[0].Open();try{$expected[$name]=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($s)).ToLowerInvariant()}finally{$s.Dispose()}
+    }}finally{$archive.Dispose()}
+    $zip.Position=0
+    $transport={param($kind,$url,$body)
+        $seconds=if($kind -ceq 'Upload'){180}else{10}
+        $limit=if($kind -ceq 'Binary'){67108864}else{65536}
+        Invoke-KuduHttp -Client $client -Kind $kind -Url $url -Token $auth.accessToken -Zip $body -Seconds $seconds -Limit $limit
+    }
+    [void][IO.Directory]::CreateDirectory('artifacts/staging-deployment')
+    # Atomic local guard, plus durable prior-job history (including lost runners).
+    $stamp=[IO.File]::Open('artifacts/staging-deployment/attempt.lock',[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+    $stamp.Dispose()
+    $attempted=$true
+    $publishing=Invoke-ControlledKuduUpload -Transport $transport -Zip $zip
+    $acceptance=Get-StagingAcceptance -Transport $transport -Expected $expected
 }catch{
-    Write-StagingSafeReceipt ([pscustomobject]@{outcome='ConfirmedFailure';reason='PreflightRejected';deploymentId=$null})
-    throw 'Staging deployment preflight rejected; no publication attempted.'
+    if($attempted){$publishing=[pscustomobject]@{outcome='Unknown';reason='Interrupted';deploymentId=$null}}
+}finally{
+    foreach($resource in @($zip,$client)){if($resource){try{$resource.Dispose()}catch{}}};$auth=$null
 }
-# Reviewed CLI 2.91.0 Windows flow polls /api/deployments/latest and invokes
-# _configure_default_logging on failure/timeout, including with --async true.
-# No supported flag disables that mutation or proves exact-request correlation.
-# Do not execute the command plan until that independent blocker is resolved.
-Write-StagingSafeReceipt ([pscustomobject]@{outcome='ConfirmedFailure';reason='PublishingPathBlocked';deploymentId=$null})
-throw 'Reviewed CLI publishing path is blocked; no publication attempted. Manual implementation approval required.'
+$evidence=ConvertTo-StagingEvidence $publishing $acceptance
+Write-Output $evidence
+try{if($env:GITHUB_STEP_SUMMARY){[IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY,$evidence+[Environment]::NewLine)}}catch{throw 'Safe receipt unavailable; manual reconciliation required.'}
+if($publishing.outcome -ceq 'Unknown'){Write-Output 'Publishing remains Unknown; manual reconciliation is mandatory before any further attempt.'}
+if($publishing.outcome -ceq 'ConfirmedFailure' -or $acceptance.outcome -cne 'VerifiedHealthy'){
+    throw 'Staging result requires manual review; no automatic redeployment or recovery.'
+}
