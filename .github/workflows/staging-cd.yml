@@ -251,6 +251,8 @@ jobs:
           path: candidate
       - name: Verify reviewed deployment CLI
         run: ./.github/scripts/Invoke-StagingDeployment.ps1 -PreflightOnly
+      - name: Reject prior deployment attempts before Azure login
+        run: ./.github/scripts/Invoke-StagingDeployment.ps1 -CheckPriorAttempts
       - name: Revalidate approved archive and target before Azure login
         run: |
           ./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun 40953823134
@@ -264,5 +266,3 @@ jobs:
           subscription-id: ${{ env.AZURE_LOGIN_SUBSCRIPTION_ID }}
       - name: Deploy only the approved package to the existing staging app
         run: ./.github/scripts/Invoke-StagingDeployment.ps1
-      - name: Validate staging liveness (manual authenticated acceptance still required)
-        run: ./.github/scripts/Test-StagingReleaseHealth.ps1

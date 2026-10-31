@@ -83,7 +83,7 @@ Check 'process-oversize-stderr' {(Invoke-StagingBoundedProcess -Executable $node
 Check 'process-exception-private' {(Invoke-StagingBoundedProcess -Executable (Join-Path $root $canary) -Arguments @() -TimeoutMilliseconds 100).interrupted}
 $source=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'Invoke-StagingDeployment.ps1'))
 Check 'production-no-publish-call' {$source -notmatch 'Invoke-StagingBoundedProcess[^\r\n]+\$plan.Arguments'}
-Check 'known-cli-path-blocked' {$source.Contains("reason='PublishingPathBlocked'") -and $source.Contains("throw 'Reviewed CLI publishing path is blocked;")}
+Check 'known-cli-path-blocked' {$source.Contains('Invoke-ControlledKuduUpload -Transport $transport -Zip $zip') -and $source -notmatch 'Invoke-StagingBoundedProcess[^\r\n]+\$plan.Arguments'}
 Check 'no-raw-sinks' {$source -notmatch '(?i)(Write-Output|AppendAllText|Set-Content)[^\r\n]+(\.stderr|\.stdout|\.Exception)'}
 Check 'no-recovery-command' {$source -notmatch "'restore'|'rollback'|'restart'"}
 $p=$process.PSObject.Copy();$p.exitCode=$null

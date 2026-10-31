@@ -51,8 +51,11 @@ prevents deployment until a separate reviewed enablement change resolves:
   deployment restriction and separately approved artifact hash.
 - Exact app-scoped role, SCM basic authentication disabled, runner network access,
   reviewed explicit CLI version and Entra publishing path without credential reads.
-- Bounded sanitized deployment process/status reporting. Existing CLI command is
-  unreachable and is not claimed to implement those future safeguards.
+- The controlled Kudu REST publisher, independent publishing/acceptance outcomes
+  and prior-attempt guard are implemented but unreachable behind both stops. See
+  [the execution contract and enablement checklist](STAGING-DEPLOYMENT-EXECUTION.md).
+  No Azure CLI deployment command is executed. Unknown publication is permitted
+  for Staging only and always requires manual reconciliation before another attempt.
 
 No approval variable or workflow input can bypass either stop. A human attestation
 is required; documentation and successful metadata checks are not runtime approval.

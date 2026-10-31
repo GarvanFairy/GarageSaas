@@ -34,6 +34,8 @@ Keys $workflow.on @('workflow_dispatch');Keys $workflow.on.workflow_dispatch.inp
 Keys $workflow.jobs @('prerequisite','release','promotion','deploy')
 Keys $workflow.permissions @('contents');Require (Equal $workflow.permissions.contents 'read')
 Require (Equal $workflow.defaults.run.shell 'pwsh')
+Keys $workflow.concurrency @('group','cancel-in-progress')
+Require ((Equal $workflow.concurrency.group 'garagesaas-staging-release') -and (Equal $workflow.concurrency['cancel-in-progress'] 'false'))
 $pre=$workflow.jobs.prerequisite;$release=$workflow.jobs.release;$deploy=$workflow.jobs.deploy
 Keys $workflow.on.workflow_dispatch.inputs.mode @('description','type','options','default','required')
 Require ((Equal $workflow.on.workflow_dispatch.inputs.mode.type 'choice') -and (Equal $workflow.on.workflow_dispatch.inputs.mode.default 'prepare'))
@@ -193,6 +195,12 @@ Require ((Position $deploy $cli) -lt (Position $deploy $login[0]))
 $execution=Step $deploy 'Deploy only the approved package to the existing staging app'
 Require (Equal $execution.run './.github/scripts/Invoke-StagingDeployment.ps1')
 Require ((Position $deploy $execution) -gt (Position $deploy $login[0]))
+$history=Step $deploy 'Reject prior deployment attempts before Azure login'
+Require (Equal $history.run './.github/scripts/Invoke-StagingDeployment.ps1 -CheckPriorAttempts')
+Require ((Position $deploy $history) -lt (Position $deploy $login[0]))
+# No alternative publisher or liveness-only acceptance step may be inserted.
+Require ($deploy.steps.Count -eq 7)
+Require ((Position $deploy $execution) -eq 6)
 foreach($step in $deploy.steps){Require (!($step.run -match '(?i)\baz\s+webapp\s+deploy\b'))}
 foreach($job in @($pre,$release)){foreach($step in $job.steps){Require (!($step.uses -like 'azure/*') -and !($step.run -match '(?i)\baz\s+webapp\s+deploy\b'))}}
 Write-Output 'Structured YAML and executable PowerShell gates verified; deployment remains unconditional false.'
