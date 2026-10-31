@@ -1,14 +1,25 @@
 param([Parameter(Mandatory)][string]$Path)
 $ErrorActionPreference='Stop'
+function Stop-WorkflowValidation([string]$Classification,[int]$Line=0){
+    $allowed=[Collections.Generic.HashSet[string]]::new([string[]]@('MissingAzureCliPython','YamlParserExecutionFailure','YamlParserTimeout','YamlParserNonzeroExit','StructuredWorkflowContractFailure','UnknownFailure'),[StringComparer]::Ordinal)
+    if(!$allowed.Contains($Classification)){$Classification='UnknownFailure'}
+    if($Line -lt 0 -or $Line -gt 10000){$Line=0}
+    $safeException=[InvalidOperationException]::new("Staging workflow validation failed: $Classification.")
+    $safeException.Data['WorkflowGuardEvidence']='1'
+    $safeException.Data['WorkflowGuardClassification']=$Classification
+    $safeException.Data['WorkflowGuardLine']=$Line
+    throw $safeException
+}
+try {
 # Supplementary conservative text check retained for the original regression
 # contract. Executable-gate decisions below use decoded YAML and the PS AST.
 $raw=[IO.File]::ReadAllText([IO.Path]::GetFullPath($Path)).Replace("`r`n","`n")
 $boundary=$raw.IndexOf("`n  deploy:`n",[StringComparison]::Ordinal)
 if($boundary -lt 0 -or $raw.Substring(0,$boundary) -match 'id-token:|azure/login@|az webapp deploy'){
-    throw 'Azure auth/OIDC must remain confined to the disabled deployment job.'
+    Stop-WorkflowValidation 'StructuredWorkflowContractFailure' 0
 }
 function Equal($a,$b){[string]::Equals([string]$a,[string]$b,[StringComparison]::Ordinal)}
-function Require([bool]$Value){if(!$Value){throw 'Staging workflow structured security contract failed.'}}
+function Require([bool]$Value){if(!$Value){Stop-WorkflowValidation 'StructuredWorkflowContractFailure' $MyInvocation.ScriptLineNumber}}
 function Keys($Map,[string[]]$Expected){
     Require ($Map -is [Collections.IDictionary] -and $Map.Count -eq $Expected.Count)
     $set=[Collections.Generic.HashSet[string]]::new($Expected,[StringComparer]::Ordinal)
@@ -17,19 +28,26 @@ function Keys($Map,[string[]]$Expected){
 # Existing Microsoft tool installation, not an Azure invocation. Missing Python
 # or PyYAML fails closed; this script never installs dependencies or falls back.
 $python=Join-Path $env:ProgramFiles 'Microsoft SDKs/Azure/CLI2/python.exe'
-Require (Test-Path -LiteralPath $python -PathType Leaf)
+if(!(Test-Path -LiteralPath $python -PathType Leaf)){Stop-WorkflowValidation 'MissingAzureCliPython' 0}
 $start=[Diagnostics.ProcessStartInfo]::new($python)
 $start.UseShellExecute=$false;$start.CreateNoWindow=$true
 $start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
 foreach($arg in @('-I',(Join-Path $PSScriptRoot 'Read-WorkflowYaml.py'),[IO.Path]::GetFullPath($Path))){$start.ArgumentList.Add($arg)}
 $process=[Diagnostics.Process]::new();$process.StartInfo=$start
 try{
-    [void]$process.Start();$stdout=$process.StandardOutput.ReadToEndAsync();$stderr=$process.StandardError.ReadToEndAsync()
-    if(!$process.WaitForExit(30000)){$process.Kill($true);throw 'Workflow parser failed.'}
-    $json=$stdout.GetAwaiter().GetResult();[void]$stderr.GetAwaiter().GetResult()
-    Require ($process.ExitCode -eq 0)
-    $workflow=$json|ConvertFrom-Json -AsHashtable
-}finally{$process.Dispose()}
+    $parserFailure=$null
+    try{
+        try{
+            if(!$process.Start()){Stop-WorkflowValidation 'YamlParserExecutionFailure' 0}
+            $stdout=$process.StandardOutput.ReadToEndAsync();$stderr=$process.StandardError.ReadToEndAsync()
+            $exited=$process.WaitForExit(30000)
+        }catch{Stop-WorkflowValidation 'YamlParserExecutionFailure' 0}
+        if(!$exited){try{$process.Kill($true)}catch{};Stop-WorkflowValidation 'YamlParserTimeout' 0}
+        try{$json=$stdout.GetAwaiter().GetResult();[void]$stderr.GetAwaiter().GetResult()}catch{Stop-WorkflowValidation 'YamlParserExecutionFailure' 0}
+        if($process.ExitCode -ne 0){Stop-WorkflowValidation 'YamlParserNonzeroExit' 0}
+        try{$workflow=$json|ConvertFrom-Json -AsHashtable}catch{Stop-WorkflowValidation 'YamlParserExecutionFailure' 0}
+    }catch{$parserFailure=$_;throw}
+}finally{try{$process.Dispose()}catch{if(!$parserFailure){throw}}}
 Keys $workflow.on @('workflow_dispatch');Keys $workflow.on.workflow_dispatch.inputs @('mode','commit')
 Keys $workflow.jobs @('prerequisite','release','promotion','deploy')
 Keys $workflow.permissions @('contents');Require (Equal $workflow.permissions.contents 'read')
@@ -196,3 +214,22 @@ Require ((Position $deploy $execution) -gt (Position $deploy $login[0]))
 foreach($step in $deploy.steps){Require (!($step.run -match '(?i)\baz\s+webapp\s+deploy\b'))}
 foreach($job in @($pre,$release)){foreach($step in $job.steps){Require (!($step.uses -like 'azure/*') -and !($step.run -match '(?i)\baz\s+webapp\s+deploy\b'))}}
 Write-Output 'Structured YAML and executable PowerShell gates verified; deployment remains unconditional false.'
+} catch {
+    # Rebuild a fixed exception without retaining a raw inner exception. This also
+    # sanitizes unexpected file/JSON/runtime errors when the guard runs directly.
+    $category='UnknownFailure';$line=$_.InvocationInfo.ScriptLineNumber
+    try{
+        $cursor=$_.Exception
+        $allowed=[Collections.Generic.HashSet[string]]::new([string[]]@('MissingAzureCliPython','YamlParserExecutionFailure','YamlParserTimeout','YamlParserNonzeroExit','StructuredWorkflowContractFailure','UnknownFailure'),[StringComparer]::Ordinal)
+        for($depth=0;$cursor -and $depth -lt 4;$depth++){
+            $marker=$cursor.Data['WorkflowGuardEvidence'];$candidate=$cursor.Data['WorkflowGuardClassification'];$candidateLine=$cursor.Data['WorkflowGuardLine']
+            if($marker -is [string] -and [string]::Equals($marker,'1',[StringComparison]::Ordinal) -and
+               $candidate -is [string] -and $allowed.Contains($candidate) -and
+               ($candidateLine -is [int] -or $candidateLine -is [long]) -and $candidateLine -ge 0 -and $candidateLine -le 10000){
+                $category=$candidate;$line=[int]$candidateLine;break
+            }
+            $cursor=$cursor.InnerException
+        }
+    }catch{$category='UnknownFailure';$line=0}
+    Stop-WorkflowValidation $category $line
+}
