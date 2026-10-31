@@ -40,8 +40,8 @@ function Test-KuduEndpoint {
     switch -CaseSensitive ($Kind){
         Upload {return [string]::Equals($Url,$script:StagingScm+'/api/zipdeploy?isAsync=true',[StringComparison]::Ordinal)}
         Status {return [regex]::IsMatch($Url,'\A'+[regex]::Escape($script:StagingScm)+'/api/deployments/[a-f0-9]{32}\z',[Text.RegularExpressions.RegexOptions]::CultureInvariant)}
-        Binary {return $Url -ceq ($script:StagingScm+'/api/vfs/site/wwwroot/GarageSaas.dll') -or $Url -ceq ($script:StagingScm+'/api/vfs/site/wwwroot/SignupAPI.dll')}
-        Health {return $Url -ceq ($script:StagingSite+'/health')}
+        Binary {return [string]::Equals($Url,$script:StagingScm+'/api/vfs/site/wwwroot/GarageSaas.dll',[StringComparison]::Ordinal) -or [string]::Equals($Url,$script:StagingScm+'/api/vfs/site/wwwroot/SignupAPI.dll',[StringComparison]::Ordinal)}
+        Health {return [string]::Equals($Url,$script:StagingSite+'/health',[StringComparison]::Ordinal)}
         Target {return [string]::Equals($Url,'https://management.azure.com/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu?api-version=2024-11-01',[StringComparison]::Ordinal)}
     }
     return $false

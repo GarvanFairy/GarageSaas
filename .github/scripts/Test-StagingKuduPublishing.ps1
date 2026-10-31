@@ -206,5 +206,7 @@ foreach($json in @($siteJson.Replace('"id":','"ID":"wrong","id":'),$siteJson.Rep
 Check 'arm-alternate-version-rejected' {!(Test-KuduEndpoint ('https://management.azure.com'+$metadata.id+'?api-version=2024-01-01') Target)}
 Check 'arm-redirect-not-followed' {$c=Fake-Client 302 $canary 'https://evil.invalid';$r=Invoke-KuduHttp $c Target ('https://management.azure.com'+$metadata.id+'?api-version=2024-11-01') $canary;$c.Calls -eq 1 -and $r.code -eq 302}
 Check 'history-current-rerun-rejected' {Reject {Assert-StagingPriorAttempts {return ('{"total_count":1,"workflow_runs":[{"id":100,"run_attempt":2}]}'|ConvertFrom-Json)} '100'}}
-if($n -ne 121){throw "Controlled publishing inventory mismatch: $n"}
+Check 'binary-soft-hyphen-host-rejected' {!(Test-KuduEndpoint ($scm.Replace('garagesaas',"garage$([char]0x00ad)saas")+'/api/vfs/site/wwwroot/GarageSaas.dll') Binary)}
+Check 'health-soft-hyphen-host-rejected' {!(Test-KuduEndpoint ($site.Replace('garagesaas',"garage$([char]0x00ad)saas")+'/health') Health)}
+if($n -ne 123){throw "Controlled publishing inventory mismatch: $n"}
 Write-Output "PASS: $n controlled Staging publishing/acceptance security regressions; synthetic offline HTTP only."

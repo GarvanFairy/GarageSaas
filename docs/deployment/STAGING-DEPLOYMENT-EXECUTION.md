@@ -50,7 +50,7 @@ After any actual attempt, reconcile manually and obtain explicit authorization b
 
 ## Remaining enablement checklist (not performed by this PR)
 
-1. Review/merge this draft and require full PR and post-merge master CI. New 121 offline publishing regressions run through the existing required artifact-security job via the hardening suite; retain 160 hardening, 70 legacy execution, 62 promotion, 20 controller-boundary, 37 artifact mutations, six native checks and 121 prerequisite regressions.
+1. Review/merge this draft and require full PR and post-merge master CI. New 123 offline publishing regressions run through the existing required artifact-security job via the hardening suite; retain 160 hardening, 70 legacy execution, 62 promotion, 20 controller-boundary, 37 artifact mutations, six native checks and 121 prerequisite regressions.
 2. Separately verify the current Staging environment's master-only restriction and owner approval policy, OIDC subject/audience, exact app-scoped publishing permissions, SCM Entra access and permitted network path. Do not expand RBAC implicitly. This implementation has not tested live publication or these permission contracts.
 3. Confirm existing settings keep server-side build/remote build disabled, retain SMTP/OpenAI disabled, resolve Key Vault references, and preserve managed-identity database connectivity. No settings are read or changed by implementation validation.
 4. Confirm staging-only schema compatibility without migrations; synthetic B2C mapping and garage membership; authenticated tenant-isolation, customer/vehicle, quote/invoice acceptance. Repository history is not fresh live evidence.
