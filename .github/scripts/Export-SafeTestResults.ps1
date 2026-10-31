@@ -126,6 +126,47 @@ function Convert-StepEvidence($value,[bool]$Seed) {
         sqlErrorNumbers=$numbers;sqlErrorsTruncated=[bool]$value.sqlErrorsTruncated;exceptionChainTruncated=[bool]$value.exceptionChainTruncated;
         elapsedMilliseconds=[int]$value.elapsedMilliseconds;durationCapped=[bool]$value.durationCapped}
 }
+function Convert-PendingDrop($value) {
+    $keys=@('availability','bodyCompleted','elapsedMilliseconds','durationCapped','observation')
+    Require-Shape $value $keys $keys
+    Require-Enum $value.availability @('Available')
+    Require-Boolean $value.bodyCompleted;Require-Boolean $value.durationCapped
+    if($null -ne $value.elapsedMilliseconds){Require-Integer $value.elapsedMilliseconds 0 600000}
+    if($value.durationCapped -and $value.elapsedMilliseconds -ne 600000){throw 'Invalid DROP duration cap'}
+    $o=$value.observation
+    $keys=@('availability','reason','request','status','wait','blocking','blockerRequest','transactions','error','sqlErrorNumbers','elapsedMilliseconds')
+    Require-Shape $o $keys $keys
+    Require-Enum $o.availability @('Available','Unavailable')
+    Require-Enum $o.reason @('Captured','NotObserved','NoMatchingRequest','CorrelationUnavailable','InvalidMetadata','ObserverFailed','DeadlineOrCancellation')
+    Require-Enum $o.error @('None','Sql','Cancelled','Other')
+    $numbers=$null
+    if($null -ne $o.sqlErrorNumbers){
+        if($o.sqlErrorNumbers -isnot [array] -or $o.sqlErrorNumbers.Count -lt 1 -or $o.sqlErrorNumbers.Count -gt 4){throw 'Invalid observer SQL codes'}
+        $seen=[Collections.Generic.HashSet[int]]::new();$numbers=@()
+        foreach($number in $o.sqlErrorNumbers){Require-Integer $number -2 300;if($number -notin @(-2,0,53,233,229,297,300) -or !$seen.Add($number)){throw 'Unknown/duplicate observer SQL code'};$numbers+=[int]$number}
+    }
+    if($o.availability -ceq 'Available'){
+        Require-Enum $o.request @('DropDatabase');Require-Enum $o.reason @('Captured');Require-Enum $o.error @('None')
+        Require-Enum $o.status @('Running','Runnable','Suspended','Sleeping','Background','Unknown')
+        Require-Enum $o.wait @('NoneReported','Lock','LogIO','IO','FileIO','Latch','Scheduler','Unknown')
+        Require-Enum $o.blocking @('NoneReported','UserSession','SystemSession','OrphanedTransaction','DeferredRecovery','InternalOwnerUnknown','Unknown')
+        Require-Enum $o.blockerRequest @('DropDatabase','DatabaseStartup','Checkpoint','LazyWriter','LogWriter','RecoveryWriter','Unknown')
+        if($null -ne $o.transactions){Require-Integer $o.transactions 0 1000000}
+        Require-Integer $o.elapsedMilliseconds 0 2000
+        if($null -ne $numbers -or $null -eq $value.elapsedMilliseconds){throw 'Inconsistent captured observer'}
+    }else{
+        foreach($name in @('request','status','wait','blocking','blockerRequest')){Require-Enum $o[$name] @('Unavailable')}
+        if($o.reason -ceq 'Captured' -or $null -ne $o.transactions -or $null -ne $o.elapsedMilliseconds){throw 'Inconsistent unavailable observer'}
+        if(($o.reason -ceq 'ObserverFailed') -ne ($o.error -cin @('Sql','Other')) -or
+           ($o.reason -ceq 'DeadlineOrCancellation') -ne ($o.error -ceq 'Cancelled') -or
+           ($o.error -cne 'Sql' -and $null -ne $numbers)){throw 'Inconsistent observer error'}
+    }
+    # Explicit reconstruction: never forward any unknown input properties.
+    return [ordered]@{availability='Available';bodyCompleted=[bool]$value.bodyCompleted;elapsedMilliseconds=$value.elapsedMilliseconds;durationCapped=[bool]$value.durationCapped;
+        observation=[ordered]@{availability=[string]$o.availability;reason=[string]$o.reason;request=[string]$o.request;status=[string]$o.status;
+            wait=[string]$o.wait;blocking=[string]$o.blocking;blockerRequest=[string]$o.blockerRequest;transactions=$o.transactions;
+            error=[string]$o.error;sqlErrorNumbers=$numbers;elapsedMilliseconds=$o.elapsedMilliseconds}}
+}
 function Convert-CleanupRecord([string]$Json, $Method) {
     if ($Json.Length -gt 16384) { throw 'Oversized diagnostic record' }
     $options = [System.Text.Json.JsonDocumentOptions]::new(); $options.MaxDepth = 12
@@ -137,7 +178,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
     $record = ConvertFrom-Json -InputObject $Json -AsHashtable -Depth 12
     $base = @('operation','success','created','marked','dedicatedLocalDb','ownershipVerified','pooling',
         'efOpenConnections','efOpenedEvents','efClosedEvents','workers','guardSessions','exceptionType','sanitizedMessage','sqlErrors','stack')
-    Require-Shape $record ($base + @('databasePresent','databaseState','databaseAccess','serverSessionsAfterOutcome','snapshotExceptionType','snapshotSqlErrors','guardSessionDetails','lifecycle','seeding','cleanupOpen')) $base
+    Require-Shape $record ($base + @('databasePresent','databaseState','databaseAccess','serverSessionsAfterOutcome','snapshotExceptionType','snapshotSqlErrors','guardSessionDetails','lifecycle','seeding','cleanupOpen','pendingDrop')) $base
     Require-Enum $record.operation @('DrainWorkers','OwnershipPrecondition','OpenOwnedDatabase','VerifyOwnershipMarker','OpenMaster','VerifyTarget','ActiveSessionGuard','DropOwnedDatabase','Completed')
     $types = @('System.InvalidOperationException','System.TimeoutException','System.OperationCanceledException','System.Threading.Tasks.TaskCanceledException',
         'System.IO.IOException','System.ObjectDisposedException','System.UnauthorizedAccessException','System.ArgumentException',
@@ -221,6 +262,8 @@ function Convert-CleanupRecord([string]$Json, $Method) {
     $seeding=if($record.Contains('seeding')){Convert-StepEvidence $record.seeding $true}else{$null}
     $cleanupOpen=if($record.Contains('cleanupOpen')){Convert-StepEvidence $record.cleanupOpen $false}else{$null}
     if($null -ne $lifecycle -and ($null -ne $seeding -or $null -ne $cleanupOpen)){throw 'Conflicting diagnostic fixture scopes'}
+    if($record.Contains('pendingDrop') -and ($Method.className -cne 'GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests' -or
+       $Method.methodName -cne 'InactiveMembershipNotReactivated')){throw 'Unexpected pending DROP diagnostic scope'}
     return [ordered]@{
         stage = [string]$record.operation; exceptionType = $record.exceptionType; sqlErrorNumbers = $numbers
         trackedOpenConnections = [int]$record.efOpenConnections; activeSessionsAtGuard = $record.guardSessions
@@ -233,6 +276,7 @@ function Convert-CleanupRecord([string]$Json, $Method) {
         snapshotSqlErrorNumbers = $snapshotNumbers; locations = $locations
         lifecycle = $lifecycle
         seeding = $seeding; cleanupOpen = $cleanupOpen
+        pendingDrop = $(if($record.Contains('pendingDrop')){Convert-PendingDrop $record.pendingDrop}else{[ordered]@{availability='Unavailable'}})
     }
 }
 function Get-CleanupEvidence($Result, $Method) {
