@@ -26,9 +26,11 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 45
     env:
-      # Only this dedicated push ref selects focused verification. PRs and all
-      # other refs retain the complete CI inventory and existing quality gates.
+      # Only this dedicated push ref selects focused verification. The separately
+      # approved PR #14 readiness exception below never applies to master/release.
       CI_SQL_FOCUS: ${{ github.event_name == 'push' && github.ref == 'refs/heads/codex/workitem-quote-race-verification' && 'workitem-quote-race' || '' }}
+      # Temporary PR #14 readiness exception only. Master/release CI remains 223.
+      CI_SQL_READINESS_QUARANTINE: ${{ ((github.event_name == 'push' && github.ref == 'refs/heads/codex/staging-deployment-execution-hardening') || (github.event_name == 'pull_request' && github.event.pull_request.number == 14 && github.event.pull_request.base.ref == 'master' && github.event.pull_request.head.ref == 'codex/staging-deployment-execution-hardening' && github.event.pull_request.head.repo.full_name == 'GarvanFairy/GarageSaas')) && 'pr14' || '' }}
       DOTNET_NOLOGO: 'true'
       DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
       OpenAI__ApiKey: ''
@@ -90,9 +92,14 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: ./.github/scripts/Test-SafeSqlCleanupDiagnostics.ps1
 
+      - name: Require staging-readiness quarantine security regressions
+        id: sql_readiness_security
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: ./.github/scripts/Test-StagingReadinessQuarantine.ps1
+
       - name: Create isolated runner-only LocalDB instance
         id: localdb
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.sql_diagnostic_security.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.sql_diagnostic_security.outcome == 'success' && steps.sql_readiness_security.outcome == 'success' }}
         run: ./.github/scripts/Start-CiLocalDb.ps1
 
       - name: Disposable SQL integration tests
@@ -119,7 +126,7 @@ jobs:
           if ($env:CI_SQL_FOCUS -eq 'workitem-quote-race') {
             ./.github/scripts/Invoke-CiTests.ps1 -Suite sql -FocusWorkItemQuoteRace
           } else {
-            ./.github/scripts/Invoke-CiTests.ps1 -Suite sql
+            ./.github/scripts/Invoke-CiTests.ps1 -Suite sql -StagingReadinessQuarantine:($env:CI_SQL_READINESS_QUARANTINE -eq 'pr14')
           }
 
       - name: Write test count summary
@@ -129,7 +136,7 @@ jobs:
             if ($env:CI_SQL_FOCUS -and $suite -ne 'sql') { continue }
             $path = "artifacts/test-results/$suite.trx"
             if (Test-Path -LiteralPath $path) {
-              ./.github/scripts/Assert-TestResults.ps1 -Path $path -Suite $suite -SummaryOnly
+              ./.github/scripts/Assert-TestResults.ps1 -Path $path -Suite $suite -SummaryOnly -StagingReadinessQuarantine:($suite -eq 'sql' -and $env:CI_SQL_READINESS_QUARANTINE -eq 'pr14')
             } else { "$suite`: no TRX produced; inspect build/setup and sanitized status file." >> $env:GITHUB_STEP_SUMMARY }
           }
 

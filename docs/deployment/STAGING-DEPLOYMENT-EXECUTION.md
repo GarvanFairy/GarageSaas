@@ -103,3 +103,45 @@ Before activation: resolve the upstream publishing/correlation blocker, review a
 real response adapter with deterministic fixtures, and confirm the existing runtime,
 recovery, capacity, SCM/network and developer authorization prerequisites. No live
 deployment or restore is part of this change.
+
+## Temporary PR #14 readiness exception (expires 7 November 2026 UTC)
+
+The developer authorized excluding exactly
+`GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests.InactiveMembershipNotReactivated`
+from this branch's push CI and same-repository PR #14 readiness execution only.
+Follow-up: [issue #21](https://github.com/GarvanFairy/GarageSaas/issues/21).
+Original SQL inventory is still **223**; readiness requires **222 executed/passed**,
+zero failures/skips among them, and explicitly records **one not executed** in
+the job summary and `sql-status.json`. Sanitized TRX contains actual executed
+results only; no passing or skipped test result is fabricated for the exclusion.
+
+Reason: run 41108996896 confirmed `DropOwnedDatabase` timeout with ownership
+verified and zero guard sessions, tracked open connections and incomplete workers.
+Business assertion completion is not established by that artifact. Local passes
+and review found no confirmed application defect. This is limited risk acceptance,
+not proof the test passed or that its membership assertions are unnecessary.
+Its source and assertions, all other tenant/concurrency tests and all cleanup
+safeguards remain intact. No test inventory entry is removed or recategorized.
+
+The helper validates this exact one-case inventory and refuses exemption requests
+at/after `2026-11-07T00:00:00Z`. Other PRs, forks, master pushes, manual workflows,
+selected application/controller release revisions and focused SQL runs cannot
+use it. Master CI, candidate preparation and release qualification remain full
+223-case gates. A readiness pass is not full release qualification and does not
+authorize deployment. No staging workflow, approved release or artifact changes.
+
+Remove `CI_SQL_READINESS_QUARANTINE`, the helper/security step and corresponding
+flag plumbing once the full case is restored; retain the original 223 inventory.
+Do not extend expiry or add exclusions automatically. Any different failure stops
+delivery for an explicit decision. Security regressions use fixed private clocks
+to test expiry deterministically; production has no clock override.
+
+Local validation for this exception: Release solution build passed (12 existing
+warnings), original SQL inventory 223/223 passed with no exclusions (including the
+quarantined case), 39 new offline exemption checks passed, and the existing 160
+hardening, 70 deployment-execution, 62 promotion, 20 controller-boundary, 37 artifact
+mutation/six native checks, 121 prerequisite and 256 sanitizer checks passed.
+PowerShell parsing, CI YAML parsing and the real staging-workflow guard passed.
+Local passes are not proof of hosted reliability. Updated branch/PR hosted checks
+must still pass before merge review; approved master CI must subsequently pass all
+223 cases. No earlier failed hosted run is reclassified or rerun by this exception.

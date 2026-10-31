@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory)][ValidateSet('unit','identity','sql')][string]$Suite,
     [switch]$FocusWorkItemQuoteRace,
+    [switch]$StagingReadinessQuarantine,
     [string]$ApplicationRoot='.',
     [string]$ApplicationCommit,
     [string]$ControllerCommit
@@ -14,6 +15,11 @@ foreach($revision in @($ApplicationCommit,$ControllerCommit)){
     if($revision -and ($revision -cnotmatch '\A[0-9a-f]{40}\z' -or [string]::Equals($revision,('0'*40),[StringComparison]::Ordinal))){throw 'Invalid test source/control revision.'}
 }
 if([bool]$ApplicationCommit -ne [bool]$ControllerCommit){throw 'Report both application and controller revisions together.'}
+$quarantine=$null
+if($StagingReadinessQuarantine){
+    if($Suite -cne 'sql' -or $FocusWorkItemQuoteRace -or $ApplicationCommit -or $ControllerCommit){throw 'Readiness quarantine cannot apply to focused tests or release preparation.'}
+    $quarantine=& (Join-Path $PSScriptRoot 'Get-StagingReadinessQuarantine.ps1') -RequireHostedScope
+}
 $safeDirectory=Join-Path $application 'artifacts/test-results'
 $filters = @{
     unit = 'TestCategory!=SqlServer&FullyQualifiedName!~StagingSubjectVerificationTests'
@@ -24,6 +30,7 @@ if ($FocusWorkItemQuoteRace) {
     if ($Suite -ne 'sql') { throw 'Focused verification requires the SQL suite.' }
     $filters.sql = 'FullyQualifiedName~GarageSaas.UnitTests.Services.WorkItemQuoteLinkRaceSqlTests'
 }
+if($quarantine){$filters.sql+='&FullyQualifiedName!='+$quarantine.method}
 $rawDirectory = Join-Path $env:RUNNER_TEMP "GarageSaas-ci-tests-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT/$Suite"
 if (Test-Path -LiteralPath $rawDirectory) { throw 'Unexpected pre-existing raw results; refusing stale TRX reuse.' }
 New-Item -ItemType Directory -Path $rawDirectory -Force | Out-Null
@@ -45,14 +52,16 @@ try {
     # Consume but never publish native output: failure messages can contain data.
     [void]$stdout.GetAwaiter().GetResult(); [void]$stderr.GetAwaiter().GetResult()
     $raw = Join-Path $rawDirectory "$Suite.trx"
-    & (Join-Path $PSScriptRoot 'Complete-CiTestEvidence.ps1') -RawPath $raw -OutputDirectory $safeDirectory -Suite $Suite -FocusWorkItemQuoteRace:$FocusWorkItemQuoteRace
+    & (Join-Path $PSScriptRoot 'Complete-CiTestEvidence.ps1') -RawPath $raw -OutputDirectory $safeDirectory -Suite $Suite -FocusWorkItemQuoteRace:$FocusWorkItemQuoteRace -StagingReadinessQuarantine:$StagingReadinessQuarantine
     $gatePassed=$true
 } catch { $exceptionType = $_.Exception.GetType().FullName }
 finally {
     $process.Dispose()
     New-Item -ItemType Directory -Path $safeDirectory -Force | Out-Null
-    @{ suite = $Suite; processExitCode = $exitCode; gatePassed = $gatePassed; exceptionType = $exceptionType;
-        applicationCommit=$ApplicationCommit;controllerCommit=$ControllerCommit } |
+    $status=@{ suite = $Suite; processExitCode = $exitCode; gatePassed = $gatePassed; exceptionType = $exceptionType;
+        applicationCommit=$ApplicationCommit;controllerCommit=$ControllerCommit }
+    if($quarantine){$status.stagingReadinessQuarantine=$quarantine}
+    $status |
         ConvertTo-Json | Set-Content (Join-Path $safeDirectory "$Suite-status.json") -Encoding utf8
 }
 if ($exitCode -ne 0 -or !$gatePassed) { throw "$Suite failed the process/discovery/pass gate. Inspect sanitized test artifacts; no raw output was published." }
