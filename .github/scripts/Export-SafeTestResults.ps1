@@ -104,9 +104,12 @@ function Convert-Lifecycle($value) {
 function Convert-StepEvidence($value,[bool]$Seed) {
     if($null -eq $value){return $null}
     $keys=@('graph','stage','succeeded','category','sqlErrorNumbers','sqlErrorsTruncated','exceptionChainTruncated','elapsedMilliseconds','durationCapped')
-    Require-Shape $value $keys $keys
+    Require-Shape $value ($keys+@('exceptionType')) $keys
+    $type='Unknown'
+    if($value.Contains('exceptionType')){Require-Enum $value.exceptionType @('None','SqlException','DbUpdateException','AssertFailedException','TimeoutException','OperationCanceledException','InvalidOperationException','Other');$type=[string]$value.exceptionType;if($value.succeeded -ne ($type -ceq 'None')){throw 'Conflicting exception type'}}
     Require-Enum $value.graph @('None','First','Second')
     $stages=if($Seed){@('ContextConstruction','GraphConstruction','GarageSave','CustomerVehicleSave','OwnershipWorkItemSave','PrepareExistingState','CustomerSave','ExistingQuoteSeed','ExistingInvoiceSeed','ContextDispose')}else{@('ConnectionOpen','IdentityQuerySetup','IdentityQueryExecute','IdentityQueryRead','RoleQueryRead','ReaderDispose','CommandDispose','ConnectionDispose','Completed')}
+    if($Seed){$stages+=@('InstanceIdentity','SetupConnection','SetupPermissions','DatabaseCreate','OwnershipMarker','SchemaInitialize','MutationSeed','MutationSetup','MutationService','MutationAssertions','MutationDispose')}
     Require-Enum $value.stage $stages
     Require-Enum $value.category @('None','Sql','DbUpdate','Timeout','Cancelled','InvalidOperation','Other')
     foreach($key in @('succeeded','sqlErrorsTruncated','exceptionChainTruncated','durationCapped')){Require-Boolean $value[$key]}
@@ -124,7 +127,7 @@ function Convert-StepEvidence($value,[bool]$Seed) {
     if($value.succeeded -and ($null -ne $numbers -or $value.sqlErrorsTruncated -or $value.exceptionChainTruncated)){throw 'Conflicting successful step errors'}
     return [ordered]@{graph=[string]$value.graph;stage=[string]$value.stage;succeeded=[bool]$value.succeeded;category=[string]$value.category;
         sqlErrorNumbers=$numbers;sqlErrorsTruncated=[bool]$value.sqlErrorsTruncated;exceptionChainTruncated=[bool]$value.exceptionChainTruncated;
-        elapsedMilliseconds=[int]$value.elapsedMilliseconds;durationCapped=[bool]$value.durationCapped}
+        elapsedMilliseconds=[int]$value.elapsedMilliseconds;durationCapped=[bool]$value.durationCapped;exceptionType=$type}
 }
 function Convert-CleanupRecord([string]$Json, $Method) {
     if ($Json.Length -gt 16384) { throw 'Oversized diagnostic record' }
@@ -168,14 +171,23 @@ function Convert-CleanupRecord([string]$Json, $Method) {
             if ($details.sessions.Count -ne [Math]::Min([int]$record.guardSessions,16) -or $details.truncated -ne ($record.guardSessions -gt 16)) { throw 'Inconsistent guard metadata count' }
             $safeSessions = @()
             foreach ($session in $details.sessions) {
-                Require-Shape $session @('userProcess','status','hasActiveRequest','openTransactions','fixtureRole') @('userProcess','status','hasActiveRequest','openTransactions','fixtureRole')
+                Require-Shape $session @('userProcess','status','hasActiveRequest','openTransactions','fixtureRole','requestCategory','waitCategory') @('userProcess','status','hasActiveRequest','openTransactions','fixtureRole')
+                $request='Unknown';$wait='Unknown'
+                if($session.Contains('requestCategory') -ne $session.Contains('waitCategory')){throw 'Partial request evidence'}
+                if($session.Contains('requestCategory')){
+                    Require-Enum $session.requestCategory @('Unknown','DatabaseStartup','Checkpoint','LazyWriter','LogWriter','RecoveryWriter','DatabaseCreate')
+                    Require-Enum $session.waitCategory @('Unknown','IO','Lock','Latch','Scheduler')
+                    $request=[string]$session.requestCategory;$wait=[string]$session.waitCategory
+                }
                 Require-Boolean $session.userProcess; Require-Boolean $session.hasActiveRequest
                 Require-Enum $session.status @('running','sleeping','dormant','preconnect','unknown')
                 Require-Integer $session.openTransactions
                 Require-Enum $session.fixtureRole @('SetupMaster','SetupOwnership','OwnershipVerification','OwnedFixture','GuardMaster','DiagnosticMaster','Unmatched','Unavailable')
-                $safeSessions += [ordered]@{ userProcess = [bool]$session.userProcess; status = [string]$session.status
+                $projectedSession = [ordered]@{ userProcess = [bool]$session.userProcess; status = [string]$session.status
                     hasActiveRequest = [bool]$session.hasActiveRequest; openTransactions = [int]$session.openTransactions
                     fixtureRole = [string]$session.fixtureRole }
+                if($session.Contains('requestCategory')){$projectedSession.requestCategory=$request;$projectedSession.waitCategory=$wait}
+                $safeSessions += $projectedSession
             }
             $guardDetails = [ordered]@{ availability = 'available'; truncated = [bool]$details.truncated; sessions = $safeSessions }
         }

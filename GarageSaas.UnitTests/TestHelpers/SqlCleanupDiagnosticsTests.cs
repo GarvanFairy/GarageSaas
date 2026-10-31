@@ -38,8 +38,35 @@ public class SqlCleanupDiagnosticsTests
         using var json = JsonDocument.Parse(lines.Last()["SQL-CLEANUP-DIAGNOSTIC:".Length..]);
         return json.RootElement.GetProperty(section).Clone();
     }
+    private static void CheckHostedCategories()
+    {
+        foreach (var pair in new[] { ("DB STARTUP","DatabaseStartup"),("CHECKPOINT","Checkpoint"),("LAZY WRITER","LazyWriter"),
+            ("LOG WRITER","LogWriter"),("RECOVERY WRITER","RecoveryWriter"),("CREATE DATABASE","DatabaseCreate") })
+            Assert.AreEqual(pair.Item2,SqlCleanupDiagnostics.RequestCategory(pair.Item1));
+        foreach(var pair in new[] { ("WRITELOG","IO"),("LCK_M_X","Lock"),("PAGELATCH_EX","Latch"),("SOS_SCHEDULER_YIELD","Scheduler") })
+            Assert.AreEqual(pair.Item2,SqlCleanupDiagnostics.WaitCategory(pair.Item1));
+        foreach(var hostile in new[] { "synthetic-private-canary",new string('x',20000),"CHECKPOINT;secret", "" }) {
+            Assert.AreEqual("Unknown",SqlCleanupDiagnostics.RequestCategory(hostile));
+            Assert.AreEqual("Unknown",SqlCleanupDiagnostics.WaitCategory(hostile));
+        }
+        Assert.AreEqual("Unknown",SqlCleanupDiagnostics.RequestCategory(null));
+        Assert.AreEqual("Unknown",SqlCleanupDiagnostics.WaitCategory(null));
+        Assert.AreEqual("Other",SqlCleanupDiagnostics.SafeExceptionType(new Exception("synthetic-private-canary",SyntheticSql(-2))));
+        var nested=new Exception("synthetic-private-canary",SyntheticSql(-2));
+        var text=JsonSerializer.Serialize(SqlCleanupDiagnostics.StepEvidence("None","DatabaseCreate",nested,0));
+        Assert.IsFalse(text.Contains("synthetic-private-canary",StringComparison.Ordinal));
+        using(var json=JsonDocument.Parse(text)) Assert.AreEqual(-2,json.RootElement.GetProperty("sqlErrorNumbers")[0].GetInt32());
+        foreach(var stage in Enum.GetValues<SqlCleanupDiagnostics.SeedStage>()) {
+            var lines=new List<string>();var diagnostic=new SqlCleanupDiagnostics(_=>"1",lines.Add);diagnostic.RegisterCustomerDiagnostics();
+            var original=new InvalidOperationException("synthetic-private-canary");
+            Assert.AreSame(original,Assert.ThrowsException<InvalidOperationException>(()=>diagnostic.SeedStep(SqlCleanupDiagnostics.SeedGraph.None,stage,()=>throw original)));
+            var row=StepRecord(diagnostic,lines,"seeding");Assert.AreEqual(stage.ToString(),row.GetProperty("stage").GetString());
+            Assert.AreEqual("InvalidOperationException",row.GetProperty("exceptionType").GetString());
+        }
+    }
     private static void CheckStepDiagnostics()
     {
+        CheckHostedCategories();
         foreach (var graph in new[] { SqlCleanupDiagnostics.SeedGraph.First, SqlCleanupDiagnostics.SeedGraph.Second })
         foreach (var stage in Enum.GetValues<SqlCleanupDiagnostics.SeedStage>()) {
             var lines = new List<string>(); var d = new SqlCleanupDiagnostics(_ => "1", lines.Add); d.RegisterCustomerDiagnostics();
@@ -203,6 +230,7 @@ public class SqlCleanupDiagnosticsTests
     [TestMethod]
     public async Task FailedDiagnosticSinkCannotChangeSuccessfulCleanup()
     {
+        CheckHostedCategories();
         var calls = 0;
         await SqlCleanupDiagnostics.RunCleanupAsync(() => { calls++; return Task.CompletedTask; },
             _ => throw new IOException("synthetic sink failure"));
