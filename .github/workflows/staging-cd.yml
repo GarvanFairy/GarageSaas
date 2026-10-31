@@ -249,6 +249,8 @@ jobs:
           artifact-ids: ${{ needs.promotion.outputs.artifact }}
           merge-multiple: true
           path: candidate
+      - name: Verify reviewed deployment CLI
+        run: ./.github/scripts/Invoke-StagingDeployment.ps1 -PreflightOnly
       - name: Revalidate approved archive and target before Azure login
         run: |
           ./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun 40953823134
@@ -261,8 +263,6 @@ jobs:
           tenant-id: ${{ env.AZURE_LOGIN_TENANT_ID }}
           subscription-id: ${{ env.AZURE_LOGIN_SUBSCRIPTION_ID }}
       - name: Deploy only the approved package to the existing staging app
-        run: |
-          az webapp deploy --ids $env:TARGET_RESOURCE_ID --src-path "candidate/GarageSaas-$env:RELEASE_COMMIT.zip" --type zip --clean true --restart true --only-show-errors --output none
-          if ($LASTEXITCODE -ne 0) { throw 'Deployment failed or is uncertain; do not automatically retry.' }
+        run: ./.github/scripts/Invoke-StagingDeployment.ps1
       - name: Validate staging liveness (manual authenticated acceptance still required)
         run: ./.github/scripts/Test-StagingReleaseHealth.ps1
