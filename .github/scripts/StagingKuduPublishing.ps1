@@ -30,6 +30,7 @@ function Assert-ControlledStagingContext {
     if($env:GITHUB_REPOSITORY -cne 'GarvanFairy/GarageSaas' -or $env:GITHUB_REF -cne 'refs/heads/master' -or
        $env:GITHUB_WORKFLOW_REF -cne 'GarvanFairy/GarageSaas/.github/workflows/staging-cd.yml@refs/heads/master' -or
        $env:GITHUB_EVENT_NAME -cne 'workflow_dispatch' -or $env:PROMOTION_MODE -cne 'promote' -or
+       $env:STAGING_OWNER_AUTHORIZED -cne 'true' -or
        $env:GITHUB_RUN_ATTEMPT -cne '1' -or $env:GITHUB_RUN_ID -cnotmatch '\A[1-9][0-9]{0,19}\z' -or
        $env:RUNNER_ENVIRONMENT -cne 'github-hosted'){throw 'Controlled staging execution context rejected.'}
 }

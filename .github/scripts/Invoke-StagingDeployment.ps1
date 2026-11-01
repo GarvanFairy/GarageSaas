@@ -167,7 +167,7 @@ try{
     if(!(Test-Path -LiteralPath $python -PathType Leaf)){throw 'Expected CLI distribution unavailable.'}
     $version=Invoke-StagingBoundedProcess -Executable $python -Arguments @('-IBm','azure.cli','version','--query','"azure-cli"','--output','tsv','--only-show-errors') -TimeoutMilliseconds 30000
     if(!(Test-StagingCliVersion $version)){throw 'Expected CLI version unavailable.'}
-    if($PreflightOnly){Write-Output 'Reviewed Azure CLI 2.91.0 distribution/version confirmed; workflow publishing remains disabled.';return}
+    if($PreflightOnly){Write-Output 'Reviewed Azure CLI 2.91.0 distribution/version confirmed; preflight only; no publication attempted.';return}
     $plan=Get-StagingDeploymentPlan -ResourceId $env:TARGET_RESOURCE_ID -TenantId $env:AZURE_LOGIN_TENANT_ID -SubscriptionId $env:AZURE_LOGIN_SUBSCRIPTION_ID -ClientId $env:AZURE_LOGIN_CLIENT_ID -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -Directory candidate
     & (Join-Path $PSScriptRoot 'Assert-StagingDeploymentArtifact.ps1') -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun 40953823134|Out-Null
     Assert-ControlledStagingHistory
@@ -222,6 +222,6 @@ $evidence=ConvertTo-StagingEvidence $publishing $acceptance
 Write-Output $evidence
 try{if($env:GITHUB_STEP_SUMMARY){[IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY,$evidence+[Environment]::NewLine)}}catch{throw 'Safe receipt unavailable; manual reconciliation required.'}
 if($publishing.outcome -ceq 'Unknown'){Write-Output 'Publishing remains Unknown; manual reconciliation is mandatory before any further attempt.'}
-if($publishing.outcome -ceq 'ConfirmedFailure' -or $acceptance.outcome -cne 'VerifiedHealthy'){
+if($publishing.outcome -cne 'ConfirmedSuccess' -or $acceptance.outcome -cne 'VerifiedHealthy'){
     throw 'Staging result requires manual review; no automatic redeployment or recovery.'
 }

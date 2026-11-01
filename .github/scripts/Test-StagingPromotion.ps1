@@ -50,7 +50,7 @@ Check 'workflow' $true {& $guard -Path $workflow}
 $yaml=[IO.File]::ReadAllText([IO.Path]::GetFullPath($workflow))
 foreach($pair in @(
     @('default: prepare','default: promote'),@('inputs.mode == ''prepare''','inputs.mode == ''promote'''),
-    @('inputs.mode == ''promote''','inputs.mode == ''prepare'''),@('if: ${{ false }}','if: ${{ true }}'),
+    @('inputs.mode == ''promote''','inputs.mode == ''prepare'''),@('if: ${{ github.repository == ''GarvanFairy/GarageSaas'' && github.ref == ''refs/heads/master'' && github.event_name == ''workflow_dispatch'' && inputs.mode == ''promote'' && inputs.authorize_staging_deployment == true && needs.promotion.result == ''success'' }}','if: ${{ true }}'),
     @('needs: promotion','needs: release'),@('artifact-ids:','name:'),
     @('client-id: ${{ env.AZURE_LOGIN_CLIENT_ID }}','client-id: ${{ vars.AZURE_STAGING_CLIENT_ID }}'),
     @('SourceRun 40953823134','SourceRun 1'))){
