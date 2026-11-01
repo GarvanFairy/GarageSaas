@@ -2,6 +2,8 @@ param([Parameter(Mandatory)][string]$PublishPath,
     [Parameter(Mandatory)][string]$PackageDirectory,
     [Parameter(Mandatory)][string]$Commit)
 $ErrorActionPreference='Stop'
+$safeFailureReader=Join-Path $PSScriptRoot 'Get-SafeStagingWorkflowFailure.ps1'
+& (Join-Path $PSScriptRoot 'Test-StagingWorkflowFailureEvidence.ps1')
 # Local mutations of COPIES only. Never builds/publishes/packages an application,
 # accesses Azure/GitHub, changes a source fixture, or dispatches any workflow.
 $publish=[IO.Path]::GetFullPath($PublishPath)
@@ -16,7 +18,14 @@ New-Item -ItemType Directory -Path $root -Force|Out-Null
 $script:count=0;$script:positive=0;$script:names=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
 function Check([string]$Name,[bool]$Accept,[scriptblock]$Action){
     if(!$script:names.Add($Name)){throw 'Duplicate hardening regression.'}
-    $accepted=$true;try{& $Action|Out-Null}catch{$accepted=$false}
+    $accepted=$true;$failure=$null;try{& $Action|Out-Null}catch{$accepted=$false;$failure=$_}
+    if($Accept -and !$accepted){
+        $safe=@{classification='UnknownFailure';assertion='Unknown';sourceLine='Unavailable'}
+        try{$safe=& $safeFailureReader -Failure $failure}catch{}
+        $labels=[Collections.Generic.HashSet[string]]::new([string[]]@('target-exact','runtime-correct','zip-clean','workflow-reviewed','memory-manifest-exact','approved-artifact-exact'),[StringComparer]::Ordinal)
+        $label=if($labels.Contains($Name)){$Name}else{'positive-case'}
+        throw "Staging hardening regression failed: $label; classification=$($safe.classification); assertion=$($safe.assertion); sourceLine=$($safe.sourceLine)"
+    }
     if($accepted -ne $Accept){throw "Staging hardening regression failed: $Name"}
     $script:count++;if($Accept){$script:positive++}
 }
