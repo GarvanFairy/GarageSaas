@@ -38,6 +38,12 @@ jobs:
           [[ "$STAGING_RESOURCE_ID" == "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu" ]] || { echo "Unexpected staging resource ID"; exit 1; }
           echo "Exact configured staging identity and target match."
 
+      - name: Checkout reviewed diagnostic source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
       - name: Authenticate with Azure via GitHub OIDC (no secret)
         uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac
         with:
@@ -59,3 +65,7 @@ jobs:
 
           echo "GitHub OIDC login and staging App Service read access verified."
           echo "No resource modifications, publishing, uploads, or deployment commands were executed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify staging SCM Entra read access (one GET)
+        shell: bash
+        run: python3 -I ./.github/scripts/StagingScmAccess.py

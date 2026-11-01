@@ -209,4 +209,11 @@ Check 'history-current-rerun-rejected' {Reject {Assert-StagingPriorAttempts {ret
 Check 'binary-soft-hyphen-host-rejected' {!(Test-KuduEndpoint ($scm.Replace('garagesaas',"garage$([char]0x00ad)saas")+'/api/vfs/site/wwwroot/GarageSaas.dll') Binary)}
 Check 'health-soft-hyphen-host-rejected' {!(Test-KuduEndpoint ($site.Replace('garagesaas',"garage$([char]0x00ad)saas")+'/health') Health)}
 if($n -ne 123){throw "Controlled publishing inventory mismatch: $n"}
+$python=Join-Path $env:ProgramFiles 'Microsoft SDKs/Azure/CLI2/python.exe'
+$scmTests=Invoke-StagingBoundedProcess -Executable $python -Arguments @('-I',(Join-Path $PSScriptRoot 'Test-StagingScmAccess.py')) -TimeoutMilliseconds 60000
+if($null -eq $scmTests.exitCode -or $scmTests.exitCode -ne 0 -or $scmTests.timedOut -or $scmTests.interrupted -or $scmTests.oversized -or
+    ![string]::Equals($scmTests.stdout.Trim(),'PASS: 32 offline SCM authentication/security regressions; no Azure or network access.',[StringComparison]::Ordinal)){
+    throw 'Required offline SCM authentication/security regressions failed.'
+}
+Write-Output 'PASS: 32 offline SCM authentication/security regressions; no Azure or network access.'
 Write-Output "PASS: $n controlled Staging publishing/acceptance security regressions; synthetic offline HTTP only."

@@ -2,6 +2,211 @@
 
 Deployment remains disabled: `deploy.if: ${{ false }}` AND the unchanged operational-readiness throw before Azure login. No input or variable removes either stop. This is Staging only; it does not establish a Production policy. Prepare is unchanged, including its full 223-case SQL qualification.
 
+## Owner-approved single-developer Staging policy — 31 October 2026
+
+The owner is the sole developer. Staging uses reviewed master controller code and
+the fixed approved artifact from reviewed master history. No second-person reviewer
+or prevent-self-review rule is mandatory. The owner must explicitly authorize
+deployment enablement and, separately, the particular Promote dispatch, identifying
+the reviewed controller commit and approved artifact/hash. A merge, green CI run,
+environment name or earlier authorization is not permission to publish.
+
+Preserve required full CI, artifact-security/provenance/hash checks, exact Azure
+target and OIDC identity, and the prior-deployment-attempt guard. Unknown publication
+requires manual reconciliation before any subsequent attempt. No CI bypass, automatic
+redeployment or recovery is authorized. Production policy is unchanged.
+
+The existing environment's master-only branch rule meets this branch restriction.
+Its absence of a reviewer rule and enabled administrator bypass are not additional
+Staging blockers under this owner-approved policy. Neither grants permission to
+bypass repository protections or owner authorization. No GitHub setting was changed.
+This policy supersedes earlier Staging documentation recommending a second reviewer.
+
+## Operational readiness evidence — 31 October 2026
+
+Master `f4a5fdfe630d7412e7aeb1028cf3d864261df285`, CI run `41213629463`, attempt 2,
+passed both required jobs: 1,087 unit/HTTP + 19 identity + 223 SQL tests, all three
+JavaScript suites, and mandatory security regressions. No master exclusion.
+The source tree inspected is identical to that master commit. This update changes
+this document only; the earlier uncommitted policy edits in the other two Staging
+guides are preserved. Both deployment hard stops remain unchanged.
+
+### Pre-deployment requirements
+
+| Requirement | Status | Evidence and limit |
+| --- | --- | --- |
+| Single-developer policy, master CI and fixed artifact | Verified | Policy above; CI passed. Artifact `12933496952` remains available, not expired, from run `40953823134` and commit `665d8d9a91235c73d1d41185d3c2df2ddb545f58`. Neither enablement nor dispatch is authorized by this report. |
+| Disabled SMTP, OpenAI and remote build | Verified | Named non-secret reads confirm loopback SMTP port 1 and disabled remote build. An in-place, read-only configuration predicate returned `openaiDisabled=true`; no AI/email request was made. |
+| Effective SQL configuration | Verified | The same predicate confirmed expected server and `GarageSaas_Staging`, Active Directory Managed Identity, encryption, certificate validation, and no SQL credentials. It resolved JSON, App Service environment mappings and worker web.config overrides without returning any setting/connection-string value. This is configuration proof, not a fresh worker-MI login. |
+| Schema compatibility | Verified | Existing 28 October catalog report: compatible with documented limitations, source `657ddbc6ca4f8022f31aa79b4fbf36392811af34`. The entire application source is unchanged since that source. No migration, DDL or application write was performed. |
+| SQL recovery availability | Verified | Read-only `sys.dm_database_backups` observation at `2026-10-31T20:28:54.9001027Z`: latest full finished `2026-10-31T10:07:39Z`; latest retained log finished `2026-10-31T20:28:43Z`; 677 retained log records. Proposed checkpoint: `2026-10-31T20:28:42Z`, subject to Azure validating the restore chain. This is the newest observed retained-log evidence, not a successfully tested restoration or a guarantee of the exact latest-restorable instant. Refresh before the eventual dispatch. |
+| Keys/uploads protection and content recovery point | Verified | Stable `GarageSaas.Staging` discriminator and private HOME paths confirmed. Existing content snapshot `2026-10-31T19:33:31.7882267Z` is listed; all current key files predate it. Current metadata: one key file, zero logo files. Windows App Service automatic backup scope includes HOME. No key/upload contents were read or exported; snapshot contents and restoration were not tested. |
+| Previous application rollback ZIP | Verified | Retained `artifacts/staging/20261021-193425-ccdf920d/GarageSaas-staging.zip`: 408 files; independently verified SHA-256 `EACF5066F438E0FA90D9778E98B479C418DFA39068FE409FAA1AF2BE6B0554C0`. Receipts link it to active deployment `4b4367727dbe4d6b9a5e9fe0bd87568d`. No rebuild or repackage. |
+| Synthetic-user preparation | Verified | Live, encrypted, certificate-validated SELECT against staging only confirms synthetic user 1, active/unblocked/non-platform-admin flags, exactly two memberships and exactly two expected active Owner memberships for garages 1 and 2; both parent garages match. This used the current operator's SQL identity, not the worker MI. Binding is still absent; see the separate approval below. |
+| CI deployment identity authenticates to SCM | Not Verified — blocker | Exact federation and app-only publishing role verified. Operator bearer GET succeeds, but that is not CI-principal evidence. The focused extension below implements the SCM GET. Its live run remains pending reviewed master merge and the one authorized dispatch; no successful CI-principal authentication is claimed before that receipt. No identity/permission expansion is needed. |
+| Version-evidence plan and recovery limitations | Not Verified — owner decision | File-identity checks exist, but loaded-process identity is not attested by this artifact. Approve the limited Staging evidence method below or separately authorize stronger in-process attestation. Owner must acknowledge the untested restoration limits; a restore rehearsal was not performed. |
+
+The configuration predicate ran only inside the existing staging host: it read
+configuration in memory and exported a fixed boolean receipt. No value was
+retrieved into the workspace or placed in arguments/logs. It wrote no files or
+settings. Early unsupported checks/local parsing errors are superseded by the
+final validated receipt: all eight predicates are true (source resolution,
+OpenAI disabled, server/database, MI, encryption, certificate validation and no SQL
+credentials). No application/SQL test, diagnostic project or persistent helper was
+added. This does not claim introspection of already-loaded IOptions in a worker.
+
+### Exact synthetic-user action requiring owner approval
+
+Use the previously approved local email-sign-in B2C test account referenced in
+[the account verification record](../../deployment/staging/EXISTING-B2C-TEST-ACCOUNT-RESULTS.md).
+It is not necessary to create another account or change memberships based on the
+current evidence. Interactive sign-in/current account usability remains unverified.
+Never request its password, token, cookie or authentication code in chat.
+
+The live SQL result is **user 1 unbound**, with the required two Owner memberships
+already correct. After the actual application's validated `NameIdentifier` is
+verified, request approval to run the existing guarded
+`deployment/staging/05-bind-test-user.sql` against **GarageSaas_Staging only**.
+Its only intended change is `dbo.Users.ExternalUserId` for the existing synthetic
+user `Id=1`. Preserve all account flags and both memberships. No email/directory-ID
+inference is permitted. The existing script requires a canonical GUID subject;
+a non-GUID value needs review rather than relaxing its guard. Its locked checks
+must stop on any changed fixture or duplicate mapping. No binding was performed.
+This report stops before that write; binding may be scheduled before or after the
+upload, but must precede successful authenticated acceptance.
+
+### Final OIDC-to-SCM verification implementation — 1 November 2026
+
+The existing `staging-oidc-diagnostic.yml` is extended; no new workflow,
+environment, identity, permission or infrastructure is introduced. Its original
+identity/target checks, master-only condition, ARM read and pinned Azure login
+remain unchanged. It checks out the exact workflow SHA without persisted credentials
+and invokes `StagingScmAccess.py` after the existing ARM checks.
+
+The helper independently verifies repository/master/workflow context, first run
+attempt, hosted runner, checkout SHA and CLI service-principal client/tenant/
+subscription. It acquires an ARM-audience token from the existing OIDC CLI session
+into private pipes, checks its metadata/expiry and passes it to an isolated HTTP
+child over private stdin. No token is placed in arguments, files, environment,
+workflow stdout/stderr or summary output.
+
+One SCM GET is permitted, to the fixed existing deployment-metadata endpoint:
+
+`https://garagesaas-stg-d49b2f61-weu.scm.azurewebsites.net/api/deployments/4b4367727dbe4d6b9a5e9fe0bd87568d`
+
+Use normal trusted TLS certificate and hostname validation. The HTTP transport has
+no redirect/proxy/authentication-fallback/retry handler. A ten-second child-process
+deadline bounds DNS, TLS and reads; the socket timeout is five seconds. Limit
+headers to 16 KiB and the response body to 64 KiB. Require HTTP 200, JSON metadata
+for that exact record and valid status/boolean types; discard all other response
+fields. A 401/403, redirect, timeout, oversized/malformed response or interrupted
+connection is a failed verification, not successful authentication. No `/latest`,
+settings/file read, SCM POST/PUT, upload or deployment is performed. Checking this
+historical record proves access only, not publication or application acceptance.
+
+Only a four-field, revalidated JSON receipt is emitted, for example:
+
+`{"schema":1,"outcome":"Success","reason":"VerifiedRead","httpStatus":200}`
+
+Failures use fixed allowlisted classifications; no raw headers, body, exceptions,
+CLI streams or secrets are published. A failed diagnostic remains failed and is not
+automatically retried. CLI operations and the HTTP child are individually bounded.
+
+32 offline regressions cover identity/context, checkout, token handling, TLS,
+single GET, redirects/401/403, bounds, malformed/duplicate metadata, secret canaries,
+private stdin, deadline/failure propagation, summary safety and workflow mutations.
+They execute through the existing 123-case Kudu security suite and therefore the
+required hosted artifact-security job. Missing/skipped/failed regression cases
+fail closed. Existing application/SQL inventories and release workflow are unchanged.
+
+**Live result: Not executed.** The reviewed change must first be on master: both
+the diagnostic's existing job condition and the staging environment restrict it to
+master. No feature-branch dispatch, environment exception or alternate identity is
+used. Merge authorization is separate from the already authorized one live
+verification run. After the focused PR passes CI and the owner approves its exact
+head for merge, dispatch this existing diagnostic on master exactly once. Report
+that run's sanitized receipt; on failure stop without a permissions change or
+another dispatch. Neither Prepare nor Promote is involved.
+
+Official contracts: [SCM REST Microsoft Entra authentication](https://learn.microsoft.com/en-us/azure/app-service/deploy-authentication-types),
+[ARM-audience bearer example](https://learn.microsoft.com/en-us/azure/app-service/deploy-zip),
+[read-only deployment metadata API](https://github.com/projectkudu/kudu/wiki/REST-API).
+
+### Running-process version method and post-deployment acceptance
+
+These checks are **after deployment**; they are not represented as already passed:
+
+1. **Deployed-file identity:** compare the deployed GarageSaas.dll and SignupAPI.dll
+   hashes with their exact approved ZIP entries. This is already implemented and
+   checks files only. Preserve the original ZIP/hash throughout.
+2. **Worker transition evidence:** observe metadata showing that the serving worker
+   started after publication, together with those hashes and health. Do not obtain
+   command lines, environments, dumps or sensitive logs, and do not force a restart
+   just to obtain evidence. A new worker plus correct disk files is supporting
+   operational evidence, not cryptographic proof of loaded managed assemblies.
+3. **Loaded identity:** conclusive proof would require an existing in-process report
+   of the loaded assembly's informational commit/MVID, validated against the
+   approved binary. This artifact has no such attestation. FileVersionInfo or a
+   module path still reads disk metadata and cannot substitute. Do not add an
+   endpoint, alter the approved artifact, inspect memory or claim proof here.
+   The smallest no-rebuild option is explicit owner acceptance of steps 1–2 for
+   this controlled Staging release while recording loaded identity `NotVerified`.
+   Stronger proof requires separately authorized application work and a new approved
+   artifact, outside this task; it is not silently made mandatory for first upload.
+4. Complete B2C sign-in/out with the approved synthetic account, verify the actual
+   subject binding, and exercise both intended garages. Foreign/forged garage,
+   customer and vehicle identifiers must be denied; scoped customer/vehicle,
+   quote/invoice retrieval and relationships must succeed without cross-garage
+   disclosure. Approve any mutation-based acceptance separately. Keep SMTP/OpenAI
+   disabled. Record worker database connectivity through these application checks.
+
+The subject binding and all authenticated isolation/customer/vehicle/quote/invoice
+checks are **required before declaring Staging accepted**. An upload can finish
+with Staging still awaiting acceptance. Healthy HTTP or successful file checks
+cannot mark authenticated acceptance passed, prove loaded identity, or rewrite an
+Unknown publishing receipt to success. Owner final acceptance must explicitly
+record any approved version-evidence limitation.
+
+### Recovery procedure and remaining limits
+
+- Before an authorized dispatch, refresh backup/snapshot availability and record
+  the pre-deployment UTC checkpoint. Keep the exact rollback ZIP and its hash
+  accessible. Do not create backups or perform restores implicitly.
+- For application rollback, obtain separate owner approval, verify the exact target,
+  retained ZIP hash, schema compatibility and persistent state, then publish that
+  exact retained ZIP through the reviewed path without rebuilding. Reconcile prior
+  uncertain publication before any further attempt; no automatic rollback/retry.
+- Preserve staging SQL state: no migration, bootstrap, seed or database restore is
+  part of application rollback. If database recovery is truly required, separately
+  approve PITR to a **new** staging recovery database and validate it before any
+  separately approved application connection change. Do not overwrite the live
+  database, touch the legacy database or infer success from backup metadata.
+- Keys/uploads must remain at their verified private HOME paths, with the same
+  `GarageSaas.Staging` discriminator. The current snapshot predates no current key
+  file; the logo directory is empty. Select the appropriate existing snapshot and
+  separately authorize restoration if needed. A full app-content restore can affect
+  additional HOME state/configuration: review its exact scope first rather than
+  blindly restoring it just to recover one file.
+- Snapshot membership follows documented Windows automatic-backup scope; contents,
+  integrity and end-to-end restore were not inspected/tested. SQL backup metadata
+  does not independently verify a continuous LSN chain or successful PITR. Existing
+  evidence reports no additional application-level encryptor for persisted keys;
+  protect SCM/backup access and any future exports. No keys or assets were exported.
+
+**Enablement decision:** configuration, backup availability, rollback artifact,
+CI and synthetic-user preparation are verified. No further broad investigation is
+needed. The remaining pre-deployment gate is actual CI-to-SCM authentication plus
+explicit owner approval of enablement, the particular Promote dispatch and the
+version/recovery evidence limits. A focused enablement change can be reviewed
+once those decisions are recorded; removal/activation of the stops is **not yet
+cleared**. The synthetic binding needs its own write approval and must be complete
+for post-deployment acceptance; the existing memberships need no change.
+
+Sources: [Kudu settings/environment mapping](https://github.com/projectkudu/kudu/blob/master/Kudu.Core/Settings/EnvironmentSettingsProvider.cs),
+[Azure SQL backup catalog](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-objects/sys-dm-database-backups-azure-sql-database),
+[Windows HOME persistence](https://learn.microsoft.com/en-us/azure/app-service/operating-system-functionality),
+[App Service backup scope and limitations](https://learn.microsoft.com/en-us/azure/app-service/manage-backup).
+
 ## Fixed release and target
 
 - Application commit: `665d8d9a91235c73d1d41185d3c2df2ddb545f58`.
