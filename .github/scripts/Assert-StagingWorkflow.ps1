@@ -5,7 +5,7 @@ $ErrorActionPreference='Stop'
 $raw=[IO.File]::ReadAllText([IO.Path]::GetFullPath($Path)).Replace("`r`n","`n")
 $boundary=$raw.IndexOf("`n  deploy:`n",[StringComparison]::Ordinal)
 if($boundary -lt 0 -or $raw.Substring(0,$boundary) -match 'id-token:|azure/login@|az webapp deploy'){
-    throw 'Azure auth/OIDC must remain confined to the disabled deployment job.'
+    throw 'Azure auth/OIDC must remain confined to the owner-authorized deployment job.'
 }
 function Equal($a,$b){[string]::Equals([string]$a,[string]$b,[StringComparison]::Ordinal)}
 function Require([bool]$Value){if(!$Value){throw 'Staging workflow structured security contract failed.'}}
@@ -30,13 +30,16 @@ try{
     Require ($process.ExitCode -eq 0)
     $workflow=$json|ConvertFrom-Json -AsHashtable
 }finally{$process.Dispose()}
-Keys $workflow.on @('workflow_dispatch');Keys $workflow.on.workflow_dispatch.inputs @('mode','commit')
+Keys $workflow.on @('workflow_dispatch');Keys $workflow.on.workflow_dispatch.inputs @('mode','commit','authorize_staging_deployment')
 Keys $workflow.jobs @('prerequisite','release','promotion','deploy')
 Keys $workflow.permissions @('contents');Require (Equal $workflow.permissions.contents 'read')
 Require (Equal $workflow.defaults.run.shell 'pwsh')
 Keys $workflow.concurrency @('group','cancel-in-progress')
 Require ((Equal $workflow.concurrency.group 'garagesaas-staging-release') -and (Equal $workflow.concurrency['cancel-in-progress'] 'false'))
 $pre=$workflow.jobs.prerequisite;$release=$workflow.jobs.release;$deploy=$workflow.jobs.deploy
+Keys $workflow.on.workflow_dispatch.inputs.authorize_staging_deployment @('description','type','default','required')
+$authorization=$workflow.on.workflow_dispatch.inputs.authorize_staging_deployment
+Require ((Equal $authorization.type 'boolean') -and (Equal $authorization.default 'false') -and (Equal $authorization.required 'true'))
 Keys $workflow.on.workflow_dispatch.inputs.mode @('description','type','options','default','required')
 Require ((Equal $workflow.on.workflow_dispatch.inputs.mode.type 'choice') -and (Equal $workflow.on.workflow_dispatch.inputs.mode.default 'prepare'))
 Require ($workflow.on.workflow_dispatch.inputs.mode.options.Count -eq 2 -and (Equal $workflow.on.workflow_dispatch.inputs.mode.options[0] 'prepare') -and (Equal $workflow.on.workflow_dispatch.inputs.mode.options[1] 'promote'))
@@ -47,8 +50,9 @@ Require (Equal $release.needs 'prerequisite')
 Require (!$release.Contains('if') -and !$release.Contains('permissions') -and !$release.Contains('continue-on-error'))
 Keys $deploy.permissions @('contents','actions','id-token')
 Require ((Equal $deploy.permissions.contents 'read') -and (Equal $deploy.permissions['id-token'] 'write'))
-Require ((Equal $deploy.if '${{ false }}') -and (Equal $deploy.environment 'staging'))
+Require ((Equal $deploy.if "`${{ github.repository == 'GarvanFairy/GarageSaas' && github.ref == 'refs/heads/master' && github.event_name == 'workflow_dispatch' && inputs.mode == 'promote' && inputs.authorize_staging_deployment == true && needs.promotion.result == 'success' }}") -and (Equal $deploy.environment 'staging'))
 Require (Equal $deploy.needs 'promotion')
+Require (Equal $deploy.env.STAGING_OWNER_AUTHORIZED '${{ inputs.authorize_staging_deployment }}')
 foreach($job in @($pre,$release,$deploy)){
     Require ((Equal $job['runs-on'] 'windows-2025') -and !$job.Contains('strategy') -and !$job.Contains('uses') -and !$job.Contains('continue-on-error') -and !$job.Contains('defaults'))
 }
@@ -183,7 +187,8 @@ Parameter $cmd 'ClientId' '$env:AZURE_LOGIN_CLIENT_ID'
 Require ($cmd.Extent.Text.Contains('-RequireClientId'))
 Parameter (Command $target './.github/scripts/Assert-StagingDeploymentArtifact.ps1') 'SourceRun' '40953823134'
 [void](Command $target './.github/scripts/Resolve-StagingPromotion.ps1')
-Require ($target.run.Contains("throw 'Independent operational readiness evidence, reviewed CLI and sanitized deployment-status handling require a separate enablement review.'"))
+$expectedTarget='./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun 40953823134'+"`n"+'./.github/scripts/Assert-StagingTarget.ps1 -ResourceId $env:TARGET_RESOURCE_ID -TenantId $env:AZURE_LOGIN_TENANT_ID -SubscriptionId $env:AZURE_LOGIN_SUBSCRIPTION_ID -ClientId $env:AZURE_LOGIN_CLIENT_ID -RequireClientId'+"`n"+'./.github/scripts/Resolve-StagingPromotion.ps1'+"`n"+"if (`$env:STAGING_OWNER_AUTHORIZED -cne 'true') { throw 'Explicit owner authorization for this Staging deployment is required.' }"
+Require (Equal $target.run.Replace("`r`n","`n").Trim() $expectedTarget)
 $login=@($deploy.steps|Where-Object {$_.uses -like 'azure/login@*'})
 Require ($login.Count -eq 1 -and (Position $deploy $target) -lt (Position $deploy $login[0]))
 Require (!$login[0].Contains('if') -and !$login[0].Contains('continue-on-error'))
@@ -203,4 +208,4 @@ Require ($deploy.steps.Count -eq 7)
 Require ((Position $deploy $execution) -eq 6)
 foreach($step in $deploy.steps){Require (!($step.run -match '(?i)\baz\s+webapp\s+deploy\b'))}
 foreach($job in @($pre,$release)){foreach($step in $job.steps){Require (!($step.uses -like 'azure/*') -and !($step.run -match '(?i)\baz\s+webapp\s+deploy\b'))}}
-Write-Output 'Structured YAML and executable PowerShell gates verified; deployment remains unconditional false.'
+Write-Output 'Structured YAML and executable PowerShell gates verified; deployment is manual master-only Promote with explicit owner authorization.'

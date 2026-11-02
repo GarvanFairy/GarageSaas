@@ -110,7 +110,7 @@ foreach($pair in @(
     @('run: ./.github/scripts/Invoke-StagingDeployment.ps1','run: az webapp deploy'),
     @('run: ./.github/scripts/Invoke-StagingDeployment.ps1','run: ./.github/scripts/Invoke-StagingDeployment.ps1 -Unexpected'),
     @('Invoke-StagingDeployment.ps1 -PreflightOnly','Invoke-StagingDeployment.ps1'),
-    @('if: ${{ false }}','if: ${{ true }}')
+    @('if: ${{ github.repository == ''GarvanFairy/GarageSaas'' && github.ref == ''refs/heads/master'' && github.event_name == ''workflow_dispatch'' && inputs.mode == ''promote'' && inputs.authorize_staging_deployment == true && needs.promotion.result == ''success'' }}','if: ${{ true }}')
 )){
     $normalized=$yaml.Replace("`r`n","`n");$mutated=$normalized.Replace($pair[0],$pair[1])
     if($mutated -ceq $normalized){throw 'Execution workflow mutation fixture did not change.'}

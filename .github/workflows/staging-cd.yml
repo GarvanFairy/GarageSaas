@@ -1,4 +1,4 @@
-name: Prepare staging release (deployment disabled)
+name: Staging release (manual prepare or authorized promote)
 
 on:
   workflow_dispatch:
@@ -8,6 +8,11 @@ on:
         type: choice
         options: [prepare, promote]
         default: prepare
+        required: true
+      authorize_staging_deployment:
+        description: Owner authorizes this single Staging publish and accepts recorded recovery/version limitations
+        type: boolean
+        default: false
         required: true
       commit:
         description: Full SHA of a reviewed master commit with successful master-push full CI
@@ -215,10 +220,9 @@ jobs:
           ./.github/scripts/Resolve-StagingPromotion.ps1
 
   deploy:
-    # HARD STOP. Only a reviewed workflow commit may remove this condition after
-    # the diagnostic-free release, target, recovery and OIDC approvals. No input
-    # or repository/environment variable can enable deployment in this version.
-    if: ${{ false }}
+    # Enablement requires explicit owner review/merge and a separately authorized dispatch.
+    # Prepare mode and omitted/false authorization never publish.
+    if: ${{ github.repository == 'GarvanFairy/GarageSaas' && github.ref == 'refs/heads/master' && github.event_name == 'workflow_dispatch' && inputs.mode == 'promote' && inputs.authorize_staging_deployment == true && needs.promotion.result == 'success' }}
     needs: promotion
     runs-on: windows-2025
     timeout-minutes: 15
@@ -228,6 +232,7 @@ jobs:
       actions: read
       id-token: write
     env:
+      STAGING_OWNER_AUTHORIZED: ${{ inputs.authorize_staging_deployment }}
       RELEASE_COMMIT: ${{ needs.promotion.outputs.commit }}
       AZURE_LOGIN_CLIENT_ID: dd6047f8-4557-4401-aab5-d7fd9e7d40a8
       GH_TOKEN: ${{ github.token }}
@@ -258,7 +263,7 @@ jobs:
           ./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun 40953823134
           ./.github/scripts/Assert-StagingTarget.ps1 -ResourceId $env:TARGET_RESOURCE_ID -TenantId $env:AZURE_LOGIN_TENANT_ID -SubscriptionId $env:AZURE_LOGIN_SUBSCRIPTION_ID -ClientId $env:AZURE_LOGIN_CLIENT_ID -RequireClientId
           ./.github/scripts/Resolve-StagingPromotion.ps1
-          throw 'Independent operational readiness evidence, reviewed CLI and sanitized deployment-status handling require a separate enablement review.'
+          if ($env:STAGING_OWNER_AUTHORIZED -cne 'true') { throw 'Explicit owner authorization for this Staging deployment is required.' }
       - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac
         with:
           client-id: ${{ env.AZURE_LOGIN_CLIENT_ID }}

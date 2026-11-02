@@ -148,7 +148,7 @@ Check 'history-page-truncation-blocked' {Reject {History -Oversized}}
 Check 'history-api-error-blocked' {Reject {Assert-StagingPriorAttempts {throw $canary} '100'}}
 Check 'history-current-not-found-blocked' {Reject {Assert-StagingPriorAttempts {return ('{"total_count":1,"workflow_runs":[{"id":99,"run_attempt":1}]}'|ConvertFrom-Json)} '100'}}
 
-$context=@{GITHUB_REPOSITORY='GarvanFairy/GarageSaas';GITHUB_REF='refs/heads/master';GITHUB_WORKFLOW_REF='GarvanFairy/GarageSaas/.github/workflows/staging-cd.yml@refs/heads/master';GITHUB_EVENT_NAME='workflow_dispatch';PROMOTION_MODE='promote';GITHUB_RUN_ATTEMPT='1';GITHUB_RUN_ID='100';RUNNER_ENVIRONMENT='github-hosted'}
+$context=@{GITHUB_REPOSITORY='GarvanFairy/GarageSaas';GITHUB_REF='refs/heads/master';GITHUB_WORKFLOW_REF='GarvanFairy/GarageSaas/.github/workflows/staging-cd.yml@refs/heads/master';GITHUB_EVENT_NAME='workflow_dispatch';PROMOTION_MODE='promote';GITHUB_RUN_ATTEMPT='1';GITHUB_RUN_ID='100';RUNNER_ENVIRONMENT='github-hosted';STAGING_OWNER_AUTHORIZED='true'}
 $saved=@{}
 try{
     foreach($k in $context.Keys){$saved[$k]=[Environment]::GetEnvironmentVariable($k);[Environment]::SetEnvironmentVariable($k,$context[$k])}
@@ -156,14 +156,31 @@ try{
     foreach($k in $context.Keys){
         $key=$k;Check ('bad-context-'+$key) {try{[Environment]::SetEnvironmentVariable($key,'wrong');Reject {Assert-ControlledStagingContext}}finally{[Environment]::SetEnvironmentVariable($key,$context[$key])}}
     }
+    foreach($value in @($null,'','false','TRUE','1')){
+        $authorizationValue=$value
+        Check ('missing-or-invalid-owner-authorization-'+$n) {
+            try{$env:STAGING_OWNER_AUTHORIZED=$authorizationValue;Reject {Assert-ControlledStagingContext}}
+            finally{$env:STAGING_OWNER_AUTHORIZED='true'}
+        }
+    }
     Check 'second-run-attempt-blocked' {$env:GITHUB_RUN_ATTEMPT='2';try{Reject {Assert-ControlledStagingContext}}finally{$env:GITHUB_RUN_ATTEMPT='1'}}
 }finally{foreach($k in $saved.Keys){[Environment]::SetEnvironmentVariable($k,$saved[$k])}}
 $entry=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'Invoke-StagingDeployment.ps1'))
 Check 'same-handle-hash-before-upload' {$entry.IndexOf('SHA256]::HashData($zip)') -lt $entry.IndexOf('Invoke-ControlledKuduUpload -Transport') -and $entry.Contains('[IO.FileShare]::Read') -and $entry.Contains('[IO.FileMode]::CreateNew')}
 Check 'no-cli-deploy-no-fallback' {$entry -notmatch 'Invoke-StagingBoundedProcess[^\r\n]+\$plan.Arguments' -and $entry.Contains('Assert-ControlledStagingHistory')}
+# Execute the real entry script's final gate with synthetic outcomes only.
+# Never invoke its upload/authentication body during these offline regressions.
+$tokens=$null;$errors=$null
+$ast=[Management.Automation.Language.Parser]::ParseInput($entry,[ref]$tokens,[ref]$errors)
+if($errors.Count -or $ast.EndBlock.Statements[-1] -isnot [Management.Automation.Language.IfStatementAst]){throw 'Completion gate fixture unavailable.'}
+$completionGate=[scriptblock]::Create($ast.EndBlock.Statements[-1].Extent.Text)
+Check 'completion-unknown-even-healthy-blocked' {$publishing=$unknown;$acceptance=$healthy;Reject {& $completionGate}}
+Check 'completion-failed-even-healthy-blocked' {$publishing=[pscustomobject]@{outcome='ConfirmedFailure'};$acceptance=$healthy;Reject {& $completionGate}}
+Check 'completion-success-and-healthy-required' {$publishing=[pscustomobject]@{outcome='ConfirmedSuccess'};$acceptance=$healthy;& $completionGate;return $true}
+Check 'completion-success-unhealthy-blocked' {$publishing=[pscustomobject]@{outcome='ConfirmedSuccess'};$acceptance=[pscustomobject]@{outcome='VerifiedUnhealthy'};Reject {& $completionGate}}
 $workflow=Join-Path $PSScriptRoot '../workflows/staging-cd.yml'
 & (Join-Path $PSScriptRoot 'Assert-StagingWorkflow.ps1') -Path $workflow|Out-Null
-Check 'workflow-disabled-and-reviewed' {$true}
+Check 'workflow-owner-authorized-and-reviewed' {$true}
 $yaml=[IO.File]::ReadAllText([IO.Path]::GetFullPath($workflow)).Replace("`r`n","`n")
 $temp=Join-Path ([IO.Path]::GetTempPath()) ('GarageSaas-kudu-'+[guid]::NewGuid().ToString('N'))
 [void][IO.Directory]::CreateDirectory($temp)
@@ -171,6 +188,9 @@ try{
     foreach($pair in @(
         @('run: ./.github/scripts/Invoke-StagingDeployment.ps1 -CheckPriorAttempts','run: Write-Output "history skipped"'),
         @('cancel-in-progress: false','cancel-in-progress: true'),
+        @('default: false','default: true'),
+        @('STAGING_OWNER_AUTHORIZED: ${{ inputs.authorize_staging_deployment }}',"STAGING_OWNER_AUTHORIZED: 'true'"),
+        @("if (`$env:STAGING_OWNER_AUTHORIZED -cne 'true') { throw 'Explicit owner authorization for this Staging deployment is required.' }","Write-Output 'authorization omitted'"),
         @('      - name: Reject prior deployment attempts before Azure login',"      - if: `${{ false }}`n        name: Reject prior deployment attempts before Azure login"),
         @('      - name: Deploy only the approved package to the existing staging app',"      - name: Unreviewed acceptance`n        run: ./.github/scripts/Test-StagingReleaseHealth.ps1`n      - name: Deploy only the approved package to the existing staging app")
     )){
@@ -208,7 +228,7 @@ Check 'arm-redirect-not-followed' {$c=Fake-Client 302 $canary 'https://evil.inva
 Check 'history-current-rerun-rejected' {Reject {Assert-StagingPriorAttempts {return ('{"total_count":1,"workflow_runs":[{"id":100,"run_attempt":2}]}'|ConvertFrom-Json)} '100'}}
 Check 'binary-soft-hyphen-host-rejected' {!(Test-KuduEndpoint ($scm.Replace('garagesaas',"garage$([char]0x00ad)saas")+'/api/vfs/site/wwwroot/GarageSaas.dll') Binary)}
 Check 'health-soft-hyphen-host-rejected' {!(Test-KuduEndpoint ($site.Replace('garagesaas',"garage$([char]0x00ad)saas")+'/health') Health)}
-if($n -ne 123){throw "Controlled publishing inventory mismatch: $n"}
+if($n -ne 136){throw "Controlled publishing inventory mismatch: $n"}
 $python=Join-Path $env:ProgramFiles 'Microsoft SDKs/Azure/CLI2/python.exe'
 $scmTests=Invoke-StagingBoundedProcess -Executable $python -Arguments @('-I',(Join-Path $PSScriptRoot 'Test-StagingScmAccess.py')) -TimeoutMilliseconds 60000
 if($null -eq $scmTests.exitCode -or $scmTests.exitCode -ne 0 -or $scmTests.timedOut -or $scmTests.interrupted -or $scmTests.oversized -or

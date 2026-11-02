@@ -129,10 +129,10 @@ $workflow=Join-Path $PSScriptRoot '../workflows/staging-cd.yml'
 $yaml=[IO.File]::ReadAllText([IO.Path]::GetFullPath($workflow)).Replace("`r`n","`n")
 Check 'workflow-reviewed' $true {& $guard -Path $workflow}
 $badWorkflows=@(
-    $yaml.Replace('if: ${{ false }}','if: ${{ true }}'),
-    $yaml.Replace('if: ${{ false }}','if: ${{ inputs.deploy }}'),
-    $yaml.Replace('if: ${{ false }}','if: ${{ vars.DEPLOY }}'),
-    $yaml.Replace("    if: `${{ false }}`n",''),
+    $yaml.Replace('if: ${{ github.repository == ''GarvanFairy/GarageSaas'' && github.ref == ''refs/heads/master'' && github.event_name == ''workflow_dispatch'' && inputs.mode == ''promote'' && inputs.authorize_staging_deployment == true && needs.promotion.result == ''success'' }}','if: ${{ true }}'),
+    $yaml.Replace('if: ${{ github.repository == ''GarvanFairy/GarageSaas'' && github.ref == ''refs/heads/master'' && github.event_name == ''workflow_dispatch'' && inputs.mode == ''promote'' && inputs.authorize_staging_deployment == true && needs.promotion.result == ''success'' }}','if: ${{ inputs.deploy }}'),
+    $yaml.Replace('if: ${{ github.repository == ''GarvanFairy/GarageSaas'' && github.ref == ''refs/heads/master'' && github.event_name == ''workflow_dispatch'' && inputs.mode == ''promote'' && inputs.authorize_staging_deployment == true && needs.promotion.result == ''success'' }}','if: ${{ vars.DEPLOY }}'),
+    $yaml.Replace(('    if: ${{ github.repository == ''GarvanFairy/GarageSaas'' && github.ref == ''refs/heads/master'' && github.event_name == ''workflow_dispatch'' && inputs.mode == ''promote'' && inputs.authorize_staging_deployment == true && needs.promotion.result == ''success'' }}'+"`n"),''),
     $yaml.Replace('  workflow_dispatch:','  push:'),
     $yaml.Replace('  workflow_dispatch:','  pull_request:'),
     $yaml.Replace('  workflow_dispatch:','  schedule:'),
@@ -222,7 +222,7 @@ $extraWorkflow=@(
     $yaml.Replace('      - name: Require full unit and identity inventories',"      - if: `${{ false }}`n        name: Require full unit and identity inventories"),
     $yaml.Replace($finalLine,('          "Assert-StagingValidationArtifact.ps1"')),
     $yaml.Replace('-ExpectedFingerprint $env:TESTED_RUNTIME_FINGERPRINT','-ExpectedFingerprint ""'),
-    $yaml.Replace('    if: ${{ false }}',"    if: `${{ false }}`n    if: `${{ true }}"),
+    $yaml.Replace('    if: ${{ github.repository == ''GarvanFairy/GarageSaas'' && github.ref == ''refs/heads/master'' && github.event_name == ''workflow_dispatch'' && inputs.mode == ''promote'' && inputs.authorize_staging_deployment == true && needs.promotion.result == ''success'' }}',"    if: `${{ false }}`n    if: `${{ true }}"),
     $yaml.Replace('${{ github.workspace }}/release-control/.github/scripts','${{ github.workspace }}/.github/scripts'),
     $yaml.Replace("permissions:`n  contents: read","permissions: &shared`n  contents: read"),
     $yaml.Replace('      - name: Upload validated immutable candidate',"      - continue-on-error: true`n        name: Upload validated immutable candidate"),
