@@ -95,15 +95,23 @@ Check 'terminated-process-unknown' {
     $r=Invoke-StagingBoundedProcess -Executable $node -Arguments @('-e',"process.kill(process.pid,'SIGTERM')") -TimeoutMilliseconds 5000
     (Outcome -P $r).outcome -ceq 'Unknown'
 }
-Check 'entry-exception-no-secret-leak' {
-    $savedProgramFiles=$env:ProgramFiles
-    try{
-        $env:ProgramFiles=Join-Path $root $canary
-        $pwsh=(Get-Process -Id $PID).Path
-        $r=Invoke-StagingBoundedProcess -Executable $pwsh -Arguments @('-NoProfile','-File',(Join-Path $PSScriptRoot 'Invoke-StagingDeployment.ps1')) -TimeoutMilliseconds 5000
-        $r.exitCode -ne 0 -and !$r.stdout.Contains($canary) -and !$r.stderr.Contains($canary) -and $r.stdout.Contains('PreflightRejected')
-    }finally{$env:ProgramFiles=$savedProgramFiles}
+# Run the injected entry failure once; retain each independent security condition.
+# A killed/interrupted child must fail as incomplete execution, never masquerade
+# as a classification change or a successful secret-redaction test.
+$entryResult=$null
+$entryProgramFiles=$env:ProgramFiles
+Check 'entry-exception-process-completed' {
+    $pwsh=(Get-Process -Id $PID).Path
+    # Start a normal host, then inject the missing-CLI path only in that child.
+    # Arguments remain separate from code; no parent/host-bootstrap mutation.
+    $script:entryResult=Invoke-StagingBoundedProcess -Executable $pwsh -Arguments @('-NoProfile','-NonInteractive','-CommandWithArgs',
+        '$env:ProgramFiles=$args[0]; & $args[1]',(Join-Path $root $canary),(Join-Path $PSScriptRoot 'Invoke-StagingDeployment.ps1')) -TimeoutMilliseconds 5000
+    $null -ne $entryResult.exitCode -and !$entryResult.timedOut -and !$entryResult.interrupted -and !$entryResult.oversized
 }
+Check 'entry-exception-parent-environment-preserved' {$env:ProgramFiles -ceq $entryProgramFiles}
+Check 'entry-exception-nonzero-exit' {$entryResult.exitCode -ne 0}
+Check 'entry-exception-no-secret-leak' {!$entryResult.stdout.Contains($canary) -and !$entryResult.stderr.Contains($canary)}
+Check 'entry-exception-preflight-rejected' {$entryResult.stdout.Contains('PreflightRejected')}
 $workflowPath=Join-Path $PSScriptRoot '../workflows/staging-cd.yml'
 $yaml=[IO.File]::ReadAllText([IO.Path]::GetFullPath($workflowPath))
 foreach($pair in @(
@@ -118,5 +126,5 @@ foreach($pair in @(
     Check ('workflow-execution-'+$count) {Reject {& (Join-Path $PSScriptRoot 'Assert-StagingWorkflow.ps1') -Path $path}}
 }
 & (Join-Path $PSScriptRoot 'Assert-StagingWorkflow.ps1') -Path (Join-Path $PSScriptRoot '../workflows/staging-cd.yml')|Out-Null
-if($count -ne 70){throw "Execution security inventory mismatch: $count"}
+if($count -ne 74){throw "Execution security inventory mismatch: $count"}
 Write-Output "PASS: $count offline deployment execution/status regressions; no Azure, CLI login, deployment or raw evidence publication."
