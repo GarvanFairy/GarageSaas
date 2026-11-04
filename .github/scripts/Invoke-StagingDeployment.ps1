@@ -138,22 +138,32 @@ function Write-StagingSafeReceipt {
 . (Join-Path $PSScriptRoot 'StagingKuduPublishing.ps1')
 
 function Assert-ControlledStagingHistory {
+    try {
     Assert-ControlledStagingContext
     $gh=Join-Path $env:ProgramFiles 'GitHub CLI/gh.exe'
-    if(!(Test-Path -LiteralPath $gh -PathType Leaf) -or !$env:GH_TOKEN){throw 'Deployment history unavailable.'}
+    if(!(Test-Path -LiteralPath $gh -PathType Leaf) -or !$env:GH_TOKEN){Stop-StagingHistory 'ApiUnavailable'}
     $watch=[Diagnostics.Stopwatch]::StartNew()
     $api={param($path)
         $remaining=90000-[int]$watch.ElapsedMilliseconds
-        if($remaining -le 0){throw 'Deployment history unavailable.'}
+        if($remaining -le 0){Stop-StagingHistory 'ApiTimeout'}
         # Fixed repository, bounded pages, no pagination/fallback/retry. Projection
         # excludes titles, user records, URLs and other unnecessary metadata.
-        if($path -cnotmatch '\Aactions/(workflows/staging-cd\.yml/runs\?branch=master&event=workflow_dispatch&created=%3E%3D2026-10-31&per_page=100|runs/[0-9]+/attempts/[1-5]/jobs\?per_page=100)\z'){throw 'Unexpected history endpoint.'}
-        $query=if($path.StartsWith('actions/workflows/')){'{total_count,workflow_runs:[.workflow_runs[]|{id,run_attempt}]}'}else{'{total_count,jobs:[.jobs[]|{name,status,conclusion}]}'}
+        if($path -cnotmatch '\Aactions/(workflows/staging-cd\.yml/runs\?branch=master&event=workflow_dispatch&created=%3E%3D2026-10-31&per_page=100|runs/[0-9]+/attempts/[1-5]/jobs\?per_page=100|runs/41536648423)\z'){Stop-StagingHistory 'InvalidHistory'}
+        $query=if($path.StartsWith('actions/workflows/')){'{total_count,workflow_runs:[.workflow_runs[]|{id,run_attempt}]}'}
+            elseif($path -ceq 'actions/runs/41536648423'){'{id,run_attempt,head_sha,head_branch,event,path,workflow_id,status,conclusion,repository:{id:.repository.id,full_name:.repository.full_name},head_repository:{id:.head_repository.id,full_name:.head_repository.full_name}}'}
+            else{'{total_count,jobs:[.jobs[]|{id,name,run_id,run_attempt,head_sha,status,conclusion,steps:[.steps[]?|{number,name,status,conclusion}]}]}'}
         $r=Invoke-StagingBoundedProcess -Executable $gh -Arguments @('api','--hostname','github.com',('repos/GarvanFairy/GarageSaas/'+$path),'--jq',$query) -TimeoutMilliseconds ([Math]::Min(10000,$remaining))
-        if($r.exitCode -ne 0 -or $null -eq $r.exitCode -or $r.timedOut -or $r.interrupted -or $r.oversized){throw 'Deployment history unavailable.'}
-        return ($r.stdout|ConvertFrom-Json)
+        return (ConvertFrom-StagingHistoryResponse $r)
     }
     Assert-StagingPriorAttempts -Api $api -CurrentRun $env:GITHUB_RUN_ID
+    } catch {
+        $reason=Get-StagingHistoryReason $_
+        $safe=[ordered]@{schema=1;stage='DeploymentHistory';outcome='Rejected';reason=$reason}|ConvertTo-Json -Compress
+        Write-Output $safe
+        # Reporting failure cannot replace the original blocking classification.
+        try{if($env:GITHUB_STEP_SUMMARY){[IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY,$safe+[Environment]::NewLine)}}catch{}
+        Stop-StagingHistory $reason
+    }
 }
 
 # Dot-source loads pure helpers for deterministic offline tests; never a workflow input.
