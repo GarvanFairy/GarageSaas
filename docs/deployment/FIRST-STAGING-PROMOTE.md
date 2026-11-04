@@ -103,7 +103,57 @@ the dated results here supersede its historical "live not executed" statement.
    correlated deployment success; treat Unknown, failed or missing evidence as
    requiring manual reconciliation. Never automatically retry or rollback.
 
-## Local validation of this PR
+## Reviewed pre-publication failure — 4 November 2026
+
+[Run 41536648423](https://github.com/GarvanFairy/GarageSaas/actions/runs/41536648423)
+attempt 1 executed workflow ID `398773184`, `.github/workflows/staging-cd.yml`,
+from master commit `08d662275cc4c1b72219eafd8629e0df567ba13c` in repository
+`GarvanFairy/GarageSaas` (ID `1192139278`). Its completed GitHub evidence shows:
+
+- Promotion job `125590079268` succeeded, including source/provenance validation,
+  artifact download and validation of the existing ZIP without rebuilding.
+- Deploy job `125590426525` completed with failure. Step 4 (reviewed CLI) succeeded;
+  step 5 (deployment-history preflight) failed. Steps 6 (archive/target revalidation),
+  7 (Azure login) and 8 (the only publisher invocation) were all skipped.
+- Prerequisite job `125590080992` and release job `125590081856` were skipped.
+  The reviewed workflow commit contains no other publication path in the steps
+  that ran. No Azure authentication or Kudu upload was initiated by this run.
+
+The original internal preflight error was suppressed. An approximately eleven-second
+step duration does not prove why it failed; no timeout increase or retry is added.
+New failures emit only a fixed `DeploymentHistory`/`Rejected` receipt with reason
+`ApiUnavailable`, `ApiTimeout`, `InvalidHistory`,
+`PriorDeploymentRequiresReconciliation` or `CurrentRunMismatch`. All still block.
+No raw API response, exception, credential or process output is published.
+
+The durable history check retains its existing checkpoint, page/attempt limits,
+ten-second per-request limit and ninety-second aggregate budget. It can reconcile
+**only this exact run and attempt**: it reads run metadata, validates the complete
+four-job inventory and exact numbered step outcomes, then rereads run metadata.
+Commit, workflow ID/path, repository identities, branch, event, fixed job IDs and
+completed outcomes must match the reviewed record. Reruns, changed/missing/duplicate
+or truncated evidence and any started login/publishing step are rejected.
+This is a fresh API-evidence check, not a user-provided exclusion or blanket
+exception for failed deploy jobs. Every other non-skipped deploy remains blocking.
+
+This reconciles the consumed dispatch only. Before another dispatch:
+
+1. Review/approve and merge the focused reconciliation PR, then require successful
+   post-merge master CI. Its 100 new offline history/reporting regressions execute
+   through the existing required artifact-security job's publishing suite.
+2. Reconfirm that run 41536648423 is still attempt 1 and that no other publication
+   attempt has occurred; refresh target, artifact availability and recovery evidence.
+3. Obtain **fresh explicit owner authorization** for one new manual master Promote
+   and acceptance of the documented recovery/version limits. The old authorization
+   is consumed. Do not rerun the failed run or reuse its authorization.
+4. Use the unchanged inputs above: `mode=promote`,
+   `authorize_staging_deployment=true`, `commit` blank. Stop on any new preflight,
+   publishing or acceptance failure. No automatic retry or rollback is authorized.
+
+No application package, Azure permission, target, workflow authorization condition,
+SQL fixture or production behavior changes accompany this reconciliation.
+
+## Local validation of the enablement PR
 
 The completion gate also now requires `ConfirmedSuccess` and `VerifiedHealthy`.
 Previously Unknown publication plus healthy files/liveness could exit successfully

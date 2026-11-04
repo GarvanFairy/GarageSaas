@@ -236,4 +236,5 @@ if($null -eq $scmTests.exitCode -or $scmTests.exitCode -ne 0 -or $scmTests.timed
     throw 'Required offline SCM authentication/security regressions failed.'
 }
 Write-Output 'PASS: 32 offline SCM authentication/security regressions; no Azure or network access.'
+& (Join-Path $PSScriptRoot 'Test-StagingHistoryReconciliation.ps1')
 Write-Output "PASS: $n controlled Staging publishing/acceptance security regressions; synthetic offline HTTP only."
