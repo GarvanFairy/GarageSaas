@@ -76,6 +76,9 @@ public class DisposableSqlDatabaseTests
         DisposableSqlDatabase.ValidateCatalog("master", allowMaster: true);
         DisposableSqlDatabase.ValidateCatalog("GarageSaas_InvoiceAtomic_Test_" + new string('d', 32));
         Assert.ThrowsException<InvalidOperationException>(() => DisposableSqlDatabase.ValidateCatalog("Garagesaas", allowMaster: true));
+        DisposableSqlDatabase.ValidateAutoClose(false);
+        Assert.ThrowsException<InvalidOperationException>(() => DisposableSqlDatabase.ValidateAutoClose(true));
+        Assert.ThrowsException<InvalidOperationException>(() => DisposableSqlDatabase.ValidateAutoClose(null));
     }
 
     [DataTestMethod]
