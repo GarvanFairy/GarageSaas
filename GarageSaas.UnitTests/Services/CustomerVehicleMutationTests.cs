@@ -46,11 +46,23 @@ public class CustomerVehicleMutationTests
 
 internal static class CustomerVehicleMutationCases
 {
-    internal static void Check(DbContextOptions<SignupContext> options, string operation, int failAt, bool after, bool relational)
+    internal static void Check(DbContextOptions<SignupContext> options, string operation, int failAt, bool after, bool relational,
+        Action<SqlCleanupDiagnostics.SeedStage,Exception?>? observe = null)
+    {
+        var stage=SqlCleanupDiagnostics.SeedStage.MutationSeed;
+        void Note(SqlCleanupDiagnostics.SeedStage value) { stage=value; }
+        try { CheckCore(options,operation,failAt,after,relational,Note); try { observe?.Invoke(stage,null); } catch { } }
+        catch(Exception error) { try { observe?.Invoke(error is AssertFailedException ? SqlCleanupDiagnostics.SeedStage.MutationAssertions : stage,error); } catch { } throw; }
+    }
+    private static void CheckCore(DbContextOptions<SignupContext> options, string operation, int failAt, bool after, bool relational,
+        Action<SqlCleanupDiagnostics.SeedStage> note)
     {
         SqlInvoiceGraph a, b;
-        using (var seed = new SignupContext(options)) { a = SqlInvoiceGraph.Seed(seed); b = SqlInvoiceGraph.Seed(seed); }
-        using var db = new FaultContext(options) { FailAt = failAt, FailAfter = after, LoseCommit = operation == "commit-uncertainty" };
+        var seed = new SignupContext(options);
+        using (var seedLifetime = new ObservedDisposal(seed,note)) { a = SqlInvoiceGraph.Seed(seed); b = SqlInvoiceGraph.Seed(seed); }
+        note(SqlCleanupDiagnostics.SeedStage.MutationSetup);
+        var db = new FaultContext(options) { FailAt = failAt, FailAfter = after, LoseCommit = operation == "commit-uncertainty" };
+        using var dbLifetime=new ObservedDisposal(db,note);
         var before = Snapshot(db); var foreignBefore = Snapshot(db, b.GarageId);
         var customersBefore = db.GarageBusinessCustomer.Count(); var vehiclesBefore = db.CustomerVehicle.Count(); var linksBefore = db.CustomerOwnedVehicles.Count();
         var customer = new GarageBusinessCustomer { GarageBusinessId = b.GarageId, GarageCustomerForename = "New local",
@@ -76,11 +88,12 @@ internal static class CustomerVehicleMutationCases
         if (operation == "missing-customer") customer.Id = int.MaxValue;
         if (operation == "combined-existing-vehicle") vehicle.Id = b.VehicleId;
         var combined = new GarageCustomerWithVehicleVM { Customer = customer, Vehicle = vehicle, AddVehicle = true };
-        ServiceResult Save() => operation.StartsWith("combined")
+        ServiceResult SaveCore() => operation.StartsWith("combined")
             ? new GarageCustomersService(db, null).AddGarageCustomerWithVehicle(combined, a.GarageId, "actor")
             : operation.Contains("customer") || operation is "pending" or "commit-uncertainty"
                 ? new GarageCustomersService(db, null).AddOrUpdateGarageCustomer(customer, a.GarageId, "actor")
                 : new CustomerVehicleService(db, null).AddOrUpdateCustomerVehicle(vm, a.GarageId, "actor");
+        ServiceResult Save() { note(SqlCleanupDiagnostics.SeedStage.MutationService); var result=SaveCore(); note(SqlCleanupDiagnostics.SeedStage.MutationAssertions); return result; }
         if (operation == "pending")
         {
             var pending = new GarageBusinessCustomer { GarageBusinessId = a.GarageId, GarageCustomerForename = "Unrelated" };
@@ -95,7 +108,7 @@ internal static class CustomerVehicleMutationCases
             StringAssert.Contains(error.Message, "could not be confirmed");
             Assert.AreEqual(1, db.Commits); Assert.AreEqual(1, db.Saves); Assert.AreEqual(0, customer.Id);
             Assert.AreEqual(0, db.ChangeTracker.Entries().Count());
-            using var committed = new SignupContext(options);
+            var committed = new SignupContext(options); using var committedLifetime=new ObservedDisposal(committed,note);
             Assert.AreEqual(customersBefore + 1, committed.GarageBusinessCustomer.Count());
             return; // Actual commit succeeded; rollback acknowledgement cannot undo it.
         }
@@ -113,14 +126,14 @@ internal static class CustomerVehicleMutationCases
             db.FailAt = 0; db.SaveChanges(); // Cannot re-persist detached rolled-back entities.
             if (relational)
             {
-                using var restored = new SignupContext(options);
+                var restored = new SignupContext(options); using var restoredLifetime=new ObservedDisposal(restored,note);
                 Assert.AreEqual(before, Snapshot(restored), "Real SQL rollback must restore values, audit and row counts");
             }
         }
         else
         {
             var result = Save(); Assert.AreEqual(!invalid, result.Success, result.ErrorMessage);
-            using var check = new SignupContext(options);
+            var check = new SignupContext(options); using var checkLifetime=new ObservedDisposal(check,note);
             if (invalid)
             {
                 Assert.AreEqual(0, db.Saves); Assert.AreEqual(before, Snapshot(check));
@@ -146,10 +159,15 @@ internal static class CustomerVehicleMutationCases
                 if (operation == "combined-create") { Assert.IsTrue(customer.Id > 0); Assert.IsTrue(vehicle.Id > 0); }
             }
         }
-        using var foreign = new SignupContext(options);
+        var foreign = new SignupContext(options); using var foreignLifetime=new ObservedDisposal(foreign,note);
         Assert.AreEqual(foreignBefore, Snapshot(foreign, b.GarageId), "Garage B must remain unchanged");
+        note(SqlCleanupDiagnostics.SeedStage.MutationDispose);
     }
 
+    private sealed class ObservedDisposal(IDisposable resource,Action<SqlCleanupDiagnostics.SeedStage> note) : IDisposable
+    {
+        public void Dispose() { try { resource.Dispose(); } catch { note(SqlCleanupDiagnostics.SeedStage.MutationDispose); throw; } }
+    }
     private static string Snapshot(SignupContext db, int? garage = null) => JsonSerializer.Serialize(new
     {
         Customers = db.GarageBusinessCustomer.AsNoTracking().Where(x => !garage.HasValue || x.GarageBusinessId == garage).OrderBy(x => x.Id)

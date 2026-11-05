@@ -12,7 +12,26 @@ namespace GarageSaas.UnitTests.TestHelpers;
 internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
 {
     internal enum SeedGraph { None, First, Second }
-    internal enum SeedStage { ContextConstruction, GraphConstruction, GarageSave, CustomerVehicleSave, OwnershipWorkItemSave, PrepareExistingState, CustomerSave, ExistingQuoteSeed, ExistingInvoiceSeed, ContextDispose }
+    internal enum SeedStage { ContextConstruction, GraphConstruction, GarageSave, CustomerVehicleSave, OwnershipWorkItemSave, PrepareExistingState, CustomerSave, ExistingQuoteSeed, ExistingInvoiceSeed, ContextDispose,
+        InstanceIdentity, SetupConnection, SetupPermissions, DatabaseCreate, OwnershipMarker, SchemaInitialize,
+        MutationSeed, MutationSetup, MutationService, MutationAssertions, MutationDispose }
+    internal static string SafeExceptionType(Exception? error) => error switch {
+        null => "None", SqlException => "SqlException", Microsoft.EntityFrameworkCore.DbUpdateException => "DbUpdateException",
+        Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException => "AssertFailedException",
+        TimeoutException => "TimeoutException", OperationCanceledException => "OperationCanceledException",
+        InvalidOperationException => "InvalidOperationException", _ => "Other" };
+    internal static string RequestCategory(string? command) => command?.ToUpperInvariant() switch {
+        "DB STARTUP" => "DatabaseStartup", "CHECKPOINT" => "Checkpoint", "LAZY WRITER" => "LazyWriter",
+        "LOG WRITER" => "LogWriter", "RECOVERY WRITER" => "RecoveryWriter", "CREATE DATABASE" => "DatabaseCreate", _ => "Unknown" };
+    internal static string WaitCategory(string? wait) => wait?.ToUpperInvariant() switch {
+        "WRITELOG" or "PAGEIOLATCH_SH" or "PAGEIOLATCH_EX" or "IO_COMPLETION" or "ASYNC_IO_COMPLETION" => "IO",
+        "LCK_M_S" or "LCK_M_X" or "LCK_M_U" or "LCK_M_IS" or "LCK_M_IX" => "Lock",
+        "PAGELATCH_SH" or "PAGELATCH_EX" or "LATCH_SH" or "LATCH_EX" => "Latch",
+        "SOS_SCHEDULER_YIELD" => "Scheduler", _ => "Unknown" };
+    internal void HelperEvidence(SeedStage stage, Exception? error) {
+        if (!CustomerDiagnosticsEnabled) return;
+        try { if (_seedFailure == null) _seedEvidence = StepEvidence("None",stage.ToString(),error,0); _seedFailure ??= error; } catch { }
+    }
     internal enum OpenStage { ConnectionOpen, IdentityQuerySetup, IdentityQueryExecute, IdentityQueryRead, RoleQueryRead, ReaderDispose, CommandDispose, ConnectionDispose, Completed }
     internal const int MaximumStepMilliseconds = 600000;
     private bool _customerDiagnostics;
@@ -34,7 +53,7 @@ internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
             cursor = cursor.InnerException;
         }
         var duration = BoundDuration(elapsed);
-        return new { graph, stage, succeeded = error == null,
+        return new { graph, stage, succeeded = error == null, exceptionType = SafeExceptionType(error),
             category = error switch { null => "None", SqlException => "Sql", Microsoft.EntityFrameworkCore.DbUpdateException => "DbUpdate", TimeoutException => "Timeout", OperationCanceledException => "Cancelled", InvalidOperationException => "InvalidOperation", _ => "Other" },
             sqlErrorNumbers = numbers.Count == 0 ? null : numbers.Take(4).ToArray(),
             sqlErrorsTruncated = numbers.Count > 4 || errorsTruncated, exceptionChainTruncated = cursor != null,
@@ -274,7 +293,9 @@ internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
                     status = status is "running" or "sleeping" or "dormant" or "preconnect" ? status : "unknown",
                     hasActiveRequest = reader.GetBoolean(2),
                     openTransactions = reader.GetInt32(3),
-                    fixtureRole = ConnectionRole(reader.IsDBNull(4) ? null : reader.GetGuid(4))
+                    fixtureRole = ConnectionRole(reader.IsDBNull(4) ? null : reader.GetGuid(4)),
+                    requestCategory = RequestCategory(reader.FieldCount > 7 && !reader.IsDBNull(7) ? reader.GetString(7) : null),
+                    waitCategory = WaitCategory(reader.FieldCount > 8 && !reader.IsDBNull(8) ? reader.GetString(8) : null)
                 });
             }
             if (details.Count == Math.Min(count, MaximumGuardSessions))

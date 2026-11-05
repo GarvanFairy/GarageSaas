@@ -391,3 +391,38 @@ Case 'step-duplicate-property' {$json=(New-StepRecord|ConvertTo-Json -Depth 12 -
 Case 'step-never-passes-failed-test' {$r=Export-Fixture (Marker (New-StepRecord));$blocked=$false;try{& $gate -Path $r.path -Suite sql -ExpectedCount 1|Out-Null}catch{$blocked=$true};Assert-Check $blocked}
 if($badSteps.Count -ne 31 -or $executed.Count-$stepStart -ne 64){throw "Step security inventory incomplete: $($executed.Count-$stepStart)"}
 Write-Output 'PASS: 64 seeding/cleanup-open security regressions; original 192 cases preserved (256 total). Synthetic fixtures only.'
+# Additive hosted-stage diagnostics: preserve every original 256-case gate.
+$hostedStart=$executed.Count
+foreach($stage in @('InstanceIdentity','SetupConnection','SetupPermissions','DatabaseCreate','OwnershipMarker','SchemaInitialize','MutationSeed','MutationSetup','MutationService','MutationAssertions','MutationDispose')){
+    Case "hosted-stage-$stage" {$r=New-StepRecord;$r.seeding.graph='None';$r.seeding.stage=$stage;$r.seeding.exceptionType='SqlException';$s=Export-Fixture (Marker $r);Assert-Check ($s.diagnostic.record.seeding.stage -ceq $stage -and $s.diagnostic.record.seeding.exceptionType -ceq 'SqlException')}
+}
+foreach($type in @('None','SqlException','DbUpdateException','AssertFailedException','TimeoutException','OperationCanceledException','InvalidOperationException','Other')){
+    Case "hosted-type-$type" {$r=New-StepRecord;$r.seeding.exceptionType=$type;if($type -ceq 'None'){$r.seeding.succeeded=$true;$r.seeding.category='None';$r.seeding.sqlErrorNumbers=$null};Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.exceptionType -ceq $type)}
+}
+foreach($request in @('Unknown','DatabaseStartup','Checkpoint','LazyWriter','LogWriter','RecoveryWriter','DatabaseCreate')){
+    Case "hosted-command-$request" {$r=New-GuardRecord;$r.guardSessionDetails.sessions[0].requestCategory=$request;$r.guardSessionDetails.sessions[0].waitCategory='Unknown';Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.guardSessionDetails.sessions[0].requestCategory -ceq $request)}
+}
+foreach($wait in @('Unknown','IO','Lock','Latch','Scheduler')){
+    Case "hosted-wait-$wait" {$r=New-GuardRecord;$r.guardSessionDetails.sessions[0].requestCategory='Unknown';$r.guardSessionDetails.sessions[0].waitCategory=$wait;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.guardSessionDetails.sessions[0].waitCategory -ceq $wait)}
+}
+$badHostedSteps=@{
+    'stage'={param($r)$r.seeding.stage=$canary};'oversized-stage'={param($r)$r.seeding.stage='x'*20000};
+    'type'={param($r)$r.seeding.exceptionType=$canary};'type-conflict'={param($r)$r.seeding.exceptionType='None'};
+    'sql-number'={param($r)$r.seeding.sqlErrorNumbers=@($canary)}
+}
+foreach($hostedCase in $badHostedSteps.Keys){Case "hosted-bad-$hostedCase" {Reject-Step $badHostedSteps[$hostedCase]}}
+$badHostedGuard=@{
+    'command'={param($r)$r.guardSessionDetails.sessions[0].requestCategory=$canary;$r.guardSessionDetails.sessions[0].waitCategory='Unknown'};
+    'wait'={param($r)$r.guardSessionDetails.sessions[0].requestCategory='Unknown';$r.guardSessionDetails.sessions[0].waitCategory=$canary};
+    'oversized'={param($r)$r.guardSessionDetails.sessions[0].requestCategory='x'*20000;$r.guardSessionDetails.sessions[0].waitCategory='Unknown'};
+    'partial'={param($r)$r.guardSessionDetails.sessions[0].requestCategory='Unknown'};
+    'sql-text'={param($r)$r.guardSessionDetails.sessions[0].sqlText=$canary};
+    'unsafe-id'={param($r)$r.guardSessionDetails.sessions[0].sessionId=$canary}
+}
+foreach($hostedCase in $badHostedGuard.Keys){Case "hosted-guard-reject-$hostedCase" {Reject-Guard $badHostedGuard[$hostedCase]}}
+Case 'hosted-duplicate-type' {$r=New-StepRecord;$r.seeding.exceptionType='SqlException';$j=(Marker $r).Replace('"exceptionType":"SqlException"','"exceptionType":"SqlException","exceptionType":"Other"');Assert-Check ((Export-Fixture $j).diagnostic.reason -ceq 'invalid')}
+Case 'hosted-unconfirmed-creation' {$r=New-StepRecord;$r.operation='OwnershipPrecondition';$r.created=$false;$r.marked=$false;$r.ownershipVerified=$false;$r.guardSessions=$null;$r.seeding.graph='None';$r.seeding.stage='DatabaseCreate';$s=Export-Fixture (Marker $r);Assert-Check (!$s.diagnostic.record.cleanupSucceeded -and !$s.diagnostic.record.databaseCreated -and $s.diagnostic.record.seeding.stage -ceq 'DatabaseCreate')}
+Case 'hosted-failed-body-successful-cleanup' {$r=New-StepRecord;$r.operation='Completed';$r.success=$true;$r.exceptionType=$null;$r.seeding.graph='None';$r.seeding.stage='MutationService';$s=Export-Fixture (Marker $r);$blocked=$false;try{& $gate -Path $s.path -Suite sql -ExpectedCount 1|Out-Null}catch{$blocked=$true};Assert-Check ($s.diagnostic.record.cleanupSucceeded -and !$s.diagnostic.record.seeding.succeeded -and $blocked)}
+Case 'hosted-success-step' {$r=New-StepRecord;$r.seeding.graph='None';$r.seeding.stage='MutationDispose';$r.seeding.succeeded=$true;$r.seeding.category='None';$r.seeding.sqlErrorNumbers=$null;$r.seeding.exceptionType='None';Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.seeding.succeeded)}
+if($executed.Count-$hostedStart -ne 46){throw "Hosted-stage inventory mismatch: $($executed.Count-$hostedStart)"}
+Write-Output 'PASS: 46 hosted-stage/session regressions; original 256 cases preserved (302 total).'
