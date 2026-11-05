@@ -21,6 +21,16 @@ public class EfUpgradeWorkflowSqlTests
         database.Create();
         try
         {
+            if (database.IsDedicatedLocalDb)
+            {
+                // Check the option after schema initialization and after setup
+                // connections have closed, through the ownership-checked API.
+                using var owned = database.OpenOwnedConnection();
+                using var lifecycle = owned.CreateCommand();
+                lifecycle.CommandTimeout = 8;
+                lifecycle.CommandText = "SELECT is_auto_close_on FROM sys.databases WHERE database_id=DB_ID()";
+                Assert.AreEqual(false, lifecycle.ExecuteScalar());
+            }
             var commands = new Commands();
             var options = new DbContextOptionsBuilder<SignupContext>(database.Options()).AddInterceptors(commands).Options;
             using var db = new SignupContext(options);
