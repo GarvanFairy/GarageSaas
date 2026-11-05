@@ -6,8 +6,8 @@ function Get-StagingDeploymentPlan {
     param([string]$ResourceId,[string]$TenantId,[string]$SubscriptionId,[string]$ClientId,
         [string]$Commit,[string]$ApprovedHash,[string]$Directory)
     & (Join-Path $PSScriptRoot 'Assert-StagingTarget.ps1') -ResourceId $ResourceId -TenantId $TenantId -SubscriptionId $SubscriptionId -ClientId $ClientId -RequireClientId|Out-Null
-    if($Commit -cne '665d8d9a91235c73d1d41185d3c2df2ddb545f58' -or
-        $ApprovedHash -cne '640efc3f6084c9fc2562a0e09da3dc229e4f329ccdc40a71bc6873ccc0c56ce5'){throw 'Unapproved staging package identity.'}
+    if($Commit -cnotmatch '\A(?!0{40})[a-f0-9]{40}\z' -or
+        $ApprovedHash -cnotmatch '\A[a-f0-9]{64}\z'){throw 'Invalid staging package identity.'}
     $zip=Join-Path ([IO.Path]::GetFullPath($Directory)) "GarageSaas-$Commit.zip"
     # Fixed arguments only: no shell, arbitrary URL, slot, source replacement or retry.
     [pscustomobject]@{Version='2.91.0';Path=$zip;Arguments=[string[]]@('webapp','deploy','--ids',$ResourceId,
@@ -136,6 +136,18 @@ function Write-StagingSafeReceipt {
 }
 
 . (Join-Path $PSScriptRoot 'StagingKuduPublishing.ps1')
+. (Join-Path $PSScriptRoot 'StagingReleaseRecords.ps1')
+
+function Get-StagingReconciliationRecords {
+    @(Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot '../../deployment/staging/reconciliations') -Filter '*.json' | ForEach-Object {
+        $relative='deployment/staging/reconciliations/'+$_.Name
+        & git ls-files --error-unmatch -- $relative 2>$null|Out-Null
+        if($LASTEXITCODE -ne 0 -or $_.Length -gt 65536 -or ($_.Attributes -band [IO.FileAttributes]::ReparsePoint)){Stop-StagingHistory 'InvalidHistory'}
+        & git diff --quiet HEAD -- $relative
+        if($LASTEXITCODE -ne 0){Stop-StagingHistory 'InvalidHistory'}
+        Read-StagingRecord ([IO.File]::ReadAllText($_.FullName)) @('schema','run','attempt','controllerCommit','workflowId','workflowPath','repository','conclusion','jobsSha256','outcome','approvalId','applicationCommit','prepareRun','prepareAttempt','artifactId','zipSha256','target','kuduDeploymentId','evidence')
+    })
+}
 
 function Assert-ControlledStagingHistory {
     try {
@@ -146,16 +158,18 @@ function Assert-ControlledStagingHistory {
     $api={param($path)
         $remaining=90000-[int]$watch.ElapsedMilliseconds
         if($remaining -le 0){Stop-StagingHistory 'ApiTimeout'}
-        # Fixed repository, bounded pages, no pagination/fallback/retry. Projection
-        # excludes titles, user records, URLs and other unnecessary metadata.
-        if($path -cnotmatch '\Aactions/(workflows/staging-cd\.yml/runs\?branch=master&event=workflow_dispatch&created=%3E%3D2026-10-31&per_page=100|runs/[0-9]+/attempts/[1-5]/jobs\?per_page=100|runs/41536648423)\z'){Stop-StagingHistory 'InvalidHistory'}
+        # Fixed repository, complete bounded pagination, no API retries.
+        # Project only identity/status/job evidence; never raw user/response data.
+        if($path -cnotmatch '\Aactions/(workflows/staging-cd\.yml/runs\?branch=master&event=workflow_dispatch&created=%3E%3D2026-10-31&per_page=100&page=[1-9][0-9]{0,2}|runs/[0-9]+/attempts/[1-5]/jobs\?per_page=100|runs/[0-9]+)\z'){Stop-StagingHistory 'InvalidHistory'}
         $query=if($path.StartsWith('actions/workflows/')){'{total_count,workflow_runs:[.workflow_runs[]|{id,run_attempt}]}'}
-            elseif($path -ceq 'actions/runs/41536648423'){'{id,run_attempt,head_sha,head_branch,event,path,workflow_id,status,conclusion,repository:{id:.repository.id,full_name:.repository.full_name},head_repository:{id:.head_repository.id,full_name:.head_repository.full_name}}'}
+            elseif($path -cmatch '\Aactions/runs/[0-9]+\z'){'{id,run_attempt,head_sha,head_branch,event,path,workflow_id,status,conclusion,run_number,repository:{id:.repository.id,full_name:.repository.full_name},head_repository:{id:.head_repository.id,full_name:.head_repository.full_name}}'}
             else{'{total_count,jobs:[.jobs[]|{id,name,run_id,run_attempt,head_sha,status,conclusion,steps:[.steps[]?|{number,name,status,conclusion}]}]}'}
         $r=Invoke-StagingBoundedProcess -Executable $gh -Arguments @('api','--hostname','github.com',('repos/GarvanFairy/GarageSaas/'+$path),'--jq',$query) -TimeoutMilliseconds ([Math]::Min(10000,$remaining))
         return (ConvertFrom-StagingHistoryResponse $r)
     }
-    Assert-StagingPriorAttempts -Api $api -CurrentRun $env:GITHUB_RUN_ID
+    $approval=Get-StagingReleaseApproval
+    $records=@(Get-StagingReconciliationRecords)
+    Assert-ReusableStagingHistory -Api $api -CurrentRun $env:GITHUB_RUN_ID -Records $records -ApprovalId $approval.approvalId -DeploymentRunNumber $approval.deploymentRunNumber
     } catch {
         $reason=Get-StagingHistoryReason $_
         $safe=[ordered]@{schema=1;stage='DeploymentHistory';outcome='Rejected';reason=$reason}|ConvertTo-Json -Compress
@@ -170,16 +184,26 @@ function Assert-ControlledStagingHistory {
 if($MyInvocation.InvocationName -ceq '.'){return}
 $publishing=[pscustomobject]@{outcome='ConfirmedFailure';reason='PreflightRejected';deploymentId=$null}
 $acceptance=[pscustomobject]@{outcome='NotVerified';reason='IdentityUnavailable';identity='Unavailable'}
-$client=$null;$zip=$null;$attempted=$false
+$client=$null;$zip=$null;$attempted=$false;$releaseApproval=$null
 try{
-    if($CheckPriorAttempts){Assert-ControlledStagingHistory;Write-Output 'Prior-attempt gate passed; no publication attempted.';return}
+    if($CheckPriorAttempts){
+        Assert-ControlledStagingContext
+        $releaseApproval=Get-StagingReleaseApproval
+        $script:StagingCommit=$releaseApproval.commit;$script:StagingHash=$releaseApproval.zipSha256
+        Assert-ControlledStagingHistory;Write-Output 'Prior-attempt gate passed; no publication attempted.';return
+    }
     $python=Join-Path $env:ProgramFiles 'Microsoft SDKs/Azure/CLI2/python.exe'
     if(!(Test-Path -LiteralPath $python -PathType Leaf)){throw 'Expected CLI distribution unavailable.'}
     $version=Invoke-StagingBoundedProcess -Executable $python -Arguments @('-IBm','azure.cli','version','--query','"azure-cli"','--output','tsv','--only-show-errors') -TimeoutMilliseconds 30000
     if(!(Test-StagingCliVersion $version)){throw 'Expected CLI version unavailable.'}
     if($PreflightOnly){Write-Output 'Reviewed Azure CLI 2.91.0 distribution/version confirmed; preflight only; no publication attempted.';return}
+    Assert-ControlledStagingContext
+    $releaseApproval=Get-StagingReleaseApproval
+    $script:StagingCommit=$releaseApproval.commit;$script:StagingHash=$releaseApproval.zipSha256
+    if($env:RELEASE_COMMIT -cne $releaseApproval.commit -or $env:EXPECTED_SHA256 -cne $releaseApproval.zipSha256){throw 'Runtime release differs from owner approval.'}
+    & (Join-Path $PSScriptRoot 'Resolve-StagingPromotion.ps1')|Out-Null
     $plan=Get-StagingDeploymentPlan -ResourceId $env:TARGET_RESOURCE_ID -TenantId $env:AZURE_LOGIN_TENANT_ID -SubscriptionId $env:AZURE_LOGIN_SUBSCRIPTION_ID -ClientId $env:AZURE_LOGIN_CLIENT_ID -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -Directory candidate
-    & (Join-Path $PSScriptRoot 'Assert-StagingDeploymentArtifact.ps1') -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun 40953823134|Out-Null
+    & (Join-Path $PSScriptRoot 'Assert-StagingDeploymentArtifact.ps1') -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun $releaseApproval.prepareRun|Out-Null
     Assert-ControlledStagingHistory
     $cli={param([string[]]$a)
         $r=Invoke-StagingBoundedProcess -Executable $python -Arguments (@('-IBm','azure.cli')+$a+@('--only-show-errors','--output','json')) -TimeoutMilliseconds 30000
@@ -221,14 +245,33 @@ try{
     $stamp=[IO.File]::Open('artifacts/staging-deployment/attempt.lock',[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
     $stamp.Dispose()
     $attempted=$true
-    $publishing=Invoke-ControlledKuduUpload -Transport $transport -Zip $zip
-    $acceptance=Get-StagingAcceptance -Transport $transport -Expected $expected
+    $publishing=Invoke-CorrelatedStagingUpload -Transport $transport -Zip $zip
+    if($publishing.outcome -ceq 'ConfirmedSuccess'){$acceptance=Get-StagingAcceptance -Transport $transport -Expected $expected}
 }catch{
     if($attempted){$publishing=[pscustomobject]@{outcome='Unknown';reason='Interrupted';deploymentId=$null}}
 }finally{
     foreach($resource in @($zip,$client)){if($resource){try{$resource.Dispose()}catch{}}};$auth=$null
 }
 $evidence=ConvertTo-StagingEvidence $publishing $acceptance
+if($releaseApproval){
+    $safe=$evidence|ConvertFrom-Json
+    $safe.schema=2
+    $safe|Add-Member controllerCommit $env:GITHUB_SHA
+    $safe|Add-Member applicationCommit $releaseApproval.commit
+    $safe|Add-Member prepareControllerCommit $releaseApproval.controllerCommit
+    $safe|Add-Member approvalId $releaseApproval.approvalId
+    $safe|Add-Member prepareRun $releaseApproval.prepareRun
+    $safe|Add-Member prepareAttempt $releaseApproval.prepareAttempt
+    $safe|Add-Member artifactId $releaseApproval.artifactId
+    $safe|Add-Member artifactName $releaseApproval.artifactName
+    $safe|Add-Member artifactDigest $releaseApproval.artifactDigest
+    $safe|Add-Member target $script:StagingTargetId
+    $safe|Add-Member deploymentRun $env:GITHUB_RUN_ID
+    $safe|Add-Member deploymentAttempt $env:GITHUB_RUN_ATTEMPT
+    $safe|Add-Member deploymentRunNumber $env:GITHUB_RUN_NUMBER
+    $safe|Add-Member healthVerification $(if($acceptance.outcome -ceq 'VerifiedHealthy'){'Healthy'}elseif($acceptance.outcome -ceq 'VerifiedUnhealthy'){'Unhealthy'}else{'NotVerified'})
+    $evidence=$safe|ConvertTo-Json -Depth 6 -Compress
+}
 Write-Output $evidence
 try{if($env:GITHUB_STEP_SUMMARY){[IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY,$evidence+[Environment]::NewLine)}}catch{throw 'Safe receipt unavailable; manual reconciliation required.'}
 if($publishing.outcome -ceq 'Unknown'){Write-Output 'Publishing remains Unknown; manual reconciliation is mandatory before any further attempt.'}

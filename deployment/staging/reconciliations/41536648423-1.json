@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "run": "41536648423",
+  "attempt": "1",
+  "controllerCommit": "08d662275cc4c1b72219eafd8629e0df567ba13c",
+  "workflowId": "398773184",
+  "workflowPath": ".github/workflows/staging-cd.yml",
+  "repository": "GarvanFairy/GarageSaas",
+  "conclusion": "failure",
+  "jobsSha256": "204f6d848441c9af7ed2673ac5bf3b24917d4f78ae88fd10ef5c5568ee7bc100",
+  "outcome": "NoPublication",
+  "approvalId": "Legacy",
+  "applicationCommit": "665d8d9a91235c73d1d41185d3c2df2ddb545f58",
+  "prepareRun": "40953823134",
+  "prepareAttempt": "1",
+  "artifactId": "12933496952",
+  "zipSha256": "640efc3f6084c9fc2562a0e09da3dc229e4f329ccdc40a71bc6873ccc0c56ce5",
+  "target": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu",
+  "kuduDeploymentId": "None",
+  "evidence": "ReviewedJobAndStepInventory"
+}
