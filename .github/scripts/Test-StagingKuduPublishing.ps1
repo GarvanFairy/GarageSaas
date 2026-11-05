@@ -1,5 +1,6 @@
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'Invoke-StagingDeployment.ps1')
+. (Join-Path $PSScriptRoot 'fixtures/StagingFirstDeploymentHistory.ps1')
 $script:n=0;$names=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
 $canary='synthetic-secret-never-publish-9248'
 function Check($Name,[scriptblock]$Test){
@@ -130,7 +131,7 @@ foreach($key in @('id','host','hosts')){
     $k=$key;Check ('wrong-site-'+$k) {$a=$metadata.PSObject.Copy();$a.$k='wrong';Reject {Assert-StagingAuthentication $account $auth $a}}
 }
 
-function History($Conclusion='skipped',$Status='completed',[switch]$Missing,[switch]$Oversized){
+function Invoke-LegacyHistoryFixture($Conclusion='skipped',$Status='completed',[switch]$Missing,[switch]$Oversized){
     $api={param($path)
         if($path.StartsWith('actions/workflows/')){return ('{"total_count":'+$(if($Oversized){101}else{2})+',"workflow_runs":[{"id":100,"run_attempt":1},{"id":99,"run_attempt":1}]}'|ConvertFrom-Json)}
         if($Missing){return ('{"total_count":0,"jobs":[]}'|ConvertFrom-Json)}
@@ -138,17 +139,17 @@ function History($Conclusion='skipped',$Status='completed',[switch]$Missing,[swi
     }
     Assert-StagingPriorAttempts $api '100'
 }
-Check 'history-all-skipped-allowed' {History;return $true}
+Check 'history-all-skipped-allowed' {Invoke-LegacyHistoryFixture;return $true}
 foreach($conclusion in @('success','failure','cancelled','timed_out','', 'unknown')){
-    $v=$conclusion;Check ('history-block-'+$n) {Reject {History -Conclusion $v}}
+    $v=$conclusion;Check ('history-block-'+$n) {Reject {Invoke-LegacyHistoryFixture -Conclusion $v}}
 }
-Check 'history-incomplete-job-blocked' {Reject {History -Status in_progress}}
-Check 'history-missing-job-blocked' {Reject {History -Missing}}
-Check 'history-page-truncation-blocked' {Reject {History -Oversized}}
+Check 'history-incomplete-job-blocked' {Reject {Invoke-LegacyHistoryFixture -Status in_progress}}
+Check 'history-missing-job-blocked' {Reject {Invoke-LegacyHistoryFixture -Missing}}
+Check 'history-page-truncation-blocked' {Reject {Invoke-LegacyHistoryFixture -Oversized}}
 Check 'history-api-error-blocked' {Reject {Assert-StagingPriorAttempts {throw $canary} '100'}}
 Check 'history-current-not-found-blocked' {Reject {Assert-StagingPriorAttempts {return ('{"total_count":1,"workflow_runs":[{"id":99,"run_attempt":1}]}'|ConvertFrom-Json)} '100'}}
 
-$context=@{GITHUB_REPOSITORY='GarvanFairy/GarageSaas';GITHUB_REF='refs/heads/master';GITHUB_WORKFLOW_REF='GarvanFairy/GarageSaas/.github/workflows/staging-cd.yml@refs/heads/master';GITHUB_EVENT_NAME='workflow_dispatch';PROMOTION_MODE='promote';GITHUB_RUN_ATTEMPT='1';GITHUB_RUN_ID='100';RUNNER_ENVIRONMENT='github-hosted';STAGING_OWNER_AUTHORIZED='true'}
+$context=@{GITHUB_ACTOR_ID='112548192';GITHUB_REPOSITORY='GarvanFairy/GarageSaas';GITHUB_REF='refs/heads/master';GITHUB_WORKFLOW_REF='GarvanFairy/GarageSaas/.github/workflows/staging-cd.yml@refs/heads/master';GITHUB_EVENT_NAME='workflow_dispatch';PROMOTION_MODE='promote';GITHUB_RUN_ATTEMPT='1';GITHUB_RUN_ID='100';RUNNER_ENVIRONMENT='github-hosted';STAGING_OWNER_AUTHORIZED='true'}
 $saved=@{}
 try{
     foreach($k in $context.Keys){$saved[$k]=[Environment]::GetEnvironmentVariable($k);[Environment]::SetEnvironmentVariable($k,$context[$k])}
@@ -166,7 +167,7 @@ try{
     Check 'second-run-attempt-blocked' {$env:GITHUB_RUN_ATTEMPT='2';try{Reject {Assert-ControlledStagingContext}}finally{$env:GITHUB_RUN_ATTEMPT='1'}}
 }finally{foreach($k in $saved.Keys){[Environment]::SetEnvironmentVariable($k,$saved[$k])}}
 $entry=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'Invoke-StagingDeployment.ps1'))
-Check 'same-handle-hash-before-upload' {$entry.IndexOf('SHA256]::HashData($zip)') -lt $entry.IndexOf('Invoke-ControlledKuduUpload -Transport') -and $entry.Contains('[IO.FileShare]::Read') -and $entry.Contains('[IO.FileMode]::CreateNew')}
+Check 'same-handle-hash-before-upload' {$entry.IndexOf('SHA256]::HashData($zip)') -lt $entry.IndexOf('Invoke-CorrelatedStagingUpload -Transport') -and $entry.Contains('[IO.FileShare]::Read') -and $entry.Contains('[IO.FileMode]::CreateNew')}
 Check 'no-cli-deploy-no-fallback' {$entry -notmatch 'Invoke-StagingBoundedProcess[^\r\n]+\$plan.Arguments' -and $entry.Contains('Assert-ControlledStagingHistory')}
 # Execute the real entry script's final gate with synthetic outcomes only.
 # Never invoke its upload/authentication body during these offline regressions.
@@ -228,7 +229,7 @@ Check 'arm-redirect-not-followed' {$c=Fake-Client 302 $canary 'https://evil.inva
 Check 'history-current-rerun-rejected' {Reject {Assert-StagingPriorAttempts {return ('{"total_count":1,"workflow_runs":[{"id":100,"run_attempt":2}]}'|ConvertFrom-Json)} '100'}}
 Check 'binary-soft-hyphen-host-rejected' {!(Test-KuduEndpoint ($scm.Replace('garagesaas',"garage$([char]0x00ad)saas")+'/api/vfs/site/wwwroot/GarageSaas.dll') Binary)}
 Check 'health-soft-hyphen-host-rejected' {!(Test-KuduEndpoint ($site.Replace('garagesaas',"garage$([char]0x00ad)saas")+'/health') Health)}
-if($n -ne 136){throw "Controlled publishing inventory mismatch: $n"}
+if($n -ne 137){throw "Controlled publishing inventory mismatch: $n"}
 $python=Join-Path $env:ProgramFiles 'Microsoft SDKs/Azure/CLI2/python.exe'
 $scmTests=Invoke-StagingBoundedProcess -Executable $python -Arguments @('-I',(Join-Path $PSScriptRoot 'Test-StagingScmAccess.py')) -TimeoutMilliseconds 60000
 if($null -eq $scmTests.exitCode -or $scmTests.exitCode -ne 0 -or $scmTests.timedOut -or $scmTests.interrupted -or $scmTests.oversized -or

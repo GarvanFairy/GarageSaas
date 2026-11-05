@@ -1,6 +1,7 @@
 $ErrorActionPreference='Stop'
 # Synthetic offline metadata and mocked process only. Never a dispatch or upload.
 . (Join-Path $PSScriptRoot 'Invoke-StagingDeployment.ps1')
+. (Join-Path $PSScriptRoot 'fixtures/StagingFirstDeploymentHistory.ps1')
 $count=0;$names=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
 $canary='synthetic-private-history-canary'
 function Check($Name,[scriptblock]$Test){
@@ -92,11 +93,13 @@ Check 'api-nonzero' {$r=Response $canary;$r.exitCode=1;Rejection $r 'ApiUnavaila
 Check 'api-missing-exit' {$r=Response '{}';$r.exitCode=$null;Rejection $r 'ApiUnavailable'}
 Check 'unknown-exception-classification' {try{throw $canary}catch{(Get-StagingHistoryReason $_) -ceq 'InvalidHistory'}}
 # Exercise the actual history wrapper's safe sink and rethrow with no real process.
-$context=@{GITHUB_REPOSITORY='GarvanFairy/GarageSaas';GITHUB_REF='refs/heads/master';GITHUB_WORKFLOW_REF='GarvanFairy/GarageSaas/.github/workflows/staging-cd.yml@refs/heads/master';GITHUB_EVENT_NAME='workflow_dispatch';PROMOTION_MODE='promote';STAGING_OWNER_AUTHORIZED='true';GITHUB_RUN_ATTEMPT='1';GITHUB_RUN_ID='999';RUNNER_ENVIRONMENT='github-hosted';GH_TOKEN=$canary;GITHUB_STEP_SUMMARY=''}
+$context=@{GITHUB_ACTOR_ID='112548192';GITHUB_REPOSITORY='GarvanFairy/GarageSaas';GITHUB_REF='refs/heads/master';GITHUB_WORKFLOW_REF='GarvanFairy/GarageSaas/.github/workflows/staging-cd.yml@refs/heads/master';GITHUB_EVENT_NAME='workflow_dispatch';PROMOTION_MODE='promote';STAGING_OWNER_AUTHORIZED='true';GITHUB_RUN_ATTEMPT='1';GITHUB_RUN_NUMBER='777';GITHUB_RUN_ID='999';RUNNER_ENVIRONMENT='github-hosted';GH_TOKEN=$canary;GITHUB_STEP_SUMMARY=''}
 $saved=@{}
 try{
     foreach($k in $context.Keys){$saved[$k]=[Environment]::GetEnvironmentVariable($k);[Environment]::SetEnvironmentVariable($k,$context[$k])}
     function Invoke-StagingBoundedProcess {param($Executable,$Arguments,$TimeoutMilliseconds) $r=Response $canary;$r.timedOut=$true;return $r}
+    function Get-StagingReleaseApproval {return [pscustomobject]@{approvalId=('a'*32);deploymentRunNumber='777'}}
+    function Get-StagingReconciliationRecords {return @()}
     Check 'wrapper-sanitizes-and-still-blocks' {
         $messages=[Collections.Generic.List[string]]::new();$reason=$null
         try{Assert-ControlledStagingHistory|ForEach-Object {$messages.Add([string]$_)}}catch{$reason=Get-StagingHistoryReason $_}
@@ -104,6 +107,6 @@ try{
         $reason -ceq 'ApiTimeout' -and $messages.Count -eq 1 -and !$messages[0].Contains($canary) -and
         @($r.PSObject.Properties).Count -eq 4 -and $r.stage -ceq 'DeploymentHistory' -and $r.outcome -ceq 'Rejected' -and $r.reason -ceq 'ApiTimeout'
     }
-}finally{Remove-Item Function:Invoke-StagingBoundedProcess;foreach($k in $saved.Keys){[Environment]::SetEnvironmentVariable($k,$saved[$k])}}
+}finally{Remove-Item Function:Invoke-StagingBoundedProcess,Function:Get-StagingReleaseApproval,Function:Get-StagingReconciliationRecords;foreach($k in $saved.Keys){[Environment]::SetEnvironmentVariable($k,$saved[$k])}}
 if($count -ne 100){throw "History regression inventory mismatch: $count"}
 Write-Output "PASS: $count offline Staging history reconciliation/reporting regressions; synthetic metadata/process only."

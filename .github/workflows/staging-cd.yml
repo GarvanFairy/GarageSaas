@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Prepare a new candidate or validate the fixed historical promotion
+        description: Prepare a new candidate or promote an explicitly approved immutable release
         type: choice
         options: [prepare, promote]
         default: prepare
@@ -16,6 +16,14 @@ on:
         required: true
       commit:
         description: Full SHA of a reviewed master commit with successful master-push full CI
+        required: false
+        type: string
+      prepare_run:
+        description: Promote only - exact successful Prepare workflow run ID
+        required: false
+        type: string
+      approval_id:
+        description: Promote only - reviewed one-use release approval ID on master
         required: false
         type: string
 
@@ -191,16 +199,21 @@ jobs:
       commit: ${{ steps.source.outputs.commit }}
       run: ${{ steps.source.outputs.run }}
       artifact: ${{ steps.source.outputs.artifact }}
+      attempt: ${{ steps.source.outputs.attempt }}
+      sha256: ${{ steps.source.outputs.sha256 }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Verify fixed historical promotion source
+      - name: Verify reviewed prepared release approval
         id: source
         env:
           GH_TOKEN: ${{ github.token }}
           PROMOTION_MODE: ${{ inputs.mode }}
+          STAGING_APPROVAL_ID: ${{ inputs.approval_id }}
+          PREPARE_RUN_ID: ${{ inputs.prepare_run }}
+          PROMOTION_COMMIT_INPUT: ${{ inputs.commit }}
         run: ./.github/scripts/Resolve-StagingPromotion.ps1
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
@@ -215,8 +228,12 @@ jobs:
           RELEASE_COMMIT: ${{ steps.source.outputs.commit }}
           GH_TOKEN: ${{ github.token }}
           PROMOTION_MODE: ${{ inputs.mode }}
+          STAGING_APPROVAL_ID: ${{ inputs.approval_id }}
+          PREPARE_RUN_ID: ${{ inputs.prepare_run }}
+          PROMOTION_COMMIT_INPUT: ${{ inputs.commit }}
+          EXPECTED_SHA256: ${{ steps.source.outputs.sha256 }}
         run: |
-          ./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash 640efc3f6084c9fc2562a0e09da3dc229e4f329ccdc40a71bc6873ccc0c56ce5 -SourceRun 40953823134
+          ./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun $env:PREPARE_RUN_ID
           ./.github/scripts/Resolve-StagingPromotion.ps1
 
   deploy:
@@ -238,7 +255,10 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       PROMOTION_MODE: ${{ inputs.mode }}
       TARGET_RESOURCE_ID: ${{ vars.AZURE_STAGING_RESOURCE_ID }}
-      EXPECTED_SHA256: ${{ vars.STAGING_APPROVED_ARTIFACT_SHA256 }}
+      EXPECTED_SHA256: ${{ needs.promotion.outputs.sha256 }}
+      STAGING_APPROVAL_ID: ${{ inputs.approval_id }}
+      PREPARE_RUN_ID: ${{ inputs.prepare_run }}
+      PROMOTION_COMMIT_INPUT: ${{ inputs.commit }}
       AZURE_LOGIN_TENANT_ID: ${{ vars.AZURE_STAGING_TENANT_ID }}
       AZURE_LOGIN_SUBSCRIPTION_ID: ${{ vars.AZURE_STAGING_SUBSCRIPTION_ID }}
     steps:
@@ -260,7 +280,7 @@ jobs:
         run: ./.github/scripts/Invoke-StagingDeployment.ps1 -CheckPriorAttempts
       - name: Revalidate approved archive and target before Azure login
         run: |
-          ./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun 40953823134
+          ./.github/scripts/Assert-StagingDeploymentArtifact.ps1 -Directory candidate -Commit $env:RELEASE_COMMIT -ApprovedHash $env:EXPECTED_SHA256 -SourceRun $env:PREPARE_RUN_ID
           ./.github/scripts/Assert-StagingTarget.ps1 -ResourceId $env:TARGET_RESOURCE_ID -TenantId $env:AZURE_LOGIN_TENANT_ID -SubscriptionId $env:AZURE_LOGIN_SUBSCRIPTION_ID -ClientId $env:AZURE_LOGIN_CLIENT_ID -RequireClientId
           ./.github/scripts/Resolve-StagingPromotion.ps1
           if ($env:STAGING_OWNER_AUTHORIZED -cne 'true') { throw 'Explicit owner authorization for this Staging deployment is required.' }
