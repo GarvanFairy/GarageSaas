@@ -169,10 +169,28 @@ internal sealed class DisposableSqlDatabase
             using var marker = database.CreateCommand(); marker.CommandTimeout = 8;
             marker.CommandText = "EXEC sys.sp_addextendedproperty @name=N'GarageSaasTestOwner', @value=@owner";
             marker.Parameters.AddWithValue("@owner", _owner); marker.ExecuteNonQuery(); _marked = true;
+            // Express/LocalDB can default AUTO_CLOSE to ON. With pooling disabled,
+            // closing the last short-lived connection can start an asynchronous
+            // shutdown/reopen cycle, including immediately before guarded deletion.
+            // Configure only this newly created, reverified owned database, while
+            // its setup connection is still open. Never wait/retry around the guard.
+            using var lifecycle = database.CreateCommand(); lifecycle.CommandTimeout = 8;
+            lifecycle.CommandText = "SELECT CONVERT(nvarchar(128),value) FROM sys.extended_properties WHERE class=0 AND name=N'GarageSaasTestOwner'";
+            ValidateOwnership(_created, _marked, DatabaseName, database.Database, _owner, lifecycle.ExecuteScalar() as string);
+            lifecycle.CommandText = $"ALTER DATABASE [{DatabaseName}] SET AUTO_CLOSE OFF";
+            lifecycle.ExecuteNonQuery();
+            lifecycle.CommandText = "SELECT is_auto_close_on FROM sys.databases WHERE database_id=DB_ID()";
+            ValidateAutoClose(lifecycle.ExecuteScalar() as bool?);
         }
         using var db = new SignupContext(Options());
         // Existing, exclusively created EMPTY database: creates current model tables.
         db.Database.EnsureCreated();
+    }
+
+    internal static void ValidateAutoClose(bool? enabled)
+    {
+        if (enabled != false)
+            throw new InvalidOperationException("Owned test database AUTO_CLOSE must be verified OFF before use.");
     }
 
     internal T Track<T>(T task) where T : Task => _workers.Track(task);
