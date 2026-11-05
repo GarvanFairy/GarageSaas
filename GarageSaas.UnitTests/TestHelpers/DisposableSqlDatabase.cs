@@ -26,6 +26,7 @@ internal sealed class DisposableSqlDatabase
     private bool _created;
     private bool _marked;
     internal string DatabaseName { get; }
+    internal bool IsDedicatedLocalDb => !_sharedServer;
     internal string ConnectionString => Connection(DatabaseName);
 
     internal static bool Enabled(string flag, Func<string, string?> environment) => environment(flag) == "1";
@@ -169,10 +170,28 @@ internal sealed class DisposableSqlDatabase
             using var marker = database.CreateCommand(); marker.CommandTimeout = 8;
             marker.CommandText = "EXEC sys.sp_addextendedproperty @name=N'GarageSaasTestOwner', @value=@owner";
             marker.Parameters.AddWithValue("@owner", _owner); marker.ExecuteNonQuery(); _marked = true;
+            if (IsDedicatedLocalDb)
+            {
+                // Keep the verified setup connection open while removing automatic
+                // shutdown/reopen churn from this generated, owned LocalDB catalog.
+                using var lifecycle = database.CreateCommand(); lifecycle.CommandTimeout = 8;
+                lifecycle.CommandText = "SELECT CONVERT(nvarchar(128),value) FROM sys.extended_properties WHERE class=0 AND name=N'GarageSaasTestOwner'";
+                ValidateOwnership(_created, _marked, DatabaseName, database.Database, _owner, lifecycle.ExecuteScalar() as string);
+                lifecycle.CommandText = $"ALTER DATABASE [{DatabaseName}] SET AUTO_CLOSE OFF";
+                lifecycle.ExecuteNonQuery();
+                lifecycle.CommandText = "SELECT is_auto_close_on FROM sys.databases WHERE database_id=DB_ID()";
+                ValidateAutoClose(lifecycle.ExecuteScalar() as bool?);
+            }
         }
         using var db = new SignupContext(Options());
         // Existing, exclusively created EMPTY database: creates current model tables.
         db.Database.EnsureCreated();
+    }
+
+    internal static void ValidateAutoClose(bool? enabled)
+    {
+        if (enabled != false)
+            throw new InvalidOperationException("Owned LocalDB test database AUTO_CLOSE must be verified OFF before use.");
     }
 
     internal T Track<T>(T task) where T : Task => _workers.Track(task);
