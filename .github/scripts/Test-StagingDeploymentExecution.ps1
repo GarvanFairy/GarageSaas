@@ -9,15 +9,15 @@ function Reject([scriptblock]$Action){try{& $Action|Out-Null;return $false}catch
 $parameters=@{ResourceId='/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu';TenantId='90589b9f-6a39-4285-a798-5d72f6937826';SubscriptionId='d49b2f61-156a-489f-ba4c-acba574d30a0';ClientId='dd6047f8-4557-4401-aab5-d7fd9e7d40a8';Commit='665d8d9a91235c73d1d41185d3c2df2ddb545f58';ApprovedHash='640efc3f6084c9fc2562a0e09da3dc229e4f329ccdc40a71bc6873ccc0c56ce5';Directory=$root}
 $plan=Get-StagingDeploymentPlan @parameters
 Check 'exact-command' {($plan.Arguments -join '|') -ceq ('webapp|deploy|--ids|'+$parameters.ResourceId+'|--src-path|'+$plan.Path+'|--type|zip|--clean|true|--restart|true|--timeout|180000|--enable-kudu-warmup|false|--enriched-errors|false|--only-show-errors|--output|json')}
-Check 'fixed-version' {$plan.Version -ceq '2.91.0'}
+Check 'fixed-version' {$plan.Version -ceq '2.92.0'}
 Check 'fixed-zip' {[IO.Path]::GetFileName($plan.Path) -ceq ('GarageSaas-'+$parameters.Commit+'.zip')}
 foreach($key in @('ResourceId','TenantId','SubscriptionId','ClientId','Commit','ApprovedHash')){
     $bad=$parameters.Clone();$bad[$key]='unapproved'
     Check "wrong-$key" {Reject {Get-StagingDeploymentPlan @bad}}
 }
-$process=[pscustomobject]@{exitCode=0;timedOut=$false;oversized=$false;interrupted=$false;stdout='2.91.0';stderr=$canary}
+$process=[pscustomobject]@{exitCode=0;timedOut=$false;oversized=$false;interrupted=$false;stdout='2.92.0';stderr=$canary}
 Check 'version-match' {Test-StagingCliVersion $process}
-foreach($value in @('2.90.0','2.92.0','2.91.0-extra','',('2.91.0'+$canary))){
+foreach($value in @('2.91.0','2.93.0','2.92.0-extra','',('2.92.0'+$canary))){
     $p=$process.PSObject.Copy();$p.stdout=$value
     Check ('version-reject-'+$count) {!(Test-StagingCliVersion $p)}
 }
@@ -27,6 +27,16 @@ foreach($field in @('timedOut','oversized','interrupted')){
 }
 $p=$process.PSObject.Copy();$p.exitCode=1
 Check 'version-process-failed' {!(Test-StagingCliVersion $p)}
+Check 'version-tsv-crlf' {$p=$process.PSObject.Copy();$p.stdout="2.92.0`r`n";Test-StagingCliVersion $p}
+Check 'version-tsv-lf' {$p=$process.PSObject.Copy();$p.stdout="2.92.0`n";Test-StagingCliVersion $p}
+Check 'version-drift-classified' {$p=$process.PSObject.Copy();$p.stdout="2.91.0`r`n";(Get-StagingCliVersionFailure $p) -ceq 'UnexpectedVersion'}
+Check 'version-extra-output-classified-without-leak' {$p=$process.PSObject.Copy();$p.stdout="2.92.0`n$canary";(Get-StagingCliVersionFailure $p) -ceq 'InvalidVersionOutput'}
+Check 'version-no-output-classified' {$p=$process.PSObject.Copy();$p.stdout=$null;(Get-StagingCliVersionFailure $p) -ceq 'InvalidVersionOutput'}
+Check 'version-malformed-result-classified' {$p=$process.PSObject.Copy();$p.timedOut='false';(Get-StagingCliVersionFailure $p) -ceq 'InvalidProcessResult'}
+Check 'version-timeout-classified' {$p=$process.PSObject.Copy();$p.timedOut=$true;(Get-StagingCliVersionFailure $p) -ceq 'Timeout'}
+Check 'version-oversize-classified' {$p=$process.PSObject.Copy();$p.oversized=$true;(Get-StagingCliVersionFailure $p) -ceq 'OutputLimit'}
+Check 'version-interrupt-classified' {$p=$process.PSObject.Copy();$p.interrupted=$true;(Get-StagingCliVersionFailure $p) -ceq 'Interrupted'}
+Check 'version-exit-classified' {$p=$process.PSObject.Copy();$p.exitCode=1;(Get-StagingCliVersionFailure $p) -ceq 'ProcessFailure'}
 $id='a'*32;$previous='b'*32
 $status=@{id=$id;status=4;active=$true;complete=$true}
 function Outcome($P=$process,$Id=$id,$Prior=$previous,$Json=($status|ConvertTo-Json -Compress)){
@@ -105,13 +115,14 @@ Check 'entry-exception-process-completed' {
     # Start a normal host, then inject the missing-CLI path only in that child.
     # Arguments remain separate from code; no parent/host-bootstrap mutation.
     $script:entryResult=Invoke-StagingBoundedProcess -Executable $pwsh -Arguments @('-NoProfile','-NonInteractive','-CommandWithArgs',
-        '$env:ProgramFiles=$args[0]; & $args[1]',(Join-Path $root $canary),(Join-Path $PSScriptRoot 'Invoke-StagingDeployment.ps1')) -TimeoutMilliseconds 5000
+        '$env:ProgramFiles=$args[0]; & $args[1] -PreflightOnly',(Join-Path $root $canary),(Join-Path $PSScriptRoot 'Invoke-StagingDeployment.ps1')) -TimeoutMilliseconds 5000
     $null -ne $entryResult.exitCode -and !$entryResult.timedOut -and !$entryResult.interrupted -and !$entryResult.oversized
 }
 Check 'entry-exception-parent-environment-preserved' {$env:ProgramFiles -ceq $entryProgramFiles}
 Check 'entry-exception-nonzero-exit' {$entryResult.exitCode -ne 0}
 Check 'entry-exception-no-secret-leak' {!$entryResult.stdout.Contains($canary) -and !$entryResult.stderr.Contains($canary)}
 Check 'entry-exception-preflight-rejected' {$entryResult.stdout.Contains('PreflightRejected')}
+Check 'entry-missing-executable-classified' {$entryResult.stdout.Contains('{"schema":1,"stage":"DeploymentCliPreflight","outcome":"Rejected","reason":"MissingExecutable"}')}
 $workflowPath=Join-Path $PSScriptRoot '../workflows/staging-cd.yml'
 $yaml=[IO.File]::ReadAllText([IO.Path]::GetFullPath($workflowPath))
 foreach($pair in @(
@@ -126,5 +137,5 @@ foreach($pair in @(
     Check ('workflow-execution-'+$count) {Reject {& (Join-Path $PSScriptRoot 'Assert-StagingWorkflow.ps1') -Path $path}}
 }
 & (Join-Path $PSScriptRoot 'Assert-StagingWorkflow.ps1') -Path (Join-Path $PSScriptRoot '../workflows/staging-cd.yml')|Out-Null
-if($count -ne 74){throw "Execution security inventory mismatch: $count"}
+if($count -ne 85){throw "Execution security inventory mismatch: $count"}
 Write-Output "PASS: $count offline deployment execution/status regressions; no Azure, CLI login, deployment or raw evidence publication."
