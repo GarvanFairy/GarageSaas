@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param([switch]$PreflightOnly,[switch]$CheckPriorAttempts)
 $ErrorActionPreference='Stop'
+$script:StagingReviewedCliVersion='2.92.0'
 
 function Get-StagingDeploymentPlan {
     param([string]$ResourceId,[string]$TenantId,[string]$SubscriptionId,[string]$ClientId,
@@ -10,7 +11,7 @@ function Get-StagingDeploymentPlan {
         $ApprovedHash -cnotmatch '\A[a-f0-9]{64}\z'){throw 'Invalid staging package identity.'}
     $zip=Join-Path ([IO.Path]::GetFullPath($Directory)) "GarageSaas-$Commit.zip"
     # Fixed arguments only: no shell, arbitrary URL, slot, source replacement or retry.
-    [pscustomobject]@{Version='2.91.0';Path=$zip;Arguments=[string[]]@('webapp','deploy','--ids',$ResourceId,
+    [pscustomobject]@{Version=$script:StagingReviewedCliVersion;Path=$zip;Arguments=[string[]]@('webapp','deploy','--ids',$ResourceId,
         '--src-path',$zip,'--type','zip','--clean','true','--restart','true',
         '--timeout','180000','--enable-kudu-warmup','false','--enriched-errors','false',
         '--only-show-errors','--output','json')}
@@ -86,14 +87,24 @@ function Read-StagingStrictObject {
     }catch{throw 'Malformed or ambiguous status.'}finally{if($doc){$doc.Dispose()}}
 }
 
-function Test-StagingCliVersion {
+function Get-StagingCliVersionFailure {
     param($ProcessResult)
-    try{
-        if($ProcessResult.exitCode -ne 0 -or $null -eq $ProcessResult.exitCode -or $ProcessResult.timedOut -or $ProcessResult.oversized -or $ProcessResult.interrupted){return $false}
-        # Project only this public scalar from `az version`, not a mutable latest version.
-        return ($ProcessResult.stdout.Trim() -ceq '2.91.0')
-    }catch{return $false}
+    foreach($flag in @('timedOut','oversized','interrupted')){
+        if($ProcessResult.$flag -isnot [bool]){return 'InvalidProcessResult'}
+    }
+    if($ProcessResult.timedOut){return 'Timeout'}
+    if($ProcessResult.oversized){return 'OutputLimit'}
+    if($ProcessResult.interrupted){return 'Interrupted'}
+    if($ProcessResult.exitCode -isnot [int] -or $ProcessResult.exitCode -ne 0){return 'ProcessFailure'}
+    if($ProcessResult.stdout -isnot [string]){return 'InvalidVersionOutput'}
+    $version=$ProcessResult.stdout.Trim()
+    if($version -ceq $script:StagingReviewedCliVersion){return $null}
+    # Classify a different scalar without revealing arbitrary subprocess output.
+    if($version -cmatch '\A[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\z'){return 'UnexpectedVersion'}
+    return 'InvalidVersionOutput'
 }
+
+function Test-StagingCliVersion($ProcessResult){return ($null -eq (Get-StagingCliVersionFailure $ProcessResult))}
 
 function Get-StagingDeploymentOutcome {
     param($ProcessResult,[string]$RequestDeploymentId,[string]$PreviousDeploymentId,[string]$StatusJson)
@@ -193,10 +204,15 @@ try{
         Assert-ControlledStagingHistory;Write-Output 'Prior-attempt gate passed; no publication attempted.';return
     }
     $python=Join-Path $env:ProgramFiles 'Microsoft SDKs/Azure/CLI2/python.exe'
-    if(!(Test-Path -LiteralPath $python -PathType Leaf)){throw 'Expected CLI distribution unavailable.'}
-    $version=Invoke-StagingBoundedProcess -Executable $python -Arguments @('-IBm','azure.cli','version','--query','"azure-cli"','--output','tsv','--only-show-errors') -TimeoutMilliseconds 30000
-    if(!(Test-StagingCliVersion $version)){throw 'Expected CLI version unavailable.'}
-    if($PreflightOnly){Write-Output 'Reviewed Azure CLI 2.91.0 distribution/version confirmed; preflight only; no publication attempted.';return}
+    $cliFailure=if(!(Test-Path -LiteralPath $python -PathType Leaf)){'MissingExecutable'}else{
+        $version=Invoke-StagingBoundedProcess -Executable $python -Arguments @('-IBm','azure.cli','version','--query','"azure-cli"','--output','tsv','--only-show-errors') -TimeoutMilliseconds 30000
+        Get-StagingCliVersionFailure $version
+    }
+    if($cliFailure){
+        [ordered]@{schema=1;stage='DeploymentCliPreflight';outcome='Rejected';reason=$cliFailure}|ConvertTo-Json -Compress|Write-Output
+        throw 'Expected CLI distribution or version unavailable.'
+    }
+    if($PreflightOnly){Write-Output "Reviewed Azure CLI $script:StagingReviewedCliVersion distribution/version confirmed; preflight only; no publication attempted.";return}
     Assert-ControlledStagingContext
     $releaseApproval=Get-StagingReleaseApproval
     $script:StagingCommit=$releaseApproval.commit;$script:StagingHash=$releaseApproval.zipSha256
