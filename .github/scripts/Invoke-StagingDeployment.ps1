@@ -262,7 +262,7 @@ try{
     $stamp.Dispose()
     $attempted=$true
     $publishing=Invoke-CorrelatedStagingUpload -Transport $transport -Zip $zip
-    if($publishing.outcome -ceq 'ConfirmedSuccess'){$acceptance=Get-StagingAcceptance -Transport $transport -Expected $expected}
+    if($publishing.outcome -ceq 'ConfirmedSuccess'){$acceptance=Get-StagingFinalAcceptance -Publishing $publishing -Transport $transport -Expected $expected}
 }catch{
     if($attempted){$publishing=[pscustomobject]@{outcome='Unknown';reason='Interrupted';deploymentId=$null}}
 }finally{

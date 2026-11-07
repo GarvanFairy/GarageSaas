@@ -1,5 +1,78 @@
 # Controlled Staging publishing (implementation only)
 
+## Current reconciliation — 7 November 2026
+
+This section supersedes the historical implementation/readiness statements below;
+it does not authorize another deployment or reuse a consumed approval.
+
+[Promote 42360965508/1](https://github.com/GarvanFairy/GarageSaas/actions/runs/42360965508)
+used controller `29c51294e22df87c4809a26dde1db5cff4a6ee97`, workflow number 8,
+and consumed approval `ef3545e1238ec2e5dc8c4e0a4423f4ee`. Promotion passed,
+Azure login succeeded and the publication/acceptance step failed. The complete
+four-job, attempt-specific GitHub inventory is fingerprinted by the reviewed
+`deployment/staging/reconciliations/42360965508-1.json` record. Its
+`ConfirmedSuccess` describes **publication**, not completed application acceptance.
+This run must never be classified as `NoPublication`.
+
+Read-only Kudu evidence for exact deployment
+`e69c3577a25e469c9f9277561da571d6` reports status 4, complete and active.
+It was received at 09:45:58.3825207Z, started at 09:45:58.6325205Z and ended at
+09:45:59.2132442Z on 7 November. The original acceptance receipt at
+09:46:01.5818868Z remains `NotVerified / IdentityMismatch`; it is not rewritten.
+The bounded Kudu request-trace projection shows a successful GarageSaas.dll GET
+with Content-Length **2,759,168**. The approved DLL is **2,769,920** bytes.
+There was no subsequent SignupAPI.dll GET in that acceptance window; the validator
+checks GarageSaas.dll first and stops at its mismatch. Thus GarageSaas.dll failed
+the initial check, while SignupAPI.dll was not checked then.
+
+The approved artifact 13464334264 from Prepare 42134413999/1 was downloaded
+unchanged and independently hashed:
+`6639f755ca7b297f5048ce81934d03cc39b1daf6565dfe5288f36384c7f9710b`.
+The following approved-ZIP and deployed-VFS hashes matched in a read-only
+observation at 21:11:01Z on 7 November:
+
+| File | Bytes | SHA-256 in approved ZIP and deployed file |
+| --- | ---: | --- |
+| GarageSaas.dll | 2,769,920 | `71f82c2921b593c1433242bc0a77873b4847173616370b77989150c8d5218335` |
+| SignupAPI.dll | 196,096 | `1b3893226e3a5feb9ccfe0636d1879c86e458a58503a5a7b577b386a708210e7` |
+
+This verifies these two deployed files against application commit
+`5bf5df69e7ee848d5abd0b79a68e531d8558f532`. It does not attest every deployed
+file or the assemblies loaded by an existing worker. `/health` returned HTTP 200
+with `Healthy`; the App Service was Running/Normal and two IIS worker processes
+were observed. Loaded-process version and authenticated garage/customer/vehicle/
+quote/invoice and tenant-isolation acceptance remain **NotVerified**.
+
+The original file response was inconsistent with the approved GarageSaas.dll.
+The body/hash of that response was not retained, so stale-file visibility,
+truncation and deployment-finalization timing cannot be distinguished, nor can
+the time of convergence be established. The current exact match rules out a
+persistent mismatch in the two observed DLLs; it is not proof of an internal Kudu
+timing defect.
+
+The narrowly scoped acceptance correction requests uncached binary GETs and
+permits at most **three** observations, two seconds apart, only after
+`ConfirmedSuccess / ExactDeploymentActive` and only while a hash mismatches.
+Each observation must independently hash both DLLs exactly before checking health.
+It never retries publication, follows redirects, changes hashes, relaxes health,
+or accepts a persistent mismatch. Unavailable/authentication/network responses
+and health failures stop without convergence polling. Existing bounded HTTP
+operations remain unchanged. Confirmed publication with unverified/unhealthy
+acceptance now explicitly sets `manualReconciliationRequired: true`.
+
+Offline coverage adds 14 deterministic cases (151 publishing/acceptance cases in
+total), including both binary convergence paths, persistent mismatches, unavailable
+and interrupted observations, unknown publication, uncached GETs, health rejection
+and sanitization. No live publication was performed for this correction.
+
+Reconciliation is sufficient to establish completed publication and currently
+matching DLLs plus liveness; it does not complete functional acceptance. Do not
+redeploy solely to clear the historical workflow failure. Review/merge this
+correction through required CI, verify loaded-version evidence using an approved
+method, and complete authenticated acceptance separately. Any future publication
+requires fresh explicit owner authorization and a new one-use approval; the
+consumed approval, attempt guard and exact-history checks remain unchanged.
+
 Deployment remains disabled: `deploy.if: ${{ false }}` AND the unchanged operational-readiness throw before Azure login. No input or variable removes either stop. This is Staging only; it does not establish a Production policy. Prepare is unchanged, including its full 223-case SQL qualification.
 
 ## Owner-approved single-developer Staging policy — 31 October 2026
