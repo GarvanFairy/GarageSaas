@@ -70,6 +70,10 @@ function Invoke-KuduHttp {
         if(!(Test-KuduEndpoint $Url $Kind)){return [pscustomobject]$safe}
         $method=if($Kind -ceq 'Upload'){[Net.Http.HttpMethod]::Post}else{[Net.Http.HttpMethod]::Get}
         $request=[Net.Http.HttpRequestMessage]::new($method,$Url)
+        if($Kind -ceq 'Binary'){
+            $request.Headers.CacheControl=[Net.Http.Headers.CacheControlHeaderValue]::new()
+            $request.Headers.CacheControl.NoCache=$true;$request.Headers.CacheControl.NoStore=$true
+        }
         if($Kind -cne 'Health'){$request.Headers.Authorization=[Net.Http.Headers.AuthenticationHeaderValue]::new('Bearer',$Token)}
         if($Kind -ceq 'Upload'){
             $request.Content=[Net.Http.StreamContent]::new($Zip)
@@ -190,6 +194,24 @@ function Get-StagingAcceptance {
     return $result
 }
 
+function Get-StagingFinalAcceptance {
+    param($Publishing,[scriptblock]$Transport,[Collections.IDictionary]$Expected,
+        [scriptblock]$ObservationWait={ [Threading.Thread]::Sleep(2000) })
+    $result=[pscustomobject]@{outcome='NotVerified';reason='IdentityUnavailable';identity='Unavailable'}
+    # Publication must already be independently correlated and complete. These
+    # observations never issue an upload, change a file, or retry publication.
+    if($Publishing.outcome -cne 'ConfirmedSuccess' -or $Publishing.reason -cne 'ExactDeploymentActive' -or
+       $Publishing.deploymentId -cnotmatch '\A[a-f0-9]{32}\z'){return $result}
+    for($observation=0;$observation -lt 3;$observation++){
+        if($observation -gt 0){try{& $ObservationWait|Out-Null}catch{return $result}}
+        $result=Get-StagingAcceptance -Transport $Transport -Expected $Expected
+        # Only a changing file view after completed publication is observed again.
+        # Every observation requires both exact DLL hashes before reading health.
+        if($result.outcome -cne 'NotVerified' -or $result.reason -cne 'IdentityMismatch'){return $result}
+    }
+    return $result
+}
+
 function ConvertTo-StagingEvidence {
     param($Publishing,$Acceptance)
     # Reconstruct from enums, never serialize an externally supplied object.
@@ -212,7 +234,8 @@ function ConvertTo-StagingEvidence {
     [ordered]@{schema=1;expectedCommit=$script:StagingCommit;zipSha256=$script:StagingHash
         publishing=[ordered]@{outcome=$Publishing.outcome;reason=$Publishing.reason;deploymentId=$Publishing.deploymentId}
         applicationAcceptance=[ordered]@{outcome=$Acceptance.outcome;reason=$Acceptance.reason;identity=$Acceptance.identity}
-        manualReconciliationRequired=($Publishing.outcome -ceq 'Unknown')
+        manualReconciliationRequired=($Publishing.outcome -ceq 'Unknown' -or
+            ($Publishing.outcome -ceq 'ConfirmedSuccess' -and $Acceptance.outcome -cne 'VerifiedHealthy'))
         authenticatedAcceptance='NotVerified';runningProcessVersion='NotVerified'}|ConvertTo-Json -Depth 4 -Compress
 }
 
