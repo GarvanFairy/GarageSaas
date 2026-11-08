@@ -105,6 +105,23 @@ function Assert-StagingReconciliation($Record,$Run,$Jobs){
     if($d.Count -ne 1){throw 'Ambiguous deployment job.'}
     $upload=@($d[0].steps|Where-Object {$_.name -ceq 'Deploy only the approved package to the existing staging app'})
     $login=@($d[0].steps|Where-Object {$_.name -ceq 'Run azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac'})
+    # A skipped deployment job has no step entries in GitHub's job API.
+    # Only reconcile that shape when the exact earlier approval failure is
+    # proved by the complete, hashed four-job inventory.
+    if($r.outcome -ceq 'NoPublication' -and $d[0].conclusion -ceq 'skipped' -and @($d[0].steps).Count -eq 0){
+        $promotion=@($Jobs.jobs|Where-Object {$_.name -ceq 'promotion'})
+        $prerequisite=@($Jobs.jobs|Where-Object {$_.name -ceq 'prerequisite'})
+        $release=@($Jobs.jobs|Where-Object {$_.name -ceq 'release'})
+        if($Jobs.total_count -ne 4 -or $promotion.Count -ne 1 -or $prerequisite.Count -ne 1 -or $release.Count -ne 1 -or
+           $promotion[0].conclusion -cne 'failure' -or $prerequisite[0].conclusion -cne 'skipped' -or $release[0].conclusion -cne 'skipped' -or
+           @($prerequisite[0].steps).Count -ne 0 -or @($release[0].steps).Count -ne 0 -or
+           $r.kuduDeploymentId -cne 'None' -or $r.evidence -cne 'ReviewedJobAndStepInventory'){throw 'Publication cannot be excluded.'}
+        $gate=@($promotion[0].steps|Where-Object {$_.name -ceq 'Verify reviewed prepared release approval' -and $_.conclusion -ceq 'failure'})
+        $download=@($promotion[0].steps|Where-Object {$_.name -ceq 'Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093' -and $_.conclusion -ceq 'skipped'})
+        $validation=@($promotion[0].steps|Where-Object {$_.name -ceq 'Validate existing ZIP without rebuilding' -and $_.conclusion -ceq 'skipped'})
+        if($gate.Count -ne 1 -or $download.Count -ne 1 -or $validation.Count -ne 1){throw 'Missing pre-publication failure evidence.'}
+        return $r
+    }
     if($upload.Count -ne 1 -or $login.Count -ne 1){throw 'Missing publication evidence.'}
     if($r.outcome -ceq 'NoPublication'){
         if($r.kuduDeploymentId -cne 'None' -or $upload[0].conclusion -cne 'skipped' -or $login[0].conclusion -cne 'skipped' -or $r.evidence -cne 'ReviewedJobAndStepInventory'){throw 'Publication cannot be excluded.'}
