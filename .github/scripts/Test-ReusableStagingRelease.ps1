@@ -179,7 +179,7 @@ Check 'preflight-observation-failure-no-upload' {
 Check 'latest-alone-never-an-exact-id' {!(Test-KuduEndpoint ($script:StagingScm+'/api/deployments/latest') Status)}
 Check 'unknown-plus-health-never-success' {
     $p=[pscustomobject]@{outcome='Unknown';reason='MissingCorrelation';deploymentId=$null}
-    $a=[pscustomobject]@{outcome='VerifiedHealthy';reason='IdentityAndLiveness';identity='ApprovedDeployedBinaryHashes'}
+    $a=[pscustomobject]@{outcome='VerifiedHealthy';reason='IdentityAndLiveness';identity='RunningApplicationCommit'}
     $r=ConvertTo-StagingEvidence $p $a|ConvertFrom-Json
     $r.publishing.outcome -ceq 'Unknown' -and $r.manualReconciliationRequired
 }
