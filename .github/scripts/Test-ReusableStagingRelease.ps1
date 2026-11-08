@@ -43,6 +43,57 @@ Check 'verified-pre-publication' {
     $r=CopyFixture $record;$r.jobsSha256=Get-StagingJobEvidenceHash $j;$r.outcome='NoPublication';$r.kuduDeploymentId='None';$r.evidence='ReviewedJobAndStepInventory'
     (Assert-StagingReconciliation $r $run $j).outcome -ceq 'NoPublication'
 }
+# GitHub's API reports a completely skipped deployment job with zero steps.
+# Reconcile only when the promotion approval gate failed and downstream steps
+# were skipped. No Azure operation is represented by this evidence shape.
+$skippedJobs=[pscustomobject]@{total_count=4L;jobs=@(
+    [pscustomobject]@{id=200L;name='promotion';run_id=99L;run_attempt=1L;head_sha=$sha;status='completed';conclusion='failure';steps=@(
+        [pscustomobject]@{number=3L;name='Verify reviewed prepared release approval';status='completed';conclusion='failure'},
+        [pscustomobject]@{number=4L;name='Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093';status='completed';conclusion='skipped'},
+        [pscustomobject]@{number=5L;name='Validate existing ZIP without rebuilding';status='completed';conclusion='skipped'})},
+    [pscustomobject]@{id=201L;name='prerequisite';run_id=99L;run_attempt=1L;head_sha=$sha;status='completed';conclusion='skipped';steps=@()},
+    [pscustomobject]@{id=202L;name='release';run_id=99L;run_attempt=1L;head_sha=$sha;status='completed';conclusion='skipped';steps=@()},
+    [pscustomobject]@{id=203L;name='deploy';run_id=99L;run_attempt=1L;head_sha=$sha;status='completed';conclusion='skipped';steps=@()}
+)}
+$skippedRecord=CopyFixture $record;$skippedRecord.jobsSha256=Get-StagingJobEvidenceHash $skippedJobs
+$skippedRecord.outcome='NoPublication';$skippedRecord.kuduDeploymentId='None';$skippedRecord.evidence='ReviewedJobAndStepInventory'
+Check 'approval-gate-skipped-deploy-no-publication' {
+    (Assert-StagingReconciliation $skippedRecord $run $skippedJobs).outcome -ceq 'NoPublication'
+}
+Check 'skipped-deploy-reject-without-gate-failure' {
+    $j=CopyFixture $skippedJobs;$j.jobs[0].steps[0].conclusion='success'
+    $r=CopyFixture $skippedRecord;$r.jobsSha256=Get-StagingJobEvidenceHash $j
+    Reject {Assert-StagingReconciliation $r $run $j}
+}
+Check 'skipped-deploy-reject-download-executed' {
+    $j=CopyFixture $skippedJobs;$j.jobs[0].steps[1].conclusion='success'
+    $r=CopyFixture $skippedRecord;$r.jobsSha256=Get-StagingJobEvidenceHash $j
+    Reject {Assert-StagingReconciliation $r $run $j}
+}
+Check 'skipped-deploy-reject-validation-executed' {
+    $j=CopyFixture $skippedJobs;$j.jobs[0].steps[2].conclusion='success'
+    $r=CopyFixture $skippedRecord;$r.jobsSha256=Get-StagingJobEvidenceHash $j
+    Reject {Assert-StagingReconciliation $r $run $j}
+}
+Check 'skipped-deploy-reject-running-deploy' {
+    $j=CopyFixture $skippedJobs;$j.jobs[3].conclusion='failure'
+    $r=CopyFixture $skippedRecord;$r.jobsSha256=Get-StagingJobEvidenceHash $j
+    Reject {Assert-StagingReconciliation $r $run $j}
+}
+Check 'skipped-deploy-reject-running-prerequisite' {
+    $j=CopyFixture $skippedJobs;$j.jobs[1].conclusion='success'
+    $r=CopyFixture $skippedRecord;$r.jobsSha256=Get-StagingJobEvidenceHash $j
+    Reject {Assert-StagingReconciliation $r $run $j}
+}
+Check 'skipped-deploy-reject-missing-promotion' {
+    $j=CopyFixture $skippedJobs;$j.jobs[0].name='other'
+    $r=CopyFixture $skippedRecord;$r.jobsSha256=Get-StagingJobEvidenceHash $j
+    Reject {Assert-StagingReconciliation $r $run $j}
+}
+Check 'skipped-deploy-reject-unknown-publication' {
+    $r=CopyFixture $skippedRecord;$r.outcome='Unknown'
+    Reject {Assert-StagingReconciliation $r $run $skippedJobs}
+}
 $savedSha=$env:GITHUB_SHA;$savedRun=$env:PREPARE_RUN_ID;$savedNumber=$env:GITHUB_RUN_NUMBER
 try{
     $env:GITHUB_SHA='a'*40;$env:PREPARE_RUN_ID='500';$env:GITHUB_RUN_NUMBER='777'
@@ -132,5 +183,5 @@ Check 'unknown-plus-health-never-success' {
     $r=ConvertTo-StagingEvidence $p $a|ConvertFrom-Json
     $r.publishing.outcome -ceq 'Unknown' -and $r.manualReconciliationRequired
 }
-if($count -ne 91){throw "Reusable release inventory mismatch: $count"}
+if($count -ne 99){throw "Reusable release inventory mismatch: $count"}
 Write-Output "PASS: $count offline reusable release approval/history/correlation regressions. No upload or live API."
