@@ -55,19 +55,19 @@ foreach($raw in @($good.Replace($id,('b'*32)),$good.Replace('"status":4','"statu
     $json=$raw;Check ('invalid-status-'+$n) {(Read-KuduStatus ([Text.Encoding]::UTF8.GetBytes($json)) $id) -ceq 'Unknown'}
 }
 Check 'status-extra-private-fields-discarded' {(Read-KuduStatus ([Text.Encoding]::UTF8.GetBytes($good.Replace('}',(',"message":"'+$canary+'","log_url":"https://evil.invalid"}')))) $id) -ceq 'ConfirmedSuccess'}
-$expected=@{};foreach($name in @('GarageSaas.dll','SignupAPI.dll')){$expected[$name]=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($name))).ToLowerInvariant()}
-function Acceptance($BinaryCode=200,$HealthCode=200,$HealthText='Healthy',[switch]$WrongBinary){
-    $state=$script:requests
+$expected='c'*40
+function Acceptance($VersionCode=200,$HealthCode=200,$HealthText='Healthy',[switch]$WrongVersion){
     $transport={param($kind,$url,$body)
-        if($kind -ceq 'Binary'){return Reply $BinaryCode $null $(if($WrongBinary){'wrong'}else{$url.Substring($url.LastIndexOf('/')+1)})}
+        if($kind -ceq 'Version'){return Reply $VersionCode $null ('{"commit":"'+$(if($WrongVersion){'d'*40}else{$expected})+'"}')}
+        if($kind -cne 'Health'){throw 'Unexpected operation.'}
         return Reply $HealthCode $null $HealthText
     }
     Get-StagingAcceptance $transport $expected
 }
 $healthy=Acceptance
-Check 'identity-and-health-required' {$healthy.outcome -ceq 'VerifiedHealthy' -and $healthy.identity -ceq 'ApprovedDeployedBinaryHashes'}
-Check 'http200-not-identity' {(Acceptance -WrongBinary).outcome -ceq 'NotVerified'}
-Check 'binary-unavailable' {(Acceptance -BinaryCode 403).outcome -ceq 'NotVerified'}
+Check 'identity-and-health-required' {$healthy.outcome -ceq 'VerifiedHealthy' -and $healthy.identity -ceq 'RunningApplicationCommit'}
+Check 'http200-not-identity' {(Acceptance -WrongVersion).outcome -ceq 'NotVerified'}
+Check 'version-unavailable' {(Acceptance -VersionCode 403).outcome -ceq 'NotVerified'}
 Check 'identity-health-failure' {(Acceptance -HealthCode 503).outcome -ceq 'VerifiedUnhealthy'}
 Check 'health-redirect-rejected' {(Acceptance -HealthCode 302).outcome -ceq 'VerifiedUnhealthy'}
 Check 'health-canary-rejected' {(Acceptance -HealthText $canary).outcome -ceq 'VerifiedUnhealthy'}
@@ -95,11 +95,11 @@ Check 'transport-exception-canary-private' {
 
 # Actual HTTP adapter with a synthetic client: no socket, server, Azure or token.
 function Fake-Client($Code=202,$Text='',$Location=$null,[switch]$Timeout){
-    $o=[pscustomobject]@{Code=$Code;Text=$Text;Location=$Location;Timeout=[bool]$Timeout;Calls=0;Bearer=$false;Method=$null;FreshBinary=$false}
+    $o=[pscustomobject]@{Code=$Code;Text=$Text;Location=$Location;Timeout=[bool]$Timeout;Calls=0;Bearer=$false;Method=$null;FreshRead=$false}
     $o|Add-Member ScriptMethod SendAsync {
         param($request,$option,$cancel)
         $this.Calls++;$this.Bearer=($request.Headers.Authorization.Scheme -ceq 'Bearer');$this.Method=$request.Method.Method
-        $this.FreshBinary=($null -ne $request.Headers.CacheControl -and $request.Headers.CacheControl.NoCache -and $request.Headers.CacheControl.NoStore)
+        $this.FreshRead=($null -ne $request.Headers.CacheControl -and $request.Headers.CacheControl.NoCache -and $request.Headers.CacheControl.NoStore)
         if($this.Timeout){throw [OperationCanceledException]::new('synthetic-secret-never-publish-9248')}
         $r=[Net.Http.HttpResponseMessage]::new([Net.HttpStatusCode]$this.Code)
         $r.Content=[Net.Http.StringContent]::new($this.Text)
@@ -228,49 +228,56 @@ foreach($json in @($siteJson.Replace('"id":','"ID":"wrong","id":'),$siteJson.Rep
 Check 'arm-alternate-version-rejected' {!(Test-KuduEndpoint ('https://management.azure.com'+$metadata.id+'?api-version=2024-01-01') Target)}
 Check 'arm-redirect-not-followed' {$c=Fake-Client 302 $canary 'https://evil.invalid';$r=Invoke-KuduHttp $c Target ('https://management.azure.com'+$metadata.id+'?api-version=2024-11-01') $canary;$c.Calls -eq 1 -and $r.code -eq 302}
 Check 'history-current-rerun-rejected' {Reject {Assert-StagingPriorAttempts {return ('{"total_count":1,"workflow_runs":[{"id":100,"run_attempt":2}]}'|ConvertFrom-Json)} '100'}}
-Check 'binary-soft-hyphen-host-rejected' {!(Test-KuduEndpoint ($scm.Replace('garagesaas',"garage$([char]0x00ad)saas")+'/api/vfs/site/wwwroot/GarageSaas.dll') Binary)}
+Check 'version-soft-hyphen-host-rejected' {!(Test-KuduEndpoint ($site.Replace('garagesaas',"garage$([char]0x00ad)saas")+'/health/version') Version)}
 Check 'health-soft-hyphen-host-rejected' {!(Test-KuduEndpoint ($site.Replace('garagesaas',"garage$([char]0x00ad)saas")+'/health') Health)}
-# Deterministic post-publication file-view observations; no network, uploads or delay.
+# Deterministic read-only running-version and liveness polling; no sockets/delays.
 $completedPublication=[pscustomobject]@{outcome='ConfirmedSuccess';reason='ExactDeploymentActive';deploymentId=$id}
 function FinalAcceptanceFixture($Scenario,$Publication=$completedPublication){
-    $script:observations=[pscustomobject]@{garage=0;signup=0;health=0;uploads=0;waits=0}
+    $script:observations=[pscustomobject]@{version=0;health=0;uploads=0;waits=0}
     $state=$script:observations
     $transport={param($kind,$url,$body)
         if($kind -ceq 'Upload'){$state.uploads++;throw $canary}
-        if($kind -ceq 'Binary'){
-            $name=$url.Substring($url.LastIndexOf('/')+1)
-            if($name -ceq 'GarageSaas.dll'){$state.garage++}else{$state.signup++}
+        if($kind -ceq 'Version'){
+            $state.version++
             if($Scenario -ceq 'transport-error'){throw $canary}
-            if($Scenario -ceq 'unavailable'){return Reply 403 $null $canary}
-            if(($Scenario -ceq 'garage-converges' -and $name -ceq 'GarageSaas.dll' -and $state.garage -eq 1) -or
-               ($Scenario -ceq 'signup-converges' -and $name -ceq 'SignupAPI.dll' -and $state.signup -eq 1) -or
-               ($Scenario -ceq 'garage-mismatch' -and $name -ceq 'GarageSaas.dll') -or
-               ($Scenario -ceq 'signup-mismatch' -and $name -ceq 'SignupAPI.dll') -or
-               $Scenario -ceq 'wait-error'){return Reply 200 $null 'different bytes'}
-            return Reply 200 $null $name
+            if($Scenario -ceq 'timeout'){return Reply 0 $null $canary 'Timeout'}
+            if($Scenario -ceq 'unavailable'){return Reply 503 $null $canary}
+            if($Scenario -ceq 'malformed'){return Reply 200 $null $canary}
+            $commit=if($Scenario -cin @('mismatch','wait-error') -or ($Scenario -ceq 'converges' -and $state.version -eq 1)){'d'*40}else{$expected}
+            return Reply 200 $null ('{"commit":"'+$commit+'"}')
         }
         if($kind -cne 'Health'){throw $canary}
         $state.health++
-        return Reply $(if($Scenario -ceq 'unhealthy'){503}else{200}) $null 'Healthy'
+        return Reply $(if($Scenario -ceq 'unhealthy' -or ($Scenario -ceq 'startup' -and $state.health -eq 1)){503}else{200}) $null 'Healthy'
     }
-    $wait={ $state.waits++;if($Scenario -ceq 'wait-error'){throw $canary} }
-    Get-StagingFinalAcceptance -Publishing $Publication -Transport $transport -Expected $expected -ObservationWait $wait
+    $wait={$state.waits++;if($Scenario -ceq 'wait-error'){throw $canary}}
+    $result=Get-StagingFinalAcceptance -Publishing $Publication -Transport $transport -ExpectedCommit $expected -ObservationWait $wait
+    if($state.uploads -ne 0){throw 'Acceptance must never publish.'}
+    return $result
 }
-Check 'final-first-observation-exact' {$r=FinalAcceptanceFixture 'exact';$r.outcome -ceq 'VerifiedHealthy' -and $observations.garage -eq 1 -and $observations.signup -eq 1 -and $observations.health -eq 1 -and $observations.waits -eq 0 -and $observations.uploads -eq 0}
-Check 'final-garage-view-converges' {$r=FinalAcceptanceFixture 'garage-converges';$r.outcome -ceq 'VerifiedHealthy' -and $observations.garage -eq 2 -and $observations.signup -eq 1 -and $observations.health -eq 1 -and $observations.waits -eq 1 -and $observations.uploads -eq 0}
-Check 'final-signup-view-converges' {$r=FinalAcceptanceFixture 'signup-converges';$r.outcome -ceq 'VerifiedHealthy' -and $observations.garage -eq 2 -and $observations.signup -eq 2 -and $observations.health -eq 1 -and $observations.waits -eq 1 -and $observations.uploads -eq 0}
-Check 'final-persistent-garage-mismatch-blocks' {$r=FinalAcceptanceFixture 'garage-mismatch';$r.reason -ceq 'IdentityMismatch' -and $r.outcome -ceq 'NotVerified' -and $observations.garage -eq 3 -and $observations.signup -eq 0 -and $observations.health -eq 0 -and $observations.waits -eq 2 -and $observations.uploads -eq 0}
-Check 'final-persistent-signup-mismatch-blocks' {$r=FinalAcceptanceFixture 'signup-mismatch';$r.reason -ceq 'IdentityMismatch' -and $r.outcome -ceq 'NotVerified' -and $observations.garage -eq 3 -and $observations.signup -eq 3 -and $observations.health -eq 0 -and $observations.waits -eq 2 -and $observations.uploads -eq 0}
-Check 'final-no-health-retry' {$r=FinalAcceptanceFixture 'unhealthy';$r.outcome -ceq 'VerifiedUnhealthy' -and $observations.garage -eq 1 -and $observations.health -eq 1 -and $observations.waits -eq 0}
-Check 'final-no-unavailable-retry' {$r=FinalAcceptanceFixture 'unavailable';$r.reason -ceq 'IdentityUnavailable' -and $observations.garage -eq 1 -and $observations.health -eq 0 -and $observations.waits -eq 0}
-Check 'final-unknown-publication-not-upgraded' {$r=FinalAcceptanceFixture 'exact' $unknown;$r.outcome -ceq 'NotVerified' -and $observations.garage -eq 0 -and $observations.health -eq 0 -and $observations.uploads -eq 0}
-Check 'final-failed-publication-not-upgraded' {$p=$completedPublication.PSObject.Copy();$p.outcome='ConfirmedFailure';$r=FinalAcceptanceFixture 'exact' $p;$r.outcome -ceq 'NotVerified' -and $observations.garage -eq 0}
-Check 'final-missing-correlation-blocks' {$p=$completedPublication.PSObject.Copy();$p.deploymentId=$null;$r=FinalAcceptanceFixture 'exact' $p;$r.outcome -ceq 'NotVerified' -and $observations.garage -eq 0}
-Check 'final-wait-failure-preserves-mismatch' {$r=FinalAcceptanceFixture 'wait-error';$j=ConvertTo-StagingEvidence $completedPublication $r;$r.reason -ceq 'IdentityMismatch' -and $observations.garage -eq 1 -and $observations.waits -eq 1 -and !$j.Contains($canary)}
-Check 'final-transport-failure-private' {$r=FinalAcceptanceFixture 'transport-error';$j=ConvertTo-StagingEvidence $completedPublication $r;$r.outcome -ceq 'NotVerified' -and $observations.garage -eq 1 -and $observations.waits -eq 0 -and !$j.Contains($canary)}
-Check 'final-unverified-acceptance-requires-reconciliation' {$r=FinalAcceptanceFixture 'garage-mismatch';$j=ConvertTo-StagingEvidence $completedPublication $r;$e=$j|ConvertFrom-Json;$e.manualReconciliationRequired -and $e.publishing.outcome -ceq 'ConfirmedSuccess' -and $e.runningProcessVersion -ceq 'NotVerified' -and $e.authenticatedAcceptance -ceq 'NotVerified'}
-Check 'binary-observation-requests-fresh-view' {$c=Fake-Client 200 'GarageSaas.dll';$r=Invoke-KuduHttp $c Binary ($scm+'/api/vfs/site/wwwroot/GarageSaas.dll') $canary;$r.code -eq 200 -and $c.Calls -eq 1 -and $c.Method -ceq 'GET' -and $c.FreshBinary}
-if($n -ne 151){throw "Controlled publishing inventory mismatch: $n"}
+Check 'final-first-observation-exact' {$r=FinalAcceptanceFixture 'exact';$r.outcome -ceq 'VerifiedHealthy' -and $observations.version -eq 1 -and $observations.health -eq 1 -and $observations.waits -eq 0}
+Check 'final-version-converges' {$r=FinalAcceptanceFixture 'converges';$r.outcome -ceq 'VerifiedHealthy' -and $observations.version -eq 2 -and $observations.health -eq 1 -and $observations.waits -eq 1}
+Check 'final-delayed-startup' {$r=FinalAcceptanceFixture 'startup';$r.outcome -ceq 'VerifiedHealthy' -and $observations.version -eq 2 -and $observations.health -eq 2 -and $observations.waits -eq 1}
+Check 'final-persistent-version-mismatch-blocks' {$r=FinalAcceptanceFixture 'mismatch';$r.reason -ceq 'IdentityMismatch' -and $r.outcome -ceq 'NotVerified' -and $observations.version -eq 6 -and $observations.health -eq 0 -and $observations.waits -eq 5}
+Check 'final-persistent-unhealthy-blocks' {$r=FinalAcceptanceFixture 'unhealthy';$r.reason -ceq 'LivenessRejected' -and $r.outcome -ceq 'VerifiedUnhealthy' -and $observations.version -eq 6 -and $observations.health -eq 6 -and $observations.waits -eq 5}
+Check 'final-unavailable-bounded' {$r=FinalAcceptanceFixture 'unavailable';$r.reason -ceq 'IdentityUnavailable' -and $observations.version -eq 6 -and $observations.health -eq 0 -and $observations.waits -eq 5}
+Check 'final-unknown-publication-not-upgraded' {$r=FinalAcceptanceFixture 'exact' $unknown;$r.outcome -ceq 'NotVerified' -and $observations.version -eq 0 -and $observations.health -eq 0}
+Check 'final-failed-publication-not-upgraded' {$p=$completedPublication.PSObject.Copy();$p.outcome='ConfirmedFailure';$r=FinalAcceptanceFixture 'exact' $p;$r.outcome -ceq 'NotVerified' -and $observations.version -eq 0}
+Check 'final-missing-correlation-blocks' {$p=$completedPublication.PSObject.Copy();$p.deploymentId=$null;$r=FinalAcceptanceFixture 'exact' $p;$r.outcome -ceq 'NotVerified' -and $observations.version -eq 0}
+Check 'final-wait-failure-private' {$r=FinalAcceptanceFixture 'wait-error';$j=ConvertTo-StagingEvidence $completedPublication $r;$r.reason -ceq 'IdentityMismatch' -and $observations.version -eq 1 -and $observations.waits -eq 1 -and !$j.Contains($canary)}
+Check 'final-transport-failure-private' {$r=FinalAcceptanceFixture 'transport-error';$j=ConvertTo-StagingEvidence $completedPublication $r;$r.outcome -ceq 'NotVerified' -and $observations.version -eq 6 -and !$j.Contains($canary)}
+Check 'final-unverified-requires-reconciliation' {$r=FinalAcceptanceFixture 'mismatch';$e=ConvertTo-StagingEvidence $completedPublication $r|ConvertFrom-Json;$e.manualReconciliationRequired -and $e.publishing.outcome -ceq 'ConfirmedSuccess' -and $e.runningProcessVersion -ceq 'NotVerified' -and $e.authenticatedAcceptance -ceq 'NotVerified'}
+Check 'version-http-anonymous-uncached' {$c=Fake-Client 200 ('{"commit":"'+$expected+'"}');$r=Invoke-KuduHttp $c Version ($site+'/health/version') $canary;$r.code -eq 200 -and $c.Calls -eq 1 -and $c.Method -ceq 'GET' -and $c.FreshRead -and !$c.Bearer}
+Check 'final-timeout-bounded' {$r=FinalAcceptanceFixture 'timeout';$r.reason -ceq 'AcceptanceTimeout' -and $observations.version -eq 6 -and $observations.health -eq 0}
+Check 'final-malformed-not-polled' {$r=FinalAcceptanceFixture 'malformed';$r.reason -ceq 'InvalidVersionResponse' -and $observations.version -eq 1 -and $observations.waits -eq 0}
+Check 'running-version-receipt-separate-from-functional-acceptance' {$e=ConvertTo-StagingEvidence $completedPublication $healthy|ConvertFrom-Json;$e.runningProcessVersion -ceq 'Verified' -and $e.authenticatedAcceptance -ceq 'NotVerified' -and !$e.manualReconciliationRequired}
+Check 'no-vfs-acceptance-path' {!(Test-KuduEndpoint ($scm+'/api/vfs/site/wwwroot/GarageSaas.dll') Version)}
+foreach($raw in @('{','[]','null','{}','{"commit":42}',('{"commit":"'+$expected+'","commit":"'+$expected+'"}'),('{"Commit":"'+$expected+'"}'),('{"commit":"'+$expected+'","token":"'+$canary+'"}'),('{"commit":"'+('0'*40)+'"}'),('{"commit":"'+('A'*40)+'"}'),('{"commit":"'+$expected+'\n"}'),('x'*257))){
+    $value=$raw;Check ('invalid-version-payload-'+$n) {$null -eq (Read-StagingRunningCommit ([Text.Encoding]::UTF8.GetBytes($value)))}
+}
+Check 'invalid-version-utf8-rejected' {$null -eq (Read-StagingRunningCommit ([byte[]]@(255,254,0)))}
+Check 'version-endpoint-host-redirect-query-rejected' {!(Test-KuduEndpoint ($site+'/health/version?commit='+$expected) Version) -and !(Test-KuduEndpoint ($site.Replace('.azurewebsites.net','.evil.invalid')+'/health/version') Version)}
+if($n -ne 168){throw "Controlled publishing inventory mismatch: $n"}
 $python=Join-Path $env:ProgramFiles 'Microsoft SDKs/Azure/CLI2/python.exe'
 $scmTests=Invoke-StagingBoundedProcess -Executable $python -Arguments @('-I',(Join-Path $PSScriptRoot 'Test-StagingScmAccess.py')) -TimeoutMilliseconds 60000
 if($null -eq $scmTests.exitCode -or $scmTests.exitCode -ne 0 -or $scmTests.timedOut -or $scmTests.interrupted -or $scmTests.oversized -or

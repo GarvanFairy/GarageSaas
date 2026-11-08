@@ -1,5 +1,79 @@
 # Controlled Staging publishing (implementation only)
 
+## Running-application acceptance contract — 8 November 2026
+
+This section supersedes the individual deployed-DLL acceptance requirement below.
+Prepare is unchanged: its exact checkout, full test/security gates, tested runtime
+fingerprint, both assembly informational commits, immutable ZIP and SHA-256 remain
+mandatory. Promote retains exact approval/provenance/ZIP/target validation, one-use
+authorization, durable history guards and exactly one correlated Kudu upload.
+
+`GET /health/version` returns only `{"commit":"<40 lowercase hex characters>"}`.
+It is anonymous, GET-only and `Cache-Control: no-store`. Its value comes from the
+`AssemblyInformationalVersionAttribute` of the **loaded** GarageSaas and SignupAPI
+assemblies. Both must contain the same non-placeholder source commit or the
+endpoint returns fixed HTTP 503 / Unavailable. It never reads configuration,
+environment variables, request parameters, a manifest or an on-disk version file.
+Prepare already verifies this SDK-generated informational commit against the
+selected source, so no new build-stamping mechanism or Prepare modification is
+needed. This attests the responding worker, not every worker in a scaled service,
+and does not cryptographically hash process memory.
+
+After `ConfirmedSuccess / ExactDeploymentActive`, acceptance performs at most six
+read-only observations, two seconds apart. Each observation requires the exact
+approved commit at `/health/version` followed by `/health` HTTP 200 / `Healthy`.
+Each GET keeps the existing ten-second cancellation deadline; version bodies are
+limited to 256 bytes and health bodies to 64 bytes. The maximum HTTP/wait budget
+is 130 seconds (12 GETs plus five waits). No redirects, alternate hosts, bearer
+tokens to the public endpoints, additional upload, restart or redeployment are
+allowed. Unknown or failed publication is never upgraded by health/version.
+Persistent mismatches, unhealthy/unavailable responses and timeouts fail. Malformed
+version JSON (including extra/duplicate fields, invalid commit/type/UTF-8 and
+oversized content) cannot pass. Delayed startup may converge within this bounded
+window. DLL downloads/hashes are no longer mandatory post-deployment acceptance.
+
+New receipts use schema 3 and identity `RunningApplicationCommit`.
+`runningProcessVersion: Verified` means the responding loaded assemblies matched
+the approved commit; `VerifiedHealthy` additionally requires health. Authenticated
+functional acceptance remains `NotVerified` until separately exercised. Prior
+schema 1/2 receipts retain their original disk-identity meaning and are immutable.
+
+### Reconciliation of Promote 42500023698/1 (workflow number 11)
+
+[The historical run](https://github.com/GarvanFairy/GarageSaas/actions/runs/42500023698)
+published approved application `d41faa411ccab07fbef88f6e2fd909aed1b54564` from
+Prepare 42425672300/1, artifact 13595493579, ZIP SHA-256
+`b64402e3f5a11661a2f60c2096e5753a5b938e95b84a47c78ddc41275d620995`.
+Its original receipt reports `ConfirmedSuccess / ExactDeploymentActive` for
+`ddf5ddf63b7c4ee98aa5df99125db18f`, and `NotVerified / IdentityMismatch` for
+application acceptance. On 8 November at 20:12 UTC a bounded read-only GET of
+that exact Kudu record independently confirmed status 4, active and complete.
+The complete four-job attempt-specific GitHub inventory is fingerprinted by
+`deployment/staging/reconciliations/42500023698-1.json`.
+
+This is **ConfirmedSuccess for publication only**, never NoPublication. The run
+still failed historically; application acceptance, health verification and loaded
+version remain NotVerified in its original receipt. The owner's observation that
+the updated address view is visible supports functional progress but does not
+rewrite that receipt or attest its exact loaded commit. Approval
+`b5a78d990c83e62f5ac39d527f1e8b06` remains consumed.
+
+### Migration and next authorized operations
+
+The deployed older artifact has no `/health/version`; it cannot satisfy this new
+contract and there is no fallback to DLL checks, health alone or operator assertion.
+After review/merge and required master CI, a **separately authorized new Prepare**
+must produce an immutable artifact containing the endpoint. Only a separately
+approved one-use release/Promote may publish it. Do not rebuild, patch or relabel
+the previously approved ZIP. This PR authorizes none of those operations.
+
+Post-publication authenticated acceptance still requires the prepared synthetic
+B2C mapping/membership and read-only customer addresses (lines 1–4/postcode),
+vehicles, quote/invoice relationships and cross-garage denial checks. Address
+save/reload, identity binding and any data mutation require separate authorization.
+Keep SMTP/OpenAI disabled. A healthy version endpoint does not verify database,
+B2C, tenant isolation, business correctness or successful recovery.
+
 ## Current reconciliation — 7 November 2026
 
 This section supersedes the historical implementation/readiness statements below;

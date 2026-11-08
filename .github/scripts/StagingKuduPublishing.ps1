@@ -38,13 +38,13 @@ function Assert-ControlledStagingContext {
 }
 
 function Test-KuduEndpoint {
-    param([string]$Url,[ValidateSet('Upload','History','Status','Binary','Health','Target')][string]$Kind)
+    param([string]$Url,[ValidateSet('Upload','History','Status','Version','Health','Target')][string]$Kind)
     # Match the original string, not a URI-normalized path (dot/escape ambiguity).
     switch -CaseSensitive ($Kind){
         Upload {return [string]::Equals($Url,$script:StagingScm+'/api/zipdeploy?isAsync=true',[StringComparison]::Ordinal) -or [regex]::IsMatch($Url,'\A'+[regex]::Escape($script:StagingScm)+'/api/zipdeploy\?isAsync=true&message=GarageSaas-[a-f0-9]{32}\z')}
         History {return [string]::Equals($Url,$script:StagingScm+'/api/deployments',[StringComparison]::Ordinal)}
         Status {return [regex]::IsMatch($Url,'\A'+[regex]::Escape($script:StagingScm)+'/api/deployments/[a-f0-9]{32}\z',[Text.RegularExpressions.RegexOptions]::CultureInvariant)}
-        Binary {return [string]::Equals($Url,$script:StagingScm+'/api/vfs/site/wwwroot/GarageSaas.dll',[StringComparison]::Ordinal) -or [string]::Equals($Url,$script:StagingScm+'/api/vfs/site/wwwroot/SignupAPI.dll',[StringComparison]::Ordinal)}
+        Version {return [string]::Equals($Url,$script:StagingSite+'/health/version',[StringComparison]::Ordinal)}
         Health {return [string]::Equals($Url,$script:StagingSite+'/health',[StringComparison]::Ordinal)}
         Target {return [string]::Equals($Url,'https://management.azure.com/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu?api-version=2024-11-01',[StringComparison]::Ordinal)}
     }
@@ -70,11 +70,11 @@ function Invoke-KuduHttp {
         if(!(Test-KuduEndpoint $Url $Kind)){return [pscustomobject]$safe}
         $method=if($Kind -ceq 'Upload'){[Net.Http.HttpMethod]::Post}else{[Net.Http.HttpMethod]::Get}
         $request=[Net.Http.HttpRequestMessage]::new($method,$Url)
-        if($Kind -ceq 'Binary'){
+        if($Kind -cin @('Health','Version')){
             $request.Headers.CacheControl=[Net.Http.Headers.CacheControlHeaderValue]::new()
             $request.Headers.CacheControl.NoCache=$true;$request.Headers.CacheControl.NoStore=$true
         }
-        if($Kind -cne 'Health'){$request.Headers.Authorization=[Net.Http.Headers.AuthenticationHeaderValue]::new('Bearer',$Token)}
+        if($Kind -cnotin @('Health','Version')){$request.Headers.Authorization=[Net.Http.Headers.AuthenticationHeaderValue]::new('Bearer',$Token)}
         if($Kind -ceq 'Upload'){
             $request.Content=[Net.Http.StreamContent]::new($Zip)
             $request.Content.Headers.ContentType=[Net.Http.Headers.MediaTypeHeaderValue]::new('application/zip')
@@ -171,23 +171,38 @@ function Invoke-ControlledKuduUpload {
     return $receipt
 }
 
+function Read-StagingRunningCommit([byte[]]$Bytes) {
+    $doc=$null
+    try{
+        if($Bytes.Length -eq 0 -or $Bytes.Length -gt 256){return $null}
+        $doc=[Text.Json.JsonDocument]::Parse([Text.UTF8Encoding]::new($false,$true).GetString($Bytes),[Text.Json.JsonDocumentOptions]@{MaxDepth=2})
+        if($doc.RootElement.ValueKind -ne [Text.Json.JsonValueKind]::Object){return $null}
+        $fields=@($doc.RootElement.EnumerateObject())
+        if($fields.Count -ne 1 -or $fields[0].Name -cne 'commit'){return $null}
+        $commit=$fields[0].Value.GetString()
+        if($commit -cmatch '\A(?!0{40})[a-f0-9]{40}\z'){return $commit}
+    }catch{}finally{if($doc){$doc.Dispose()}}
+    return $null
+}
+
 function Get-StagingAcceptance {
-    param([scriptblock]$Transport,[Collections.IDictionary]$Expected)
+    param([scriptblock]$Transport,[string]$ExpectedCommit)
     $result=[pscustomobject]@{outcome='NotVerified';reason='IdentityUnavailable';identity='Unavailable'}
     try{
-        # Disk identity AND health are required. This is not authenticated functional
-        # acceptance or proof that an already running process loaded these bytes.
-        foreach($name in @('GarageSaas.dll','SignupAPI.dll')){
-            if(!$Expected.Contains($name) -or $Expected[$name] -cnotmatch '\A[a-f0-9]{64}\z'){return $result}
-            $r=& $Transport 'Binary' ($script:StagingScm+'/api/vfs/site/wwwroot/'+$name) $null
-            if($r.failure -cne 'None' -or $r.code -ne 200){return $result}
-            $hash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([byte[]]$r.bytes)).ToLowerInvariant()
-            if($hash -cne $Expected[$name]){$result.reason='IdentityMismatch';return $result}
+        if($ExpectedCommit -cnotmatch '\A(?!0{40})[a-f0-9]{40}\z'){return $result}
+        $r=& $Transport 'Version' ($script:StagingSite+'/health/version') $null
+        if($r.failure -cne 'None'){
+            if($r.failure -ceq 'Timeout'){$result.reason='AcceptanceTimeout'}
+            return $result
         }
-        $result.identity='ApprovedDeployedBinaryHashes'
+        if($r.code -ne 200){return $result}
+        $commit=Read-StagingRunningCommit $r.bytes
+        if(!$commit){$result.reason='InvalidVersionResponse';return $result}
+        if($commit -cne $ExpectedCommit){$result.reason='IdentityMismatch';return $result}
+        $result.identity='RunningApplicationCommit'
         $r=& $Transport 'Health' ($script:StagingSite+'/health') $null
-        if($r.failure -cne 'None'){$result.reason='HealthUnavailable';return $result}
-        if($r.code -eq 200 -and [Text.Encoding]::UTF8.GetString($r.bytes).Trim() -ceq 'Healthy'){
+        if($r.failure -cne 'None'){$result.reason=if($r.failure -ceq 'Timeout'){'AcceptanceTimeout'}else{'HealthUnavailable'};return $result}
+        if($r.code -eq 200 -and $r.bytes.Length -le 64 -and [Text.UTF8Encoding]::new($false,$true).GetString($r.bytes).Trim() -ceq 'Healthy'){
             $result.outcome='VerifiedHealthy';$result.reason='IdentityAndLiveness'
         }else{$result.outcome='VerifiedUnhealthy';$result.reason='LivenessRejected'}
     }catch{}
@@ -195,19 +210,18 @@ function Get-StagingAcceptance {
 }
 
 function Get-StagingFinalAcceptance {
-    param($Publishing,[scriptblock]$Transport,[Collections.IDictionary]$Expected,
+    param($Publishing,[scriptblock]$Transport,[string]$ExpectedCommit,
         [scriptblock]$ObservationWait={ [Threading.Thread]::Sleep(2000) })
     $result=[pscustomobject]@{outcome='NotVerified';reason='IdentityUnavailable';identity='Unavailable'}
-    # Publication must already be independently correlated and complete. These
-    # observations never issue an upload, change a file, or retry publication.
     if($Publishing.outcome -cne 'ConfirmedSuccess' -or $Publishing.reason -cne 'ExactDeploymentActive' -or
-       $Publishing.deploymentId -cnotmatch '\A[a-f0-9]{32}\z'){return $result}
-    for($observation=0;$observation -lt 3;$observation++){
+       $Publishing.deploymentId -cnotmatch '\A[a-f0-9]{32}\z' -or
+       $ExpectedCommit -cnotmatch '\A(?!0{40})[a-f0-9]{40}\z'){return $result}
+    # At most six read-only observations, each with bounded HTTP operations.
+    # No upload, restart or publication retry is possible through this function.
+    for($observation=0;$observation -lt 6;$observation++){
         if($observation -gt 0){try{& $ObservationWait|Out-Null}catch{return $result}}
-        $result=Get-StagingAcceptance -Transport $Transport -Expected $Expected
-        # Only a changing file view after completed publication is observed again.
-        # Every observation requires both exact DLL hashes before reading health.
-        if($result.outcome -cne 'NotVerified' -or $result.reason -cne 'IdentityMismatch'){return $result}
+        $result=Get-StagingAcceptance -Transport $Transport -ExpectedCommit $ExpectedCommit
+        if($result.outcome -ceq 'VerifiedHealthy' -or $result.reason -ceq 'InvalidVersionResponse'){return $result}
     }
     return $result
 }
@@ -219,8 +233,8 @@ function ConvertTo-StagingEvidence {
        !(Test-KuduChoice $Publishing.reason @('Interrupted','Timeout','OutputLimit','InvalidResponse','UnexpectedResponse','MissingCorrelation','StatusUnavailable','ExactDeploymentActive','ExactDeploymentFailed','CompletionUnproven','PreflightRejected')) -or
        ($null -ne $Publishing.deploymentId -and $Publishing.deploymentId -cnotmatch '\A[a-f0-9]{32}\z') -or
        !(Test-KuduChoice $Acceptance.outcome @('VerifiedHealthy','VerifiedUnhealthy','NotVerified')) -or
-       !(Test-KuduChoice $Acceptance.reason @('IdentityUnavailable','IdentityMismatch','HealthUnavailable','IdentityAndLiveness','LivenessRejected')) -or
-       !(Test-KuduChoice $Acceptance.identity @('Unavailable','ApprovedDeployedBinaryHashes'))){throw 'Invalid sanitized staging evidence.'}
+       !(Test-KuduChoice $Acceptance.reason @('IdentityUnavailable','IdentityMismatch','HealthUnavailable','IdentityAndLiveness','LivenessRejected','InvalidVersionResponse','AcceptanceTimeout')) -or
+       !(Test-KuduChoice $Acceptance.identity @('Unavailable','RunningApplicationCommit'))){throw 'Invalid sanitized staging evidence.'}
     foreach($pair in @(@($Publishing,@('outcome','reason','deploymentId')),@($Acceptance,@('outcome','reason','identity')))){
         $keys=@($pair[0].PSObject.Properties.Name)
         if($keys.Count -ne 3 -or @($keys|Where-Object {!(Test-KuduChoice $_ $pair[1])}).Count){throw 'Unexpected evidence field.'}
@@ -229,14 +243,14 @@ function ConvertTo-StagingEvidence {
        ($Publishing.outcome -ceq 'ConfirmedFailure' -and $Publishing.reason -cnotin @('PreflightRejected','ExactDeploymentFailed')) -or
        ($Publishing.reason -ceq 'ExactDeploymentFailed' -and (!$Publishing.deploymentId -or $Publishing.outcome -cne 'ConfirmedFailure')) -or
        ($Publishing.outcome -ceq 'Unknown' -and $Publishing.reason -cin @('PreflightRejected','ExactDeploymentFailed','ExactDeploymentActive')) -or
-       ($Acceptance.outcome -ceq 'VerifiedHealthy' -and ($Acceptance.reason -cne 'IdentityAndLiveness' -or $Acceptance.identity -cne 'ApprovedDeployedBinaryHashes')) -or
-       ($Acceptance.outcome -ceq 'VerifiedUnhealthy' -and ($Acceptance.reason -cne 'LivenessRejected' -or $Acceptance.identity -cne 'ApprovedDeployedBinaryHashes'))){throw 'Inconsistent staging evidence.'}
-    [ordered]@{schema=1;expectedCommit=$script:StagingCommit;zipSha256=$script:StagingHash
+       ($Acceptance.outcome -ceq 'VerifiedHealthy' -and ($Acceptance.reason -cne 'IdentityAndLiveness' -or $Acceptance.identity -cne 'RunningApplicationCommit')) -or
+       ($Acceptance.outcome -ceq 'VerifiedUnhealthy' -and ($Acceptance.reason -cne 'LivenessRejected' -or $Acceptance.identity -cne 'RunningApplicationCommit'))){throw 'Inconsistent staging evidence.'}
+    [ordered]@{schema=3;expectedCommit=$script:StagingCommit;zipSha256=$script:StagingHash
         publishing=[ordered]@{outcome=$Publishing.outcome;reason=$Publishing.reason;deploymentId=$Publishing.deploymentId}
         applicationAcceptance=[ordered]@{outcome=$Acceptance.outcome;reason=$Acceptance.reason;identity=$Acceptance.identity}
         manualReconciliationRequired=($Publishing.outcome -ceq 'Unknown' -or
             ($Publishing.outcome -ceq 'ConfirmedSuccess' -and $Acceptance.outcome -cne 'VerifiedHealthy'))
-        authenticatedAcceptance='NotVerified';runningProcessVersion='NotVerified'}|ConvertTo-Json -Depth 4 -Compress
+        authenticatedAcceptance='NotVerified';runningProcessVersion=$(if($Publishing.outcome -ceq 'ConfirmedSuccess' -and $Acceptance.identity -ceq 'RunningApplicationCommit'){'Verified'}else{'NotVerified'})}|ConvertTo-Json -Depth 4 -Compress
 }
 
 function Stop-StagingHistory([string]$Reason) {

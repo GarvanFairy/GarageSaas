@@ -63,6 +63,24 @@ public class ProductionSecurityHttpTests
             using var health = await client.GetAsync("/health");
             Assert.AreEqual(HttpStatusCode.OK, health.StatusCode);
             Assert.AreEqual("Healthy", await health.Content.ReadAsStringAsync());
+            // The real anonymous endpoint reports loaded assembly metadata, not
+            // the test host's entry assembly or an externally supplied commit.
+            using var version = await client.GetAsync("/health/version?commit=synthetic-private");
+            Assert.AreEqual(HttpStatusCode.OK, version.StatusCode);
+            Assert.IsTrue(version.Headers.CacheControl!.NoStore);
+            using var json = System.Text.Json.JsonDocument.Parse(await version.Content.ReadAsStringAsync());
+            Assert.AreEqual(1, json.RootElement.EnumerateObject().Count());
+            var loaded = typeof(GarageSaas.Startup).Assembly
+                .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+                .Cast<System.Reflection.AssemblyInformationalVersionAttribute>().Single().InformationalVersion.Split('+').Last();
+            Assert.AreEqual(loaded, json.RootElement.GetProperty("commit").GetString());
+            Assert.IsFalse((await version.Content.ReadAsStringAsync()).Contains("synthetic-private"));
+            using var versionPost = await client.PostAsync("/health/version", new StringContent(""));
+            Assert.AreEqual(HttpStatusCode.MethodNotAllowed, versionPost.StatusCode);
+            var sha = new string('a', 40);
+            Assert.AreEqual(sha, GarageSaas.Controllers.HealthVersionController.MatchLoadedCommits("1.0.0+" + sha, "1.0.0+" + sha));
+            foreach (var invalid in new[] { null, "1.0.0", "1.0.0+" + new string('0', 40), "1.0.0+" + new string('b', 40), "1.0.0+" + sha + "\n", "1.0.0+" + sha.ToUpperInvariant(), new string('x', 1000), "1.0.0+synthetic-private" })
+                Assert.IsNull(GarageSaas.Controllers.HealthVersionController.MatchLoadedCommits("1.0.0+" + sha, invalid));
             var logoName = "garage-1-" + Guid.NewGuid().ToString("N") + ".png";
             var logoBytes = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "TestHelpers", "Fixtures", "GarageLogo.png"));
             File.WriteAllBytes(Path.Combine(logoDirectory, logoName), logoBytes);

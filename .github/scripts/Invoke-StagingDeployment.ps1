@@ -243,17 +243,9 @@ try{
     $zip=[IO.File]::Open($plan.Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
     if($zip.Length -gt 2147483648 -or [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($zip)).ToLowerInvariant() -cne $script:StagingHash){throw 'Package identity rejected.'}
     $zip.Position=0
-    $archive=[IO.Compression.ZipArchive]::new($zip,[IO.Compression.ZipArchiveMode]::Read,$true)
-    $expected=@{}
-    try{foreach($name in @('GarageSaas.dll','SignupAPI.dll')){
-        $entries=@($archive.Entries|Where-Object {$_.FullName -ceq $name})
-        if($entries.Count -ne 1 -or $entries[0].Length -gt 67108864){throw 'Package identity unavailable.'}
-        $s=$entries[0].Open();try{$expected[$name]=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($s)).ToLowerInvariant()}finally{$s.Dispose()}
-    }}finally{$archive.Dispose()}
-    $zip.Position=0
     $transport={param($kind,$url,$body)
         $seconds=if($kind -ceq 'Upload'){180}else{10}
-        $limit=if($kind -ceq 'Binary'){67108864}else{65536}
+        $limit=if($kind -ceq 'Version'){256}elseif($kind -ceq 'Health'){64}else{65536}
         Invoke-KuduHttp -Client $client -Kind $kind -Url $url -Token $auth.accessToken -Zip $body -Seconds $seconds -Limit $limit
     }
     [void][IO.Directory]::CreateDirectory('artifacts/staging-deployment')
@@ -262,7 +254,7 @@ try{
     $stamp.Dispose()
     $attempted=$true
     $publishing=Invoke-CorrelatedStagingUpload -Transport $transport -Zip $zip
-    if($publishing.outcome -ceq 'ConfirmedSuccess'){$acceptance=Get-StagingFinalAcceptance -Publishing $publishing -Transport $transport -Expected $expected}
+    if($publishing.outcome -ceq 'ConfirmedSuccess'){$acceptance=Get-StagingFinalAcceptance -Publishing $publishing -Transport $transport -ExpectedCommit $releaseApproval.commit}
 }catch{
     if($attempted){$publishing=[pscustomobject]@{outcome='Unknown';reason='Interrupted';deploymentId=$null}}
 }finally{
@@ -271,7 +263,7 @@ try{
 $evidence=ConvertTo-StagingEvidence $publishing $acceptance
 if($releaseApproval){
     $safe=$evidence|ConvertFrom-Json
-    $safe.schema=2
+    $safe.schema=3
     $safe|Add-Member controllerCommit $env:GITHUB_SHA
     $safe|Add-Member applicationCommit $releaseApproval.commit
     $safe|Add-Member prepareControllerCommit $releaseApproval.controllerCommit
