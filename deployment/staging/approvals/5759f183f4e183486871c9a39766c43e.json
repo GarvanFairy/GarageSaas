@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "approvalId": "5759f183f4e183486871c9a39766c43e",
+  "repository": "GarvanFairy/GarageSaas",
+  "commit": "acd467f6cff6b4e7e0768656480a55dfa424857a",
+  "controllerCommit": "acd467f6cff6b4e7e0768656480a55dfa424857a",
+  "prepareRun": "42533087812",
+  "prepareAttempt": "1",
+  "deploymentRunNumber": "13",
+  "artifactId": "13638124169",
+  "artifactName": "staging-release-acd467f6cff6b4e7e0768656480a55dfa424857a-42533087812",
+  "artifactDigest": "sha256:7b312b7eaf6263dc188a4307cacb02660f7da426e78b9ce5bfd0156b50ca0914",
+  "zipSha256": "5b38f3ac1cd6e40fa173460014040717754e435af0697f562e78eb00f9bf35d7",
+  "target": "/subscriptions/d49b2f61-156a-489f-ba4c-acba574d30a0/resourceGroups/GarageSaasResourceGroup/providers/Microsoft.Web/sites/garagesaas-stg-d49b2f61-weu",
+  "expiresAt": "2026-11-15T00:00:00Z"
+}
