@@ -240,7 +240,7 @@ function FinalAcceptanceFixture($Scenario,$Publication=$completedPublication){
         if($kind -ceq 'Version'){
             $state.version++
             if($Scenario -ceq 'transport-error'){throw $canary}
-            if($Scenario -ceq 'timeout'){return Reply 0 $null $canary 'Timeout'}
+            if($Scenario -ceq 'timeout' -or ($Scenario -ceq 'late-startup' -and $state.version -lt 9)){return Reply 0 $null $canary 'Timeout'}
             if($Scenario -ceq 'unavailable'){return Reply 503 $null $canary}
             if($Scenario -ceq 'malformed'){return Reply 200 $null $canary}
             $commit=if($Scenario -cin @('mismatch','wait-error') -or ($Scenario -ceq 'converges' -and $state.version -eq 1)){'d'*40}else{$expected}
@@ -258,17 +258,18 @@ function FinalAcceptanceFixture($Scenario,$Publication=$completedPublication){
 Check 'final-first-observation-exact' {$r=FinalAcceptanceFixture 'exact';$r.outcome -ceq 'VerifiedHealthy' -and $observations.version -eq 1 -and $observations.health -eq 1 -and $observations.waits -eq 0}
 Check 'final-version-converges' {$r=FinalAcceptanceFixture 'converges';$r.outcome -ceq 'VerifiedHealthy' -and $observations.version -eq 2 -and $observations.health -eq 1 -and $observations.waits -eq 1}
 Check 'final-delayed-startup' {$r=FinalAcceptanceFixture 'startup';$r.outcome -ceq 'VerifiedHealthy' -and $observations.version -eq 2 -and $observations.health -eq 2 -and $observations.waits -eq 1}
-Check 'final-persistent-version-mismatch-blocks' {$r=FinalAcceptanceFixture 'mismatch';$r.reason -ceq 'IdentityMismatch' -and $r.outcome -ceq 'NotVerified' -and $observations.version -eq 6 -and $observations.health -eq 0 -and $observations.waits -eq 5}
-Check 'final-persistent-unhealthy-blocks' {$r=FinalAcceptanceFixture 'unhealthy';$r.reason -ceq 'LivenessRejected' -and $r.outcome -ceq 'VerifiedUnhealthy' -and $observations.version -eq 6 -and $observations.health -eq 6 -and $observations.waits -eq 5}
-Check 'final-unavailable-bounded' {$r=FinalAcceptanceFixture 'unavailable';$r.reason -ceq 'IdentityUnavailable' -and $observations.version -eq 6 -and $observations.health -eq 0 -and $observations.waits -eq 5}
+Check 'final-late-startup-after-eight-observations' {$r=FinalAcceptanceFixture 'late-startup';$r.outcome -ceq 'VerifiedHealthy' -and $observations.version -eq 9 -and $observations.health -eq 1 -and $observations.waits -eq 8}
+Check 'final-persistent-version-mismatch-blocks' {$r=FinalAcceptanceFixture 'mismatch';$r.reason -ceq 'IdentityMismatch' -and $r.outcome -ceq 'NotVerified' -and $observations.version -eq 12 -and $observations.health -eq 0 -and $observations.waits -eq 11}
+Check 'final-persistent-unhealthy-blocks' {$r=FinalAcceptanceFixture 'unhealthy';$r.reason -ceq 'LivenessRejected' -and $r.outcome -ceq 'VerifiedUnhealthy' -and $observations.version -eq 12 -and $observations.health -eq 12 -and $observations.waits -eq 11}
+Check 'final-unavailable-bounded' {$r=FinalAcceptanceFixture 'unavailable';$r.reason -ceq 'IdentityUnavailable' -and $observations.version -eq 12 -and $observations.health -eq 0 -and $observations.waits -eq 11}
 Check 'final-unknown-publication-not-upgraded' {$r=FinalAcceptanceFixture 'exact' $unknown;$r.outcome -ceq 'NotVerified' -and $observations.version -eq 0 -and $observations.health -eq 0}
 Check 'final-failed-publication-not-upgraded' {$p=$completedPublication.PSObject.Copy();$p.outcome='ConfirmedFailure';$r=FinalAcceptanceFixture 'exact' $p;$r.outcome -ceq 'NotVerified' -and $observations.version -eq 0}
 Check 'final-missing-correlation-blocks' {$p=$completedPublication.PSObject.Copy();$p.deploymentId=$null;$r=FinalAcceptanceFixture 'exact' $p;$r.outcome -ceq 'NotVerified' -and $observations.version -eq 0}
 Check 'final-wait-failure-private' {$r=FinalAcceptanceFixture 'wait-error';$j=ConvertTo-StagingEvidence $completedPublication $r;$r.reason -ceq 'IdentityMismatch' -and $observations.version -eq 1 -and $observations.waits -eq 1 -and !$j.Contains($canary)}
-Check 'final-transport-failure-private' {$r=FinalAcceptanceFixture 'transport-error';$j=ConvertTo-StagingEvidence $completedPublication $r;$r.outcome -ceq 'NotVerified' -and $observations.version -eq 6 -and !$j.Contains($canary)}
+Check 'final-transport-failure-private' {$r=FinalAcceptanceFixture 'transport-error';$j=ConvertTo-StagingEvidence $completedPublication $r;$r.outcome -ceq 'NotVerified' -and $observations.version -eq 12 -and !$j.Contains($canary)}
 Check 'final-unverified-requires-reconciliation' {$r=FinalAcceptanceFixture 'mismatch';$e=ConvertTo-StagingEvidence $completedPublication $r|ConvertFrom-Json;$e.manualReconciliationRequired -and $e.publishing.outcome -ceq 'ConfirmedSuccess' -and $e.runningProcessVersion -ceq 'NotVerified' -and $e.authenticatedAcceptance -ceq 'NotVerified'}
 Check 'version-http-anonymous-uncached' {$c=Fake-Client 200 ('{"commit":"'+$expected+'"}');$r=Invoke-KuduHttp $c Version ($site+'/health/version') $canary;$r.code -eq 200 -and $c.Calls -eq 1 -and $c.Method -ceq 'GET' -and $c.FreshRead -and !$c.Bearer}
-Check 'final-timeout-bounded' {$r=FinalAcceptanceFixture 'timeout';$r.reason -ceq 'AcceptanceTimeout' -and $observations.version -eq 6 -and $observations.health -eq 0}
+Check 'final-timeout-bounded' {$r=FinalAcceptanceFixture 'timeout';$r.reason -ceq 'AcceptanceTimeout' -and $observations.version -eq 12 -and $observations.health -eq 0}
 Check 'final-malformed-not-polled' {$r=FinalAcceptanceFixture 'malformed';$r.reason -ceq 'InvalidVersionResponse' -and $observations.version -eq 1 -and $observations.waits -eq 0}
 Check 'running-version-receipt-separate-from-functional-acceptance' {$e=ConvertTo-StagingEvidence $completedPublication $healthy|ConvertFrom-Json;$e.runningProcessVersion -ceq 'Verified' -and $e.authenticatedAcceptance -ceq 'NotVerified' -and !$e.manualReconciliationRequired}
 Check 'no-vfs-acceptance-path' {!(Test-KuduEndpoint ($scm+'/api/vfs/site/wwwroot/GarageSaas.dll') Version)}
@@ -277,7 +278,7 @@ foreach($raw in @('{','[]','null','{}','{"commit":42}',('{"commit":"'+$expected+
 }
 Check 'invalid-version-utf8-rejected' {$null -eq (Read-StagingRunningCommit ([byte[]]@(255,254,0)))}
 Check 'version-endpoint-host-redirect-query-rejected' {!(Test-KuduEndpoint ($site+'/health/version?commit='+$expected) Version) -and !(Test-KuduEndpoint ($site.Replace('.azurewebsites.net','.evil.invalid')+'/health/version') Version)}
-if($n -ne 168){throw "Controlled publishing inventory mismatch: $n"}
+if($n -ne 169){throw "Controlled publishing inventory mismatch: $n"}
 $python=Join-Path $env:ProgramFiles 'Microsoft SDKs/Azure/CLI2/python.exe'
 $scmTests=Invoke-StagingBoundedProcess -Executable $python -Arguments @('-I',(Join-Path $PSScriptRoot 'Test-StagingScmAccess.py')) -TimeoutMilliseconds 60000
 if($null -eq $scmTests.exitCode -or $scmTests.exitCode -ne 0 -or $scmTests.timedOut -or $scmTests.interrupted -or $scmTests.oversized -or

@@ -211,14 +211,15 @@ function Get-StagingAcceptance {
 
 function Get-StagingFinalAcceptance {
     param($Publishing,[scriptblock]$Transport,[string]$ExpectedCommit,
-        [scriptblock]$ObservationWait={ [Threading.Thread]::Sleep(2000) })
+        [scriptblock]$ObservationWait={ [Threading.Thread]::Sleep(10000) })
     $result=[pscustomobject]@{outcome='NotVerified';reason='IdentityUnavailable';identity='Unavailable'}
     if($Publishing.outcome -cne 'ConfirmedSuccess' -or $Publishing.reason -cne 'ExactDeploymentActive' -or
        $Publishing.deploymentId -cnotmatch '\A[a-f0-9]{32}\z' -or
        $ExpectedCommit -cnotmatch '\A(?!0{40})[a-f0-9]{40}\z'){return $result}
-    # At most six read-only observations, each with bounded HTTP operations.
-    # No upload, restart or publication retry is possible through this function.
-    for($observation=0;$observation -lt 6;$observation++){
+    # Allow IIS/ASP.NET Core to finish startup after Kudu publication.
+    # At most twelve read-only observations (eleven ten-second waits), each with
+    # bounded HTTP operations. No upload, restart or publication retry.
+    for($observation=0;$observation -lt 12;$observation++){
         if($observation -gt 0){try{& $ObservationWait|Out-Null}catch{return $result}}
         $result=Get-StagingAcceptance -Transport $Transport -ExpectedCommit $ExpectedCommit
         if($result.outcome -ceq 'VerifiedHealthy' -or $result.reason -ceq 'InvalidVersionResponse'){return $result}
