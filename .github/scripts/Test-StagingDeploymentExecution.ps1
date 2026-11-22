@@ -17,7 +17,7 @@ foreach($key in @('ResourceId','TenantId','SubscriptionId','ClientId','Commit','
 }
 $process=[pscustomobject]@{exitCode=0;timedOut=$false;oversized=$false;interrupted=$false;stdout='2.93.0';stderr=$canary}
 Check 'version-match' {Test-StagingCliVersion $process}
-foreach($value in @('2.91.0','2.93.0','2.92.0-extra','',('2.93.0'+$canary))){
+foreach($value in @('2.91.0','2.92.0','2.94.0','2.93.0-extra','',('2.93.0'+$canary))){
     $p=$process.PSObject.Copy();$p.stdout=$value
     Check ('version-reject-'+$count) {!(Test-StagingCliVersion $p)}
 }
