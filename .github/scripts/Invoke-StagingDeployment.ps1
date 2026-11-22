@@ -1,7 +1,9 @@
 [CmdletBinding()]
 param([switch]$PreflightOnly,[switch]$CheckPriorAttempts)
 $ErrorActionPreference='Stop'
-$script:StagingReviewedCliVersion='2.92.0'
+# Reviewed exact CLI version for the windows-2025 image 20261116.315.1.
+# Preserve exact-version refusal when the hosted image drifts again.
+$script:StagingReviewedCliVersion='2.93.0'
 
 function Get-StagingDeploymentPlan {
     param([string]$ResourceId,[string]$TenantId,[string]$SubscriptionId,[string]$ClientId,
