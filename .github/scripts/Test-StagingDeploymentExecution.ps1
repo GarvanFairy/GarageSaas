@@ -137,5 +137,5 @@ foreach($pair in @(
     Check ('workflow-execution-'+$count) {Reject {& (Join-Path $PSScriptRoot 'Assert-StagingWorkflow.ps1') -Path $path}}
 }
 & (Join-Path $PSScriptRoot 'Assert-StagingWorkflow.ps1') -Path (Join-Path $PSScriptRoot '../workflows/staging-cd.yml')|Out-Null
-if($count -ne 85){throw "Execution security inventory mismatch: $count"}
+if($count -ne 86){throw "Execution security inventory mismatch: $count"}
 Write-Output "PASS: $count offline deployment execution/status regressions; no Azure, CLI login, deployment or raw evidence publication."
