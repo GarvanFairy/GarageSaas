@@ -1,4 +1,4 @@
-﻿@model SignupAPI.Models.GarageCustomerWithVehicleVM
+@model SignupAPI.Models.GarageCustomerWithVehicleVM
 
 @{
     ViewData["Title"] = "Add Garage Customer";
@@ -7,110 +7,127 @@
 <form asp-action="AddUpdateGarageCustomerWithVehicle"
       asp-controller="GarageCustomers"
       method="post"
-      autocomplete="off">
+      autocomplete="off"
+      class="garage-customer-form">
 
     @Html.AntiForgeryToken()
 
     <!-- ================= CUSTOMER ================= -->
-    <div class="card shadow-sm mb-4">
+    <div class="card mb-4">
         <div class="card-body">
-            <h5 class="mb-3">Customer details</h5>
+            <section class="mb-4" aria-labelledby="customer-details-heading">
+                <h2 id="customer-details-heading" class="h6 mb-3">Customer details</h2>
 
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <label class="form-label">First name</label>
-                    <input asp-for="Customer.GarageCustomerForename" class="form-control" />
-                </div>
+                <div class="row customer-form-row">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">First name</label>
+                        <input asp-for="Customer.GarageCustomerForename" class="form-control" />
+                    </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Surname</label>
-                    <input asp-for="Customer.GarageCustomerSurname" class="form-control" />
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Surname</label>
+                        <input asp-for="Customer.GarageCustomerSurname" class="form-control" />
+                    </div>
                 </div>
+            </section>
 
-                <div class="col-12">
-                    <label asp-for="Customer.GarageCustomerAddressline1" class="form-label">Address line 1</label>
-                    <input asp-for="Customer.GarageCustomerAddressline1" class="form-control" />
-                </div>
+            <section class="mb-4" aria-labelledby="customer-contact-heading">
+                <h2 id="customer-contact-heading" class="h6 mb-3">Contact information</h2>
 
-                <div class="col-12">
-                    <label asp-for="Customer.GarageCustomerAddressline2" class="form-label">Address line 2</label>
-                    <input asp-for="Customer.GarageCustomerAddressline2" class="form-control" />
-                </div>
+                <div class="row customer-form-row">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Mobile</label>
+                        <input asp-for="Customer.GarageCustomerMobileNumber" class="form-control" />
+                    </div>
 
-                <div class="col-12">
-                    <label asp-for="Customer.GarageCustomerAddressline3" class="form-label">Address line 3</label>
-                    <input asp-for="Customer.GarageCustomerAddressline3" class="form-control" />
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Customer.GarageCustomerEmailAddress" class="form-control" />
+                    </div>
                 </div>
+            </section>
 
-                <div class="col-12">
-                    <label asp-for="Customer.GarageCustomerAddressline4" class="form-label">Address line 4</label>
-                    <input asp-for="Customer.GarageCustomerAddressline4" class="form-control" />
-                </div>
+            <section aria-labelledby="customer-address-heading">
+                <h2 id="customer-address-heading" class="h6 mb-3">Address details</h2>
 
-                <div class="col-md-6">
-                    <label asp-for="Customer.GarageCustomerPostcode" class="form-label">Postcode / Eircode</label>
-                    <input asp-for="Customer.GarageCustomerPostcode" class="form-control" />
-                </div>
+                <div class="row customer-form-row">
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Customer.GarageCustomerAddressline1" class="form-label">Address line 1</label>
+                        <input asp-for="Customer.GarageCustomerAddressline1" class="form-control" />
+                    </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Mobile</label>
-                    <input asp-for="Customer.GarageCustomerMobileNumber" class="form-control" />
-                </div>
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Customer.GarageCustomerAddressline2" class="form-label">Address line 2</label>
+                        <input asp-for="Customer.GarageCustomerAddressline2" class="form-control" />
+                    </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Email</label>
-                    <input asp-for="Customer.GarageCustomerEmailAddress" class="form-control" />
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Customer.GarageCustomerAddressline3" class="form-label">Address line 3</label>
+                        <input asp-for="Customer.GarageCustomerAddressline3" class="form-control" />
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label asp-for="Customer.GarageCustomerAddressline4" class="form-label">Address line 4</label>
+                        <input asp-for="Customer.GarageCustomerAddressline4" class="form-control" />
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <label asp-for="Customer.GarageCustomerPostcode" class="form-label">Postcode / Eircode</label>
+                        <input asp-for="Customer.GarageCustomerPostcode" class="form-control" />
+                    </div>
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 
     <!-- ================= VEHICLE ================= -->
-    <div class="card shadow-sm mb-4">
+    <div class="card mb-4">
         <div class="card-body">
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" asp-for="AddVehicle" id="chkAddVehicle" />
-                <label class="form-check-label fw-semibold">
+                <label class="form-check-label font-weight-bold" for="chkAddVehicle">
                     Add vehicle for this customer
                 </label>
             </div>
 
             <div id="vehicleSection">
-                <h5 class="mb-3">Vehicle details</h5>
+                <h2 class="h6 mb-3">Vehicle information</h2>
 
-                <div class="row g-4">
-                    <div class="col-md-6">
+                <div class="row customer-form-row">
+                    <div class="col-12 col-md-6 col-lg-4">
                         <label class="form-label">Registration</label>
-                        <input asp-for="Vehicle.VehicleRegistration" class="form-control" />
+                        <input asp-for="Vehicle.VehicleRegistration" class="form-control registration-input customer-registration-plate" />
                     </div>
+                </div>
 
-                    <div class="col-md-6">
+                <div class="row customer-form-row mt-3">
+                    <div class="col-12 col-md-6">
                         <label class="form-label">Make</label>
-                        <select id="ddlVehicleMake" asp-for="Vehicle.VehicleMakeId" class="form-select"
+                        <select id="ddlVehicleMake" asp-for="Vehicle.VehicleMakeId" class="form-control form-select"
                                 asp-items="Model.ListOfVehicleMakes">
                             <option value="">-- Select make --</option>
                         </select>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
                         <label class="form-label">Model</label>
-                        <select id="ddlVehicleModel" asp-for="Vehicle.VehicleModelId" class="form-select"
+                        <select id="ddlVehicleModel" asp-for="Vehicle.VehicleModelId" class="form-control form-select"
                                 asp-items="Model.ListOfVehicleModels">
                             <option value="">-- Select make --</option>
                         </select>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
                         <label class="form-label">Year</label>
-                        <select asp-for="Vehicle.VehicleYearId" class="form-select"
+                        <select asp-for="Vehicle.VehicleYearId" class="form-control form-select"
                                 asp-items="Model.ListOfVehicleYears">
                             <option value="">-- Select year --</option>
                         </select>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
                         <label class="form-label">Fuel type</label>
-                        <select asp-for="Vehicle.VehicleFuelTypeId" class="form-select"
+                        <select asp-for="Vehicle.VehicleFuelTypeId" class="form-control form-select"
                                 asp-items="Model.ListOfVehicleFuelTypes">
                             <option value="">-- Select fuel --</option>
                         </select>
@@ -121,7 +138,7 @@
     </div>
 
     <!-- ================= ACTIONS ================= -->
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap align-items-center customer-form-actions">
         <button type="submit" class="btn btn-primary">
             Save
         </button>
