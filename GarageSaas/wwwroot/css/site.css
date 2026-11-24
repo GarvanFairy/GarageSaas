@@ -460,6 +460,52 @@ label.form-label {
     font-weight: 700;
 }
 
+/* Compact customer/vehicle form; scoped gutters support Bootstrap 4.3. */
+.garage-customer-form {
+    width: 100%;
+    max-width: 1100px;
+    margin-left: 0;
+    margin-right: auto;
+}
+
+.garage-customer-form .customer-form-row {
+    margin-right: -.5rem;
+    margin-left: -.5rem;
+    margin-bottom: -1rem;
+}
+
+.garage-customer-form .customer-form-row > [class*="col-"] {
+    padding-right: .5rem;
+    padding-left: .5rem;
+    margin-bottom: 1rem;
+}
+
+.garage-customer-form .customer-form-actions {
+    gap: .5rem;
+}
+
+.garage-customer-form .customer-registration-plate {
+    width: 100%;
+    max-width: 18rem;
+    height: 2.75rem;
+    padding: .35rem .75rem .35rem 1rem;
+    border: 2px solid #344054;
+    border-radius: .35rem;
+    background: #fff;
+    color: #111827;
+    box-shadow: inset 6px 0 0 var(--app-primary);
+    font-size: 1.25rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .08em;
+    text-align: center;
+}
+
+.garage-customer-form .customer-registration-plate:focus {
+    border-color: var(--app-primary);
+    box-shadow: inset 6px 0 0 var(--app-primary), 0 0 0 .2rem rgba(25, 87, 210, .14);
+}
+
 .table thead th {
     color: var(--app-muted);
     font-size: .78rem;
