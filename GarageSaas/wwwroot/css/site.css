@@ -461,20 +461,23 @@ label.form-label {
 }
 
 /* Compact customer/vehicle form; scoped gutters support Bootstrap 4.3. */
-.garage-customer-form {
+.garage-customer-form,
+.vehicle-edit-page {
     width: 100%;
     max-width: 1100px;
     margin-left: 0;
     margin-right: auto;
 }
 
-.garage-customer-form .customer-form-row {
+.garage-customer-form .customer-form-row,
+.vehicle-edit-page .vehicle-form-row {
     margin-right: -.5rem;
     margin-left: -.5rem;
     margin-bottom: -1rem;
 }
 
-.garage-customer-form .customer-form-row > [class*="col-"] {
+.garage-customer-form .customer-form-row > [class*="col-"],
+.vehicle-edit-page .vehicle-form-row > [class*="col-"] {
     padding-right: .5rem;
     padding-left: .5rem;
     margin-bottom: 1rem;
@@ -484,7 +487,8 @@ label.form-label {
     gap: .5rem;
 }
 
-.garage-customer-form .customer-registration-plate {
+.garage-customer-form .customer-registration-plate,
+.vehicle-edit-page .customer-registration-plate {
     width: 100%;
     max-width: 18rem;
     height: 2.75rem;
@@ -501,7 +505,8 @@ label.form-label {
     text-align: center;
 }
 
-.garage-customer-form .customer-registration-plate:focus {
+.garage-customer-form .customer-registration-plate:focus,
+.vehicle-edit-page .customer-registration-plate:focus {
     border-color: var(--app-primary);
     box-shadow: inset 6px 0 0 var(--app-primary), 0 0 0 .2rem rgba(25, 87, 210, .14);
 }
@@ -1689,4 +1694,73 @@ label.form-label {
     font-size: .75rem;
     line-height: 1.35;
     white-space: nowrap;
+}
+
+/* Vehicle editor: keep the main fields useful before introducing a sidebar. */
+.vehicle-edit-page .edit-vehicle-grid {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.vehicle-edit-page .edit-form-panel,
+.vehicle-edit-page .edit-vehicle-side > * {
+    min-width: 0;
+}
+
+.vehicle-edit-page .edit-vehicle-side {
+    position: static;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.vehicle-edit-page .customer-registration-plate {
+    max-width: none;
+}
+
+.vehicle-edit-page .owner-toggle {
+    max-width: 100%;
+    align-items: flex-start;
+}
+
+.vehicle-edit-page .owner-toggle .form-check-input {
+    position: static;
+    flex: 0 0 auto;
+    margin: .2rem 0 0;
+}
+
+.vehicle-edit-page .split-select {
+    grid-template-columns: minmax(0, 1fr);
+    padding: .65rem;
+    border: 1px solid var(--app-line);
+    border-radius: .5rem;
+    background: #f8fafc;
+}
+
+.vehicle-edit-page .vehicle-record-main > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (min-width: 768px) {
+    .vehicle-edit-page .customer-registration-plate {
+        max-width: 18rem;
+    }
+
+    .vehicle-edit-page .edit-vehicle-side,
+    .vehicle-edit-page .split-select {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .vehicle-edit-page .save-panel {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (min-width: 1400px) {
+    .vehicle-edit-page .edit-vehicle-grid {
+        grid-template-columns: minmax(0, 1fr) 17rem;
+    }
+
+    .vehicle-edit-page .edit-vehicle-side {
+        position: sticky;
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
