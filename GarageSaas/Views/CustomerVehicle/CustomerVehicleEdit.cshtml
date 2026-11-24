@@ -49,7 +49,7 @@
     </div>
 </section>
 
-@using (Html.BeginForm("AddUpdateCustomerVehicle", "CustomerVehicle", FormMethod.Post, new { id = "vehicleForm", autocomplete = "off", onsubmit = "return false;" }))
+@using (Html.BeginForm("AddUpdateCustomerVehicle", "CustomerVehicle", FormMethod.Post, new { id = "vehicleForm", autocomplete = "off", onsubmit = "return false;", @class = "vehicle-edit-page" }))
 {
     @Html.AntiForgeryToken()
     @await Html.PartialAsync("_GarageContext")
@@ -73,18 +73,18 @@
                     </div>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-12 col-lg-6">
+                <div class="row vehicle-form-row">
+                    <div class="col-12 col-md-6">
                         <label class="form-label" for="txtRegistration">Registration</label>
-                        <input class="form-control registration-input"
+                        <input class="form-control registration-input customer-registration-plate"
                                id="txtRegistration"
                                value="@Model.Vehicle.VehicleRegistration"
                                placeholder="e.g. 12-D-12345" />
                     </div>
 
-                    <div class="col-12 col-lg-6">
+                    <div class="col-12 col-md-6">
                         <label class="form-label" for="ddlVehicleOwner">Owner</label>
-                        <select class="form-select" id="ddlVehicleOwner">
+                        <select class="form-control form-select" id="ddlVehicleOwner">
                             <option value="">-- Select owner --</option>
                             @foreach (var owner in Model.GarageVehicleOwnerList ?? Enumerable.Empty<SelectListItem>())
                             {
@@ -102,36 +102,36 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div id="newCustomerPanel" class="new-customer-panel" style="display:none;">
-                <div class="section-heading">
-                    <span><i class="bi bi-person-plus"></i></span>
-                    <div>
-                        <h3>New customer</h3>
-                        <p>Add the owner details without leaving this vehicle record.</p>
-                    </div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-12 col-md-6 col-xl-3">
-                        <label class="form-label" for="txtNewCustomerForename">First name</label>
-                        <input class="form-control" id="txtNewCustomerForename" />
+                <div id="newCustomerPanel" class="new-customer-panel" style="display:none;">
+                    <div class="section-heading">
+                        <span><i class="bi bi-person-plus"></i></span>
+                        <div>
+                            <h3>New customer</h3>
+                            <p>Add the owner details without leaving this vehicle record.</p>
+                        </div>
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-3">
-                        <label class="form-label" for="txtNewCustomerSurname">Surname</label>
-                        <input class="form-control" id="txtNewCustomerSurname" />
-                    </div>
+                    <div class="row vehicle-form-row">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="txtNewCustomerForename">First name</label>
+                            <input class="form-control" id="txtNewCustomerForename" />
+                        </div>
 
-                    <div class="col-12 col-md-6 col-xl-3">
-                        <label class="form-label" for="txtNewCustomerMobile">Mobile number</label>
-                        <input class="form-control" id="txtNewCustomerMobile" />
-                    </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="txtNewCustomerSurname">Surname</label>
+                            <input class="form-control" id="txtNewCustomerSurname" />
+                        </div>
 
-                    <div class="col-12 col-md-6 col-xl-3">
-                        <label class="form-label" for="txtNewCustomerEMail">Email address</label>
-                        <input class="form-control" id="txtNewCustomerEMail" type="email" />
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="txtNewCustomerMobile">Mobile number</label>
+                            <input class="form-control" id="txtNewCustomerMobile" />
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="txtNewCustomerEMail">Email address</label>
+                            <input class="form-control" id="txtNewCustomerEMail" type="email" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -140,15 +140,15 @@
                 <div class="section-heading">
                     <span><i class="bi bi-car-front"></i></span>
                     <div>
-                        <h3>Make and model</h3>
+                        <h3>Vehicle details</h3>
                         <p>Set the core vehicle specification used across jobs and invoices.</p>
                     </div>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-12 col-lg-6">
+                <div class="row vehicle-form-row">
+                    <div class="col-12 col-md-6">
                         <label class="form-label" for="ddlVehicleMake">Make</label>
-                        <select class="form-select" id="ddlVehicleMake">
+                        <select class="form-control form-select" id="ddlVehicleMake">
                             <option value="">-- Select make --</option>
                             @foreach (var make in Model.ListofVehicleMakes ?? Enumerable.Empty<SelectListItem>())
                             {
@@ -160,9 +160,9 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-lg-6">
+                    <div class="col-12 col-md-6">
                         <label class="form-label" for="ddlVehicleModel">Model</label>
-                        <select class="form-select"
+                        <select class="form-control form-select"
                                 id="ddlVehicleModel"
                                 data-current-model-id="@Model.Vehicle.VehicleModelId">
                             <option value="">-- Select model --</option>
@@ -176,9 +176,9 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-3">
+                    <div class="col-12 col-md-6">
                         <label class="form-label" for="ddlVehicleYears">Year</label>
-                        <select class="form-select" id="ddlVehicleYears">
+                        <select class="form-control form-select" id="ddlVehicleYears">
                             <option value="">-- Select year --</option>
                             @foreach (var y in Model.ListofVehicleYears ?? Enumerable.Empty<SelectListItem>())
                             {
@@ -190,9 +190,9 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-3">
+                    <div class="col-12 col-md-6">
                         <label class="form-label" for="ddlFuelType">Fuel type</label>
-                        <select class="form-select" id="ddlFuelType">
+                        <select class="form-control form-select" id="ddlFuelType">
                             <option value="">-- Select fuel --</option>
                             @foreach (var ft in Model.ListofFuelTypes ?? Enumerable.Empty<SelectListItem>())
                             {
@@ -206,7 +206,7 @@
 
                     <div class="col-12 col-md-6">
                         <label class="form-label" for="ddlTransmission">Transmission</label>
-                        <select class="form-select" id="ddlTransmission">
+                        <select class="form-control form-select" id="ddlTransmission">
                             <option value="">-- Select transmission type --</option>
                             @foreach (var tt in Model.ListofTransmissionTypes ?? Enumerable.Empty<SelectListItem>())
                             {
@@ -220,7 +220,7 @@
 
                     <div class="col-12 col-md-6">
                         <label class="form-label" for="ddlMileage">Mileage (KM)</label>
-                        <select class="form-select" id="ddlMileage">
+                        <select class="form-control form-select" id="ddlMileage">
                             <option value="">-- Select mileage --</option>
                             @foreach (var m in Model.ListofMileages ?? Enumerable.Empty<SelectListItem>())
                             {
@@ -243,8 +243,8 @@
                     </div>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-12 col-md-4">
+                <div class="row vehicle-form-row">
+                    <div class="col-12 col-md-6">
                         <label class="form-label" for="txtDate">Mileage date</label>
                         <input type="text"
                                id="txtDate"
@@ -253,17 +253,20 @@
                                placeholder="dd/mm/yyyy" />
                     </div>
 
-                    <div class="col-12 col-md-4">
+                </div>
+
+                <div class="row vehicle-form-row">
+                    <div class="col-12 col-md-6">
                         <label class="form-label" for="ddlNCTMonth">NCT due</label>
                         <div class="split-select">
-                            <select class="form-select" id="ddlNCTMonth">
+                            <select class="form-control form-select" id="ddlNCTMonth">
                                 @foreach (var mo in new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" })
                                 {
                                     <option value="@mo" selected="@(mo == nctMonth ? "selected" : null)">@mo</option>
                                 }
                             </select>
 
-                            <select class="form-select" id="ddlNCTYear">
+                            <select class="form-control form-select" id="ddlNCTYear">
                                 @for (int y = DateTime.Now.Year; y <= DateTime.Now.Year + 7; y++)
                                 {
                                     <option value="@y" selected="@(y.ToString() == nctYear ? "selected" : null)">@y</option>
@@ -272,17 +275,17 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-6">
                         <label class="form-label" for="ddlTaxMonth">Tax due</label>
                         <div class="split-select">
-                            <select class="form-select" id="ddlTaxMonth">
+                            <select class="form-control form-select" id="ddlTaxMonth">
                                 @foreach (var mo in new[] { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" })
                                 {
                                     <option value="@mo" selected="@(mo == taxMonth ? "selected" : null)">@mo</option>
                                 }
                             </select>
 
-                            <select class="form-select" id="ddlTaxYear">
+                            <select class="form-control form-select" id="ddlTaxYear">
                                 @for (int y = DateTime.Now.Year; y <= DateTime.Now.Year + 7; y++)
                                 {
                                     <option value="@y" selected="@(y.ToString() == taxYear ? "selected" : null)">@y</option>
