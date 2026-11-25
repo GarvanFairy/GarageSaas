@@ -128,6 +128,7 @@ public class SqlCleanupDiagnosticsTests
     public async Task CleanupFailurePreservesOriginalAndStack()
     {
         CheckStepDiagnostics();
+        await SqlPendingDropDiagnosticChecks.Run(SyntheticSql);
         var original = new InvalidOperationException("synthetic");
         Exception? reported = null;
         var caught = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() =>

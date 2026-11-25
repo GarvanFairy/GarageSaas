@@ -24,6 +24,7 @@ function New-Record {
 }
 function New-Trx([string]$Path, [string]$Text, [string]$Outcome, [string]$Suite, [string]$ErrorMessage='synthetic failure', [switch]$Unmapped, [string]$Stream='StdOut') {
     $method = $inventory.suites.$Suite[0]
+    if($script:pendingDropFixture -and $Suite -ceq 'sql'){$method=@($inventory.suites.sql|Where-Object {$_.className -ceq 'GarageSaas.UnitTests.Controllers.StaffInvitationConcurrencySqlTests' -and $_.methodName -ceq 'InactiveMembershipNotReactivated'})[0]}
     $id = '11111111-1111-1111-1111-111111111111'
     $escape = { param($value) [Security.SecurityElement]::Escape([string]$value) }
     $class = if ($Unmapped) { 'Untrusted.'+$canary } else { $method.className }
@@ -391,3 +392,72 @@ Case 'step-duplicate-property' {$json=(New-StepRecord|ConvertTo-Json -Depth 12 -
 Case 'step-never-passes-failed-test' {$r=Export-Fixture (Marker (New-StepRecord));$blocked=$false;try{& $gate -Path $r.path -Suite sql -ExpectedCount 1|Out-Null}catch{$blocked=$true};Assert-Check $blocked}
 if($badSteps.Count -ne 31 -or $executed.Count-$stepStart -ne 64){throw "Step security inventory incomplete: $($executed.Count-$stepStart)"}
 Write-Output 'PASS: 64 seeding/cleanup-open security regressions; original 192 cases preserved (256 total). Synthetic fixtures only.'
+# Targeted pending DROP observer. Synthetic fixtures only, no actual observer/SQL.
+$dropStart=$executed.Count;$script:pendingDropFixture=$true
+function New-PendingDrop {
+    [ordered]@{availability='Available';bodyCompleted=$true;elapsedMilliseconds=8000;durationCapped=$false;
+        observation=[ordered]@{availability='Available';reason='Captured';request='DropDatabase';status='Suspended';wait='Lock';
+            blocking='SystemSession';blockerRequest='Checkpoint';transactions=0;error='None';sqlErrorNumbers=$null;elapsedMilliseconds=1}}
+}
+function New-DropRecord {$r=New-Record;$r.operation='DropOwnedDatabase';$r.guardSessions=0;$r.pendingDrop=New-PendingDrop;return $r}
+function Unavailable-Drop($r,[string]$Reason='NotObserved',[string]$ErrorCategory='None'){
+    $o=$r.pendingDrop.observation;$o.availability='Unavailable';$o.reason=$Reason;$o.error=$ErrorCategory
+    foreach($key in @('request','status','wait','blocking','blockerRequest')){$o[$key]='Unavailable'}
+    $o.transactions=$null;$o.elapsedMilliseconds=$null;$o.sqlErrorNumbers=$null
+}
+function Reject-Drop([scriptblock]$change){$r=New-DropRecord;& $change $r;$safe=Export-Fixture (Marker $r);Assert-Check ($safe.diagnostic.reason -ceq 'invalid' -and $null -eq $safe.diagnostic.record)}
+Case 'drop-captured' {$safe=Export-Fixture (Marker (New-DropRecord));Assert-Check ($safe.diagnostic.record.pendingDrop.observation.blocking -ceq 'SystemSession' -and $safe.diagnostic.record.pendingDrop.bodyCompleted)}
+foreach($field in @('bodyCompleted','durationCapped')){Case "drop-bool-$field" {$r=New-DropRecord;if($field -ceq 'durationCapped'){$r.pendingDrop.elapsedMilliseconds=600000};$r.pendingDrop[$field]=!$r.pendingDrop[$field];Assert-Check ($null -ne (Export-Fixture (Marker $r)).diagnostic.record.pendingDrop)}}
+foreach($value in @('Running','Runnable','Suspended','Sleeping','Background','Unknown')){Case "drop-status-$value" {$r=New-DropRecord;$r.pendingDrop.observation.status=$value;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.pendingDrop.observation.status -ceq $value)}}
+foreach($value in @('NoneReported','Lock','LogIO','IO','FileIO','Latch','Scheduler','Unknown')){Case "drop-wait-$value" {$r=New-DropRecord;$r.pendingDrop.observation.wait=$value;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.pendingDrop.observation.wait -ceq $value)}}
+foreach($value in @('NoneReported','UserSession','SystemSession','OrphanedTransaction','DeferredRecovery','InternalOwnerUnknown','Unknown')){Case "drop-blocker-$value" {$r=New-DropRecord;$r.pendingDrop.observation.blocking=$value;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.pendingDrop.observation.blocking -ceq $value)}}
+foreach($value in @('DropDatabase','DatabaseStartup','Checkpoint','LazyWriter','LogWriter','RecoveryWriter','Unknown')){Case "drop-blocker-request-$value" {$r=New-DropRecord;$r.pendingDrop.observation.blockerRequest=$value;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.pendingDrop.observation.blockerRequest -ceq $value)}}
+foreach($value in @('NotObserved','NoMatchingRequest','CorrelationUnavailable','InvalidMetadata','ObserverFailed','DeadlineOrCancellation')){
+    Case "drop-unavailable-$value" {$r=New-DropRecord;$errorCategory=if($value -ceq 'ObserverFailed'){'Other'}elseif($value -ceq 'DeadlineOrCancellation'){'Cancelled'}else{'None'};Unavailable-Drop $r $value $errorCategory;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.pendingDrop.observation.availability -ceq 'Unavailable')}
+}
+foreach($code in @(-2,0,53,233,229,297,300)){Case "drop-SQL-code-$code" {$r=New-DropRecord;Unavailable-Drop $r 'ObserverFailed' 'Sql';$r.pendingDrop.observation.sqlErrorNumbers=@($code);Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.pendingDrop.observation.sqlErrorNumbers[0] -eq $code)}}
+Case 'drop-before-command' {$r=New-DropRecord;Unavailable-Drop $r;$r.pendingDrop.elapsedMilliseconds=$null;Assert-Check ($null -eq (Export-Fixture (Marker $r)).diagnostic.record.pendingDrop.elapsedMilliseconds)}
+Case 'drop-missing-optional' {$r=New-Record;Assert-Check ((Export-Fixture (Marker $r)).diagnostic.record.pendingDrop.availability -ceq 'Unavailable')}
+Case 'drop-body-completed-does-not-pass-failed-test' {$safe=Export-Fixture (Marker (New-DropRecord));$rejected=$false;try{& $gate -Path $safe.path -Suite sql -ExpectedCount 1|Out-Null}catch{$rejected=$true};Assert-Check $rejected}
+$badDrops=[ordered]@{
+    'scope'={param($r)$script:pendingDropFixture=$false};
+    'missing-observation'={param($r)$r.pendingDrop.Remove('observation')};
+    'missing-body'={param($r)$r.pendingDrop.Remove('bodyCompleted')};
+    'body-canary'={param($r)$r.pendingDrop.bodyCompleted=$canary};
+    'unknown-availability'={param($r)$r.pendingDrop.availability=$canary};
+    'duration-negative'={param($r)$r.pendingDrop.elapsedMilliseconds=-1};
+    'duration-overflow'={param($r)$r.pendingDrop.elapsedMilliseconds=600001};
+    'duration-fraction'={param($r)$r.pendingDrop.elapsedMilliseconds=1.5};
+    'cap-conflict'={param($r)$r.pendingDrop.durationCapped=$true};
+    'request-canary'={param($r)$r.pendingDrop.observation.request=$canary};
+    'status-canary'={param($r)$r.pendingDrop.observation.status=$canary};
+    'wait-canary'={param($r)$r.pendingDrop.observation.wait=$canary};
+    'blocking-canary'={param($r)$r.pendingDrop.observation.blocking=$canary};
+    'blocker-request-canary'={param($r)$r.pendingDrop.observation.blockerRequest=$canary};
+    'reason-canary'={param($r)$r.pendingDrop.observation.reason=$canary};
+    'error-canary'={param($r)$r.pendingDrop.observation.error=$canary};
+    'SQL-text'={param($r)$r.pendingDrop.observation.sql=$canary};
+    'session-id'={param($r)$r.pendingDrop.observation.sessionId=50};
+    'connection-string'={param($r)$r.pendingDrop.observation.connectionString=$canary};
+    'raw-message'={param($r)$r.pendingDrop.observation.message=$canary};
+    'database-name'={param($r)$r.pendingDrop.databaseName=$canary};
+    'observer-duration-overflow'={param($r)$r.pendingDrop.observation.elapsedMilliseconds=2001};
+    'observer-duration-null'={param($r)$r.pendingDrop.observation.elapsedMilliseconds=$null};
+    'transaction-negative'={param($r)$r.pendingDrop.observation.transactions=-1};
+    'transaction-canary'={param($r)$r.pendingDrop.observation.transactions=$canary};
+    'transaction-overflow'={param($r)$r.pendingDrop.observation.transactions=1000001};
+    'captured-error-conflict'={param($r)$r.pendingDrop.observation.error='Other'};
+    'unavailable-fields-conflict'={param($r)$r.pendingDrop.observation.availability='Unavailable'};
+    'unknown-code'={param($r)Unavailable-Drop $r 'ObserverFailed' 'Sql';$r.pendingDrop.observation.sqlErrorNumbers=@(1205)};
+    'duplicate-code'={param($r)Unavailable-Drop $r 'ObserverFailed' 'Sql';$r.pendingDrop.observation.sqlErrorNumbers=@(-2,-2)};
+    'many-codes'={param($r)Unavailable-Drop $r 'ObserverFailed' 'Sql';$r.pendingDrop.observation.sqlErrorNumbers=@(-2,0,53,233,229)};
+    'string-code'={param($r)Unavailable-Drop $r 'ObserverFailed' 'Sql';$r.pendingDrop.observation.sqlErrorNumbers=@($canary)};
+    'code-on-success'={param($r)$r.pendingDrop.observation.sqlErrorNumbers=@(-2)};
+    'oversized-field'={param($r)$r.pendingDrop.observation.status='x'*17000}
+}
+foreach($dropCase in $badDrops.Keys){Case "drop-reject-$dropCase" {try{Reject-Drop $badDrops[$dropCase]}finally{$script:pendingDropFixture=$true}}}
+Case 'drop-duplicate-field' {$json=(New-DropRecord|ConvertTo-Json -Depth 12 -Compress).Replace('"bodyCompleted":true','"bodyCompleted":true,"bodyCompleted":false');Assert-Check ((Export-Fixture ('SQL-CLEANUP-DIAGNOSTIC:'+$json)).diagnostic.reason -ceq 'invalid')}
+Case 'drop-duplicate-record' {$marker=Marker (New-DropRecord);Assert-Check ((Export-Fixture ($marker+"`n"+$marker)).diagnostic.reason -ceq 'multiple')}
+$script:pendingDropFixture=$false
+if($badDrops.Count -ne 34 -or $executed.Count-$dropStart -ne 83){throw "Pending DROP security inventory incomplete: $($executed.Count-$dropStart)"}
+Write-Output 'PASS: 83 pending DROP security regressions; original 256 cases preserved (339 total). Synthetic fixtures only.'

@@ -18,6 +18,22 @@ internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
     private bool _customerDiagnostics;
     private object? _seedEvidence, _openEvidence;
     private Exception? _seedFailure;
+    private SqlPendingDropDiagnostics? _pendingDrop;
+    internal bool PendingDropEnabled => Enabled && _pendingDrop != null;
+    internal void RegisterPendingDrop() { if (Enabled) _pendingDrop = new(); }
+    internal void PendingDropBodyCompleted() => _pendingDrop?.BodyCompleted();
+    internal void ObserveDrop(Action drop, SqlConnection verifiedMaster)
+    {
+        if (!PendingDropEnabled) { drop(); return; }
+        Func<CancellationToken, Task<SqlPendingDropDiagnostics.Observation>> probe;
+        try
+        {
+            var ids = _roles.Where(x => x.Value == SqlFixtureConnectionRole.GuardMaster).Select(x => x.Key).Take(2).ToArray();
+            probe = SqlPendingDropDiagnostics.Probe(verifiedMaster, !_roleTrackingUnavailable && ids.Length == 1 ? ids[0] : Guid.Empty);
+        }
+        catch { probe = _ => Task.FromResult(SqlPendingDropDiagnostics.Unavailable("CorrelationUnavailable")); }
+        _pendingDrop!.Execute(drop, probe);
+    }
     internal bool CustomerDiagnosticsEnabled => Enabled && _customerDiagnostics;
     internal void RegisterCustomerDiagnostics() { if (Enabled && !_scenario.HasValue) _customerDiagnostics = true; }
     internal static (int Milliseconds, bool Capped) BoundDuration(long milliseconds)
@@ -384,6 +400,7 @@ internal sealed class SqlCleanupDiagnostics : DbConnectionInterceptor
             data["seeding"] = _seedEvidence;
             data["cleanupOpen"] = _openEvidence;
         }
+        if (_pendingDrop != null) data["pendingDrop"] = _pendingDrop.Evidence;
         if (LifecycleEnabled) {
             data["lifecycle"] = new { availability = "available", scenario = _scenario.ToString(), bodyCompleted = _bodyCompleted, observations = _observations };
             if (JsonSerializer.Serialize(data).Length > 16384)
